@@ -1,8 +1,10 @@
 {
-  "name": "product-frontend",
+  "name": "fisura-web",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "license": "MIT",
   "type": "module",
+  "description": "Fisura SPA: crack, damage and defect detection and quantification on concrete and construction materials, from classical pipelines to foundation models, with replay of committed artifacts and an in-browser live lane.",
   "scripts": {
     "predev": "node copy-data.mjs",
     "dev": "vite",
@@ -12,8 +14,13 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@fasl-work/caos-app-shell": "^0.3.0",
+    "@types/katex": "^0.16.8",
+    "katex": "^0.16.11",
+    "lucide-react": "^0.469.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.1"
   },
   "devDependencies": {
     "@types/node": "^22.20.0",
