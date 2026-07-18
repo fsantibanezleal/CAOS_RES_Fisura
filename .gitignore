@@ -52,3 +52,6 @@ models/*.pth
 .DS_Store
 Thumbs.db
 *.log
+
+# local dataset vault default (scripts/fetch-data)
+data/raw-local/
