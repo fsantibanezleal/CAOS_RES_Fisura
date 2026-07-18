@@ -20,7 +20,7 @@ export default function Implementation() {
           <b>{t('Offline (precompute).', 'Offline (precómputo).')}</b>{' '}
           {t(
             'The heavy lane, on a local consumer GPU (8 GB): dataset preparation into fixed crop shards, the classical ladder at scale, training of the learned rungs with mixed precision and gradient accumulation, parameter-efficient fine-tuning for foundation encoders, anomaly-model fitting, ONNX export, evaluation, and the baking of every committed artifact with its manifest.',
-            'El carril pesado, en una GPU local de consumo (8 GB): preparación de datasets en shards de recortes fijos, la escalera clásica a escala, entrenamiento de los peldaños aprendidos con precisión mixta y acumulación de gradientes, fine-tuning eficiente en parámetros para codificadores fundacionales, ajuste de modelos de anomalías, exportación ONNX, evaluación, y el horneado de cada artefacto versionado con su manifiesto.',
+            'El carril pesado, en una GPU local de consumo (8 GB): preparación de datasets en shards de recortes fijos, la escalera clásica a escala, entrenamiento de los peldaños aprendidos con precisión mixta y acumulación de gradientes, fine-tuning eficiente en parámetros para codificadores fundacionales, ajuste de modelos de anomalías, exportación ONNX, evaluación, y el precálculo de cada artefacto versionado con su manifiesto.',
           )}
         </li>
         <li>
