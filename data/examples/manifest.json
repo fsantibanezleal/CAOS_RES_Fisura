@@ -1,0 +1,74 @@
+[
+  {
+    "sample_id": "bcl-nonsteel-c1",
+    "file": "bcl/bcl_nonsteel_c1.jpg",
+    "mask": "bcl/bcl_nonsteel_c1_mask.png",
+    "source": "bcl",
+    "license_tag": "cc0",
+    "url": "https://doi.org/10.7910/DVN/RURXSH",
+    "citation": "Ye X.W., Jin T., Li Z.X., Ma S.Y., Ding Y., Ou Y.H. (2021). Structural Crack Detection from Benchmark Data Sets Using Pruned Fully Convolutional Networks. Journal of Structural Engineering 147(11), 04721008. Bridge Crack Library, Harvard Dataverse, CC0 1.0.",
+    "material": "concrete",
+    "mm_per_px": null,
+    "label": "cracked"
+  },
+  {
+    "sample_id": "bcl-nonsteel-c10",
+    "file": "bcl/bcl_nonsteel_c10.jpg",
+    "mask": "bcl/bcl_nonsteel_c10_mask.png",
+    "source": "bcl",
+    "license_tag": "cc0",
+    "url": "https://doi.org/10.7910/DVN/RURXSH",
+    "citation": "Ye X.W., Jin T., Li Z.X., Ma S.Y., Ding Y., Ou Y.H. (2021). Structural Crack Detection from Benchmark Data Sets Using Pruned Fully Convolutional Networks. Journal of Structural Engineering 147(11), 04721008. Bridge Crack Library, Harvard Dataverse, CC0 1.0.",
+    "material": "concrete",
+    "mm_per_px": null,
+    "label": "cracked"
+  },
+  {
+    "sample_id": "bcl-steel-s1",
+    "file": "bcl/bcl_steel_s1.jpg",
+    "mask": "bcl/bcl_steel_s1_mask.png",
+    "source": "bcl",
+    "license_tag": "cc0",
+    "url": "https://doi.org/10.7910/DVN/RURXSH",
+    "citation": "Ye X.W., Jin T., Li Z.X., Ma S.Y., Ding Y., Ou Y.H. (2021). Structural Crack Detection from Benchmark Data Sets Using Pruned Fully Convolutional Networks. Journal of Structural Engineering 147(11), 04721008. Bridge Crack Library, Harvard Dataverse, CC0 1.0.",
+    "material": "steel",
+    "mm_per_px": null,
+    "label": "cracked"
+  },
+  {
+    "sample_id": "bcl-noise-f1",
+    "file": "bcl/bcl_noise_f1.jpg",
+    "mask": "bcl/bcl_noise_f1_mask.png",
+    "source": "bcl",
+    "license_tag": "cc0",
+    "url": "https://doi.org/10.7910/DVN/RURXSH",
+    "citation": "Ye X.W., Jin T., Li Z.X., Ma S.Y., Ding Y., Ou Y.H. (2021). Structural Crack Detection from Benchmark Data Sets Using Pruned Fully Convolutional Networks. Journal of Structural Engineering 147(11), 04721008. Bridge Crack Library, Harvard Dataverse, CC0 1.0.",
+    "material": "concrete",
+    "mm_per_px": null,
+    "label": "uncracked"
+  },
+  {
+    "sample_id": "sdnet-cp-001-100",
+    "file": "sdnet2018/sdnet_cp_001-100.jpg",
+    "mask": null,
+    "source": "sdnet2018",
+    "license_tag": "cc-by",
+    "url": "https://doi.org/10.15142/T3TD19",
+    "citation": "Dorafshan S., Thomas R.J., Maguire M. (2018). SDNET2018: An annotated image dataset for non-contact concrete crack detection using deep convolutional neural networks. Data in Brief 21. Utah State University, CC BY 4.0.",
+    "material": "concrete",
+    "mm_per_px": null,
+    "label": "cracked"
+  },
+  {
+    "sample_id": "sdnet-up-001-1",
+    "file": "sdnet2018/sdnet_up_001-1.jpg",
+    "mask": null,
+    "source": "sdnet2018",
+    "license_tag": "cc-by",
+    "url": "https://doi.org/10.15142/T3TD19",
+    "citation": "Dorafshan S., Thomas R.J., Maguire M. (2018). SDNET2018: An annotated image dataset for non-contact concrete crack detection using deep convolutional neural networks. Data in Brief 21. Utah State University, CC BY 4.0.",
+    "material": "concrete",
+    "mm_per_px": null,
+    "label": "uncracked"
+  }
+]

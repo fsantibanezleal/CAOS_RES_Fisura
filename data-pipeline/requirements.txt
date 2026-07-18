@@ -4,3 +4,4 @@
 # template installs instantly with no native build; a real product adds e.g. yade / pychrono / ortools / mintpy /
 # torch here, each PINNED to the version it installs+verifies.
 numpy==2.4.6
+imageio==2.37.2         # image IO for CONTRACT 1 (image domain), PNG/JPG readers in io/image_formats.py
