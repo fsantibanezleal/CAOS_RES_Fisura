@@ -1,7 +1,7 @@
 {
  "schema": "fisura.index/v1",
- "engine_version": "0.04.000",
- "n_cases": 2,
+ "engine_version": "0.05.000",
+ "n_cases": 4,
  "cases": [
   {
    "case_id": "bcl_examples",
@@ -9,9 +9,19 @@
    "manifest_path": "manifests/bcl_examples.json"
   },
   {
+   "case_id": "severity_grading",
+   "category": "quantification-validation",
+   "manifest_path": "manifests/severity_grading.json"
+  },
+  {
    "case_id": "synthetic_battery",
    "category": "quantification-validation",
    "manifest_path": "manifests/synthetic_battery.json"
+  },
+  {
+   "case_id": "width_bench",
+   "category": "quantification-validation",
+   "manifest_path": "manifests/width_bench.json"
   }
  ]
 }

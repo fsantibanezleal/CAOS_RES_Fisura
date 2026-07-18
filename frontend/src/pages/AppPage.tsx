@@ -257,13 +257,62 @@ function ChartsView({ sample, es }: { sample: ArtifactSample; es: boolean }) {
           <div className="fs-tablewrap">
             <table className="fs-table">
               <tbody>
-                <tr><td>{t('true width (median)', 'ancho verdadero (mediana)')}</td><td className="mono">{sample.width_validation.true_width_px.toFixed(2)} px</td></tr>
+                <tr><td>{t('true mask width (median)', 'ancho verdadero de máscara (mediana)')}</td><td className="mono">{sample.width_validation.true_width_px.toFixed(2)} px</td></tr>
+                {sample.width_validation.true_fwhm_px != null ? (
+                  <tr><td>{t('true optical FWHM (mask + edge softness)', 'FWHM óptico verdadero (máscara + suavidad de borde)')}</td><td className="mono">{sample.width_validation.true_fwhm_px.toFixed(2)} px</td></tr>
+                ) : null}
                 <tr><td>{t('inscribed-circle estimate on GT', 'estimación círculo inscrito sobre GT')}</td><td className="mono">{sample.width_validation.edt_on_gt_median?.toFixed(2) ?? 'n/a'} px</td></tr>
                 <tr><td>{t('orthogonal-profile estimate on GT', 'estimación perfil ortogonal sobre GT')}</td><td className="mono">{sample.width_validation.profile_on_gt_median?.toFixed(2) ?? 'n/a'} px</td></tr>
-                <tr><td>{t('absolute error (inscribed circle)', 'error absoluto (círculo inscrito)')}</td><td className="mono">{sample.width_validation.edt_abs_error?.toFixed(3) ?? 'n/a'} px</td></tr>
+                {sample.width_validation.intensity_on_gt_median != null ? (
+                  <tr><td>{t('intensity sub-pixel FWHM estimate', 'estimación FWHM subpíxel por intensidad')}</td><td className="mono">{sample.width_validation.intensity_on_gt_median.toFixed(2)} px</td></tr>
+                ) : null}
+                <tr><td>{t('absolute error (inscribed circle vs mask width)', 'error absoluto (círculo inscrito vs ancho de máscara)')}</td><td className="mono">{sample.width_validation.edt_abs_error?.toFixed(3) ?? 'n/a'} px</td></tr>
+                {sample.width_validation.intensity_fwhm_abs_error != null ? (
+                  <tr><td>{t('absolute error (intensity vs optical FWHM)', 'error absoluto (intensidad vs FWHM óptico)')}</td><td className="mono">{sample.width_validation.intensity_fwhm_abs_error.toFixed(3)} px</td></tr>
+                ) : null}
               </tbody>
             </table>
           </div>
+          <p className="fs-panel-sub">
+            {t('Two width definitions coexist on purpose: mask-boundary width and optical full-width-at-half-maximum. Each estimator is validated against its own definition; the gap between them is the edge-softness physics, not an error.', 'Dos definiciones de ancho coexisten a propósito: ancho por borde de máscara y ancho óptico a media altura. Cada estimador se valida contra su propia definición; la brecha entre ambas es la física de la suavidad del borde, no un error.')}
+          </p>
+        </div>
+      ) : null}
+
+      {sample.width_mm ? (
+        <div className="fs-kpis">
+          <div className="fs-kpi"><div className="fs-kpi-v">{sample.width_mm.median.toFixed(2)}</div><div className="fs-kpi-l">{t('width median (mm)', 'ancho mediano (mm)')}</div></div>
+          <div className="fs-kpi"><div className="fs-kpi-v">{sample.width_mm.p95.toFixed(2)}</div><div className="fs-kpi-l">{t('width p95 (mm)', 'ancho p95 (mm)')}</div></div>
+          <div className="fs-kpi"><div className="fs-kpi-v">{sample.width_mm.mm_per_px.toFixed(3)}</div><div className="fs-kpi-l">mm/px</div></div>
+          <div className="fs-kpi"><div className="fs-kpi-v">{(sample.geometry.length_px * sample.width_mm.mm_per_px).toFixed(0)}</div><div className="fs-kpi-l">{t('length (mm)', 'largo (mm)')}</div></div>
+        </div>
+      ) : null}
+
+      {sample.severity ? (
+        <div className="fs-panel">
+          <div className="fs-panel-t">{t('Severity CONTEXT: measured width vs published guidance bands', 'CONTEXTO de severidad: ancho medido vs bandas de guías publicadas')}</div>
+          <div className="fs-tablewrap">
+            <table className="fs-table">
+              <thead>
+                <tr><th>{t('Source', 'Fuente')}</th><th>{t('Exposure', 'Exposición')}</th><th className="mono">{t('limit (mm)', 'límite (mm)')}</th><th>{t('median', 'mediana')}</th><th>p95</th></tr>
+              </thead>
+              <tbody>
+                {sample.severity.bands.map((b, i) => (
+                  <tr key={i}>
+                    <td>{b.source}</td>
+                    <td>{b.exposure}</td>
+                    <td className="mono">{b.limit_mm.toFixed(2)}</td>
+                    <td><span className={`fs-badge ${b.median_within ? 'real' : 'tr-monitor'}`}>{b.median_within ? t('within', 'dentro') : t('exceeds', 'excede')}</span></td>
+                    <td><span className={`fs-badge ${b.p95_within ? 'real' : 'tr-monitor'}`}>{b.p95_within ? t('within', 'dentro') : t('exceeds', 'excede')}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {sample.severity.caveats.map((c, i) => (
+            <p key={i} className="fs-panel-sub">{c}</p>
+          ))}
+          <p className="fs-panel-sub"><b>{sample.severity.framing}</b></p>
         </div>
       ) : null}
     </div>
