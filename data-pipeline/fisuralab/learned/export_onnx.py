@@ -42,6 +42,7 @@ def export(arch: str, ckpt: Path, out_dir: Path | None = None, opset: int = 17) 
         output_names=["logits"],
         dynamic_axes={"image": {0: "n", 2: "h", 3: "w"}, "logits": {0: "n", 2: "h", 3: "w"}},
         opset_version=opset,
+        dynamo=False,  # the legacy exporter handles SMP graphs + dynamic axes reliably on torch 2.11
     )
     # parity: torch vs onnxruntime CPU on the same input
     import onnxruntime as ort  # noqa: PLC0415

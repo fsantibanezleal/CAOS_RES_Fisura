@@ -63,10 +63,15 @@ def main() -> None:
 
     for arch in args.archs:
         print(f"=== {arch} ===")
-        rec = train_arch(
-            arch, idx, ckpt_dir, seed=args.seed, max_epochs=args.max_epochs,
-            limit_train=args.limit_train, limit_val=args.limit_val,
-        )
+        rec_path = ckpt_dir / f"{arch}.json"
+        if rec_path.exists() and Path(json.loads(rec_path.read_text(encoding="utf-8"))["checkpoint"]).exists():
+            rec = json.loads(rec_path.read_text(encoding="utf-8"))
+            print(f"[{arch}] resume: checkpoint exists (best val F1@2px {rec['best_val_f1_2px']:.4f}); skipping training")
+        else:
+            rec = train_arch(
+                arch, idx, ckpt_dir, seed=args.seed, max_epochs=args.max_epochs,
+                limit_train=args.limit_train, limit_val=args.limit_val,
+            )
         examples = evaluate_on_examples(arch, Path(rec["checkpoint"]), base / "examples" / arch)
         exp = export(arch, Path(rec["checkpoint"]))
         results["archs"][arch] = {"training": rec, "examples": examples, "onnx": exp}
