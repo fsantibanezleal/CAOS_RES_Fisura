@@ -1,0 +1,116 @@
+{
+ "schema": "fisura.manifest/v1",
+ "case_id": "severity_grading",
+ "category": "quantification-validation",
+ "title": "Severity context: measured widths in mm against ACI 224R-01 and EC2 Table 7.1N bands",
+ "real_or_synthetic": "real",
+ "expected_band": {
+  "metric": "n_severity_records",
+  "min": 3,
+  "max": 6
+ },
+ "engine": {
+  "package": "fisuralab",
+  "version": "0.05.000",
+  "model": "classical ladder L0-L5 (staged S0-S8)"
+ },
+ "params": {
+  "ladder": {
+   "ridge_method": "sato",
+   "sigmas": [
+    1.0,
+    1.5,
+    2.0,
+    3.0
+   ],
+   "flatten_radius": 15,
+   "sauvola_window": 31,
+   "sauvola_k": 0.25,
+   "tophat_length": 15,
+   "hyst_low_pct": 92.0,
+   "hyst_high_pct": 98.5,
+   "max_gap": 20,
+   "rules": {
+    "min_area": 20,
+    "min_eccentricity": 0.85,
+    "max_extent": 0.6
+   }
+  },
+  "train": {
+   "trained": true,
+   "n_samples": 4,
+   "features": "LBP(8,1)+LBP(16,2)+GLCM(contrast,homogeneity,energy,correlation)+HOG",
+   "model": "RandomForestClassifier(n_estimators=120, min_samples_leaf=2)",
+   "seed": 42
+  }
+ },
+ "seed": 42,
+ "artifact": {
+  "path": "severity_grading/artifact.json",
+  "format": "json",
+  "artifact_schema": "fisura.artifact/v1",
+  "bytes": 599171
+ },
+ "lane": "precompute",
+ "gate": {
+  "lane": "precompute",
+  "pure_python": true,
+  "wheels": [
+   "imageio",
+   "numpy",
+   "scikit-image",
+   "scikit-learn",
+   "scipy"
+  ],
+  "trace_bytes": 599171,
+  "run_ms_budget": 1500.0,
+  "trace_bytes_budget": 524288,
+  "reasons": [
+   "wheels not Pyodide-safe: ['imageio', 'scikit-learn']",
+   "runtime exceeds the 1500ms budget",
+   "trace_bytes 599171 > 524288"
+  ]
+ },
+ "flags": [
+  {
+   "sample_id": "bcl-nonsteel-c1",
+   "flags": [
+    "mm_per_px=0.1 is a DEMONSTRATION scale (no real calibration exists for this source imagery)"
+   ]
+  },
+  {
+   "sample_id": "bcl-nonsteel-c10",
+   "flags": [
+    "mm_per_px=0.1 is a DEMONSTRATION scale (no real calibration exists for this source imagery)"
+   ]
+  },
+  {
+   "sample_id": "bcl-steel-s1",
+   "flags": [
+    "mm_per_px=0.1 is a DEMONSTRATION scale (no real calibration exists for this source imagery)"
+   ]
+  },
+  {
+   "sample_id": "bcl-noise-f1",
+   "flags": [
+    "mask: empty (no positive pixels); valid for uncracked samples"
+   ]
+  }
+ ],
+ "metrics": {
+  "protocol": "buffered P/R/F1 at 2 px AND 5 px tolerances; strict IoU; no thinning/NMS",
+  "mean_f1_L0_2px": 0.1079,
+  "mean_f1_L0_5px": 0.1427,
+  "mean_f1_L1_2px": 0.2556,
+  "mean_f1_L1_5px": 0.2857,
+  "mean_f1_L2_2px": 0.5112,
+  "mean_f1_L2_5px": 0.5457,
+  "mean_f1_L3_2px": 0.4229,
+  "mean_f1_L3_5px": 0.4609,
+  "mean_f1_L4_2px": 0.4169,
+  "mean_f1_L4_5px": 0.455,
+  "mean_f1_L5_2px": 0.4696,
+  "mean_f1_L5_5px": 0.5581,
+  "n_severity_records": 3
+ }
+}

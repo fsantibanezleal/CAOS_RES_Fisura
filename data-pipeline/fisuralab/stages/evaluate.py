@@ -11,9 +11,10 @@ from __future__ import annotations
 import numpy as np
 
 from ..io.image_contract import ImageSample
-from ..model.classical import LevelResult
-from ..model.geometry import measure, width_stats
+from ..model.classical import LevelResult, to_gray_float
+from ..model.geometry import intensity_width_stats, measure, width_stats
 from ..model.metrics import evaluate_mask
+from ..model.severity import band_widths
 
 
 def run(case, samples: list[ImageSample], inferred: list[dict[str, LevelResult]]) -> tuple[dict, list[dict]]:
@@ -37,17 +38,39 @@ def run(case, samples: list[ImageSample], inferred: list[dict[str, LevelResult]]
             "orientation_hist": geom.orientation_hist.tolist(),
             "width": width_stats(geom),
         }
+        # physical widths + severity context when a scale exists (never invented)
+        if s.mm_per_px is not None:
+            wsg = rec["geometry"]["width"]
+            if wsg.get("edt_median") is not None:
+                rec["width_mm"] = {
+                    "mm_per_px": s.mm_per_px,
+                    "median": wsg["edt_median"] * s.mm_per_px,
+                    "p95": (wsg["edt_p95"] or wsg["edt_median"]) * s.mm_per_px,
+                }
+                if case.id == "severity_grading" and s.mask is not None and s.mask.any():
+                    rec["severity"] = band_widths(rec["width_mm"]["median"], rec["width_mm"]["p95"])
+
         # width validation against exact synthetic truth
         true_w = getattr(s, "true_width_px", None)
         if true_w is not None and len(true_w) > 0 and s.mask is not None and s.mask.any():
             gt_geom = measure(s.mask)
             ws = width_stats(gt_geom)
+            iw = intensity_width_stats(to_gray_float(s.image), gt_geom)
+            true_med = float(np.median(true_w))
+            # the intensity estimator measures the OPTICAL full width at half maximum, which for the
+            # plateau + Gaussian-shoulder profile is mask width + 2.355 * softness (FWHM identity);
+            # each estimator validates against ITS OWN true definition, and the difference is the lesson
+            softness = float(getattr(s, "params", {}).get("softness", 0.0)) if getattr(s, "params", None) else 0.0
+            true_fwhm = true_med + 2.355 * softness
             rec["width_validation"] = {
-                "true_width_px": float(np.median(true_w)),
+                "true_width_px": true_med,
+                "true_fwhm_px": true_fwhm,
                 "edt_on_gt_median": ws["edt_median"],
                 "profile_on_gt_median": ws["profile_median"],
-                "edt_abs_error": abs(ws["edt_median"] - float(np.median(true_w))) if ws["edt_median"] is not None else None,
-                "profile_abs_error": abs(ws["profile_median"] - float(np.median(true_w))) if ws["profile_median"] is not None else None,
+                "intensity_on_gt_median": iw["intensity_median"],
+                "edt_abs_error": abs(ws["edt_median"] - true_med) if ws["edt_median"] is not None else None,
+                "profile_abs_error": abs(ws["profile_median"] - true_med) if ws["profile_median"] is not None else None,
+                "intensity_fwhm_abs_error": abs(iw["intensity_median"] - true_fwhm) if iw["intensity_median"] is not None else None,
             }
         per_sample.append(rec)
 
@@ -90,6 +113,20 @@ def _case_rollup(case, samples: list[ImageSample], per_sample: list[dict]) -> di
         v = _mean_f1(per_sample, masked_ids, "L4", "tol5px")
         if v is not None:
             out["mean_f1_L4_tol5"] = round(v, 4)
+    if case.id == "width_bench":
+        errs = [
+            r["width_validation"]["intensity_fwhm_abs_error"]
+            for r in per_sample
+            if r.get("width_validation", {}).get("intensity_fwhm_abs_error") is not None
+            and r["width_validation"]["true_width_px"] >= 2.5
+        ]
+        if errs:
+            out["subpx_intensity_fwhm_abs_error_median_px"] = round(float(np.median(errs)), 3)
+        all_int = [r["width_validation"]["intensity_fwhm_abs_error"] for r in per_sample if r.get("width_validation", {}).get("intensity_fwhm_abs_error") is not None]
+        if all_int:
+            out["subpx_intensity_fwhm_abs_error_median_all_px"] = round(float(np.median(all_int)), 3)
+    if case.id == "severity_grading":
+        out["n_severity_records"] = sum(1 for r in per_sample if "severity" in r)
     return out
 
 

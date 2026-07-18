@@ -23,9 +23,11 @@ series); planned cases live in the product plan, not here.
 |---|---|---|---|
 | `bcl_examples` | classical-segmentation | committed CC0/CC BY examples (BCL + SDNET2018) | [bcl_examples.md](bcl_examples.md) |
 | `synthetic_battery` | quantification-validation | generated cracks, exact ground truth | [synthetic_battery.md](synthetic_battery.md) |
+| `width_bench` | quantification-validation | soft-edged bars, sub-px widths, mm calibration | [width_bench.md](width_bench.md) |
+| `severity_grading` | quantification-validation | BCL patches, mm widths vs ACI/EC2 bands | [severity_grading.md](severity_grading.md) |
 
 ## Coverage matrix (shipped / validated plan)
 
-Classical-segmentation 1 of 4 planned; quantification-validation 1 of 2 planned; every other
+Classical-segmentation 1 of 4 planned; quantification-validation 3 shipped (battery, width bench, severity context); every other
 category 0 shipped (engines arrive per unit). The validated 16-case matrix lives in the product
 plan; this table only ever lists what is real.

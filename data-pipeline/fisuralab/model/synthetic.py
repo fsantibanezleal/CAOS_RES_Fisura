@@ -106,11 +106,12 @@ def straight_bar(
     center = center[keep]
     widths = np.full(len(center), float(width_px))
     bg = _texture(rng, (size, size), base=0.62, noise=noise, blotch=blotch)
-    dark, mask = _render_crack((size, size), center, widths, depth=contrast, softness=0.8)
+    softness = 0.8
+    dark, mask = _render_crack((size, size), center, widths, depth=contrast, softness=softness)
     img = np.clip(bg - dark, 0.0, 1.0).astype(np.float32)
     return SyntheticCrack(img, mask, center, widths, params=dict(
         kind="straight_bar", size=size, width_px=width_px, angle_deg=angle_deg,
-        contrast=contrast, noise=noise, blotch=blotch, seed=seed,
+        contrast=contrast, noise=noise, blotch=blotch, seed=seed, softness=softness,
     ))
 
 
@@ -134,10 +135,11 @@ def wavy_crack(
     center = np.stack([rows, np.clip(cols, 2, size - 3)], axis=1)
     widths = width_px * (1.0 + (width_taper - 1.0) * ts)
     bg = _texture(rng, (size, size), base=0.58, noise=noise, blotch=blotch)
-    dark, mask = _render_crack((size, size), center, widths, depth=contrast, softness=0.9)
+    softness = 0.9
+    dark, mask = _render_crack((size, size), center, widths, depth=contrast, softness=softness)
     img = np.clip(bg - dark, 0.0, 1.0).astype(np.float32)
     return SyntheticCrack(img, mask, center, widths, params=dict(
-        kind="wavy_crack", size=size, width_px=width_px, width_taper=width_taper,
+        kind="wavy_crack", softness=softness, size=size, width_px=width_px, width_taper=width_taper,
         amplitude=amplitude, cycles=cycles, contrast=contrast, noise=noise, blotch=blotch, seed=seed,
     ))
 
@@ -163,6 +165,16 @@ def uncracked(
     return SyntheticCrack(img, mask, center, widths, params=dict(
         kind="uncracked", size=size, noise=noise, blotch=blotch, joint=joint, seed=seed,
     ))
+
+
+def battery_subpx(seed: int = 100) -> list[SyntheticCrack]:
+    """The width-bench specimens: soft-edged bars at fine widths (some under 3 px), one angle,
+    constant contrast; the reference set for the intensity-domain sub-pixel estimator."""
+    out: list[SyntheticCrack] = []
+    for i, width in enumerate((1.5, 2.5, 4.0, 6.0)):
+        spec = straight_bar(width_px=width, angle_deg=35.0, contrast=0.35, noise=0.015, blotch=0.02, seed=seed + i)
+        out.append(spec)
+    return out
 
 
 def battery(seed: int = 0) -> list[SyntheticCrack]:

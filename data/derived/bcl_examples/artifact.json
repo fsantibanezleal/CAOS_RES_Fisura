@@ -5760,6 +5760,8 @@
     }
    },
    "width_validation": null,
+   "width_mm": null,
+   "severity": null,
    "overlays_rel": "bcl_examples/overlays/bcl-nonsteel-c1"
   },
   {
@@ -15168,6 +15170,8 @@
     }
    },
    "width_validation": null,
+   "width_mm": null,
+   "severity": null,
    "overlays_rel": "bcl_examples/overlays/bcl-nonsteel-c10"
   },
   {
@@ -22358,6 +22362,8 @@
     }
    },
    "width_validation": null,
+   "width_mm": null,
+   "severity": null,
    "overlays_rel": "bcl_examples/overlays/bcl-steel-s1"
   },
   {
@@ -30474,6 +30480,8 @@
     }
    },
    "width_validation": null,
+   "width_mm": null,
+   "severity": null,
    "overlays_rel": "bcl_examples/overlays/bcl-noise-f1"
   },
   {
@@ -45512,6 +45520,8 @@
     }
    },
    "width_validation": null,
+   "width_mm": null,
+   "severity": null,
    "overlays_rel": "bcl_examples/overlays/sdnet-cp-001-100"
   },
   {
@@ -50462,6 +50472,8 @@
     }
    },
    "width_validation": null,
+   "width_mm": null,
+   "severity": null,
    "overlays_rel": "bcl_examples/overlays/sdnet-up-001-1"
   }
  ]
