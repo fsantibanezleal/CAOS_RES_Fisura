@@ -1,0 +1,91 @@
+{
+ "schema": "fisura.manifest/v1",
+ "case_id": "width_bench",
+ "category": "quantification-validation",
+ "title": "Width bench: sub-pixel estimators vs exact truth, calibrated to mm",
+ "real_or_synthetic": "synthetic",
+ "expected_band": {
+  "metric": "subpx_intensity_fwhm_abs_error_median_px",
+  "min": 0.0,
+  "max": 0.5
+ },
+ "engine": {
+  "package": "fisuralab",
+  "version": "0.05.000",
+  "model": "classical ladder L0-L5 (staged S0-S8)"
+ },
+ "params": {
+  "ladder": {
+   "ridge_method": "sato",
+   "sigmas": [
+    0.8,
+    1.2,
+    2.0,
+    3.0
+   ],
+   "flatten_radius": 21,
+   "sauvola_window": 31,
+   "sauvola_k": 0.25,
+   "tophat_length": 21,
+   "hyst_low_pct": 92.0,
+   "hyst_high_pct": 98.5,
+   "max_gap": 20,
+   "rules": {
+    "min_area": 20,
+    "min_eccentricity": 0.85,
+    "max_extent": 0.6
+   }
+  },
+  "train": {
+   "trained": true,
+   "n_samples": 4,
+   "features": "LBP(8,1)+LBP(16,2)+GLCM(contrast,homogeneity,energy,correlation)+HOG",
+   "model": "RandomForestClassifier(n_estimators=120, min_samples_leaf=2)",
+   "seed": 42
+  }
+ },
+ "seed": 42,
+ "artifact": {
+  "path": "width_bench/artifact.json",
+  "format": "json",
+  "artifact_schema": "fisura.artifact/v1",
+  "bytes": 237247
+ },
+ "lane": "precompute",
+ "gate": {
+  "lane": "precompute",
+  "pure_python": true,
+  "wheels": [
+   "imageio",
+   "numpy",
+   "scikit-image",
+   "scikit-learn",
+   "scipy"
+  ],
+  "trace_bytes": 237247,
+  "run_ms_budget": 1500.0,
+  "trace_bytes_budget": 524288,
+  "reasons": [
+   "wheels not Pyodide-safe: ['imageio', 'scikit-learn']",
+   "runtime exceeds the 1500ms budget"
+  ]
+ },
+ "flags": [],
+ "metrics": {
+  "protocol": "buffered P/R/F1 at 2 px AND 5 px tolerances; strict IoU; no thinning/NMS",
+  "mean_f1_L0_2px": 1.0,
+  "mean_f1_L0_5px": 1.0,
+  "mean_f1_L1_2px": 1.0,
+  "mean_f1_L1_5px": 1.0,
+  "mean_f1_L2_2px": 0.9714,
+  "mean_f1_L2_5px": 1.0,
+  "mean_f1_L3_2px": 0.7322,
+  "mean_f1_L3_5px": 0.9176,
+  "mean_f1_L4_2px": 0.7322,
+  "mean_f1_L4_5px": 0.9176,
+  "mean_f1_L5_2px": 0.6258,
+  "mean_f1_L5_5px": 0.843,
+  "subpx_intensity_fwhm_abs_error_median_px": 0.007,
+  "subpx_intensity_fwhm_abs_error_median_all_px": 0.012
+ }
+}

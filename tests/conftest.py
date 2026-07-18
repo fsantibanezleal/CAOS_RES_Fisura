@@ -20,3 +20,17 @@ def bcl_manifest():
     from fisuralab import pipeline
 
     return pipeline.precompute("bcl_examples")
+
+
+@pytest.fixture(scope="session")
+def width_bench_manifest():
+    from fisuralab import pipeline
+
+    return pipeline.precompute("width_bench")
+
+
+@pytest.fixture(scope="session")
+def severity_manifest():
+    from fisuralab import pipeline
+
+    return pipeline.precompute("severity_grading")

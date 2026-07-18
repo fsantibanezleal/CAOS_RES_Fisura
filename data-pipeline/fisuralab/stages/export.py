@@ -19,7 +19,7 @@ from ..io.image_contract import ImageSample, is_redistributable
 from ..io.image_formats import write_mask
 from ..model.classical import LEVELS, LevelResult, to_gray_float
 
-OVERLAY_SYNTH_IDS = ("synth-02", "synth-04", "synth-08", "synth-11")  # w3 bar, w5 bar, wavy, joint trap
+OVERLAY_SYNTH_IDS = ("synth-02", "synth-04", "synth-08", "synth-11", "subpx-")  # bars, wavy, joint trap, width bench
 
 
 def _overlay_png(path: Path, gray: np.ndarray, mask: np.ndarray) -> None:
@@ -69,6 +69,8 @@ def run(
             "geometry_level": rec["geometry_level"],
             "geometry": rec["geometry"],
             "width_validation": rec.get("width_validation"),
+            "width_mm": rec.get("width_mm"),
+            "severity": rec.get("severity"),
         }
         if want_overlays:
             base = derived / "overlays" / s.sample_id

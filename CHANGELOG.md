@@ -3,6 +3,25 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.05.000], 2026-07-18
+
+### Added
+- The quantification flagship: pixel-to-mm calibration (known reference object + pure-numpy DLT
+  homography with Hartley normalization and local width mapping; standoff GSD route documented,
+  never computed from invented parameters), and severity CONTEXT from published guidance (ACI
+  224R-01 tolerable-width table and EN 1992-1-1 Table 7.1N as data with their caveats first-class:
+  the ACI corrosion warning, the National-Annex dependence, the flagged XC1-row ambiguity; every
+  output states "reference bands, not a structural safety verdict").
+- Intensity-domain sub-pixel width estimator (half-depth crossings with linear interpolation),
+  validated against the correct optical definition: on the soft-edge generator the FWHM identity
+  is optical = mask + 2.355 x softness, and the estimator lands within 0.007 px median of it.
+- Cases `width_bench` (three estimators, each vs its own true definition; mm via a demonstration
+  scale) and `severity_grading` (BCL mm percentiles vs the bands; demonstration scale explicitly
+  flagged in the manifest), both band-gated.
+- Workbench: mm KPI row, the estimator-definition validation table, and the severity band table
+  with per-band within/exceeds badges for median and p95 plus the caveats rendered verbatim.
+- Docs: width-bench and severity case docs, the calibration guide (06).
+
 ## [0.04.000], 2026-07-18
 
 ### Added

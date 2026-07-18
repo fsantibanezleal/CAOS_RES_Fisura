@@ -42,10 +42,36 @@ export interface GeometryRecord {
 
 export interface WidthValidation {
   true_width_px: number;
+  true_fwhm_px?: number;
   edt_on_gt_median: number | null;
   profile_on_gt_median: number | null;
+  intensity_on_gt_median?: number | null;
   edt_abs_error: number | null;
   profile_abs_error: number | null;
+  intensity_fwhm_abs_error?: number | null;
+}
+
+export interface WidthMm {
+  mm_per_px: number;
+  median: number;
+  p95: number;
+}
+
+export interface SeverityBandRow {
+  source: string;
+  exposure: string;
+  limit_mm: number;
+  note: string;
+  median_within: boolean;
+  p95_within: boolean;
+}
+
+export interface SeverityRecord {
+  width_mm_median: number;
+  width_mm_p95: number;
+  bands: SeverityBandRow[];
+  caveats: string[];
+  framing: string;
 }
 
 export interface LevelRecord {
@@ -68,6 +94,8 @@ export interface ArtifactSample {
   geometry_level: string;
   geometry: GeometryRecord;
   width_validation: WidthValidation | null;
+  width_mm?: WidthMm | null;
+  severity?: SeverityRecord | null;
   overlays_rel?: string;               // derived/<case>/overlays/<sample_id> prefix (redistributable only)
 }
 

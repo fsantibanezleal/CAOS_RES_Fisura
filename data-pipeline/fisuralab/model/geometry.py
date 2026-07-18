@@ -171,6 +171,90 @@ def measure(mask: np.ndarray, junction_radius: int = 3, skeleton_method: str = "
     )
 
 
+def _bilinear(img: np.ndarray, rr: float, cc: float) -> float:
+    r0, c0 = int(rr), int(cc)
+    fr, fc = rr - r0, cc - c0
+    return float(
+        img[r0, c0] * (1 - fr) * (1 - fc)
+        + img[r0 + 1, c0] * fr * (1 - fc)
+        + img[r0, c0 + 1] * (1 - fr) * fc
+        + img[r0 + 1, c0 + 1] * fr * fc
+    )
+
+
+def profile_width_intensity(
+    gray: np.ndarray,
+    point: tuple[int, int],
+    tangent: float,
+    max_half: float = 12.0,
+    bg_margin: float = 3.0,
+) -> float:
+    """Sub-pixel crack width from the INTENSITY profile (half-depth crossings, linear interpolation).
+
+    Casts the normal to the local tangent on the grayscale image, estimates local background as the
+    median intensity beyond (half-width + margin) on both sides, takes the profile minimum as the
+    crack floor, and finds the two half-depth crossings with linear interpolation between samples.
+    Genuinely sub-pixel because it reads the image signal, not a binary mask; degrades when depth
+    is under about 3 times the noise sigma (returns NaN when no meaningful depth exists).
+    """
+    normal = np.array([np.cos(tangent), -np.sin(tangent)])
+    step = 0.25
+    ts = np.arange(-max_half, max_half + step, step)
+    h, w = gray.shape
+    samples = []
+    for t in ts:
+        rr = point[0] + t * normal[0]
+        cc = point[1] + t * normal[1]
+        if not (0 <= rr < h - 1 and 0 <= cc < w - 1):
+            return float("nan")
+        samples.append(_bilinear(gray, rr, cc))
+    prof = np.asarray(samples)
+    center = len(ts) // 2
+    floor_idx = int(np.argmin(prof[center - int(2 / step) : center + int(2 / step) + 1])) + center - int(2 / step)
+    floor = prof[floor_idx]
+    tails = np.concatenate([prof[: int(bg_margin / step)], prof[-int(bg_margin / step) :]])
+    bg = float(np.median(tails))
+    depth = bg - floor
+    if depth < 0.03:  # no meaningful crack signal on this profile
+        return float("nan")
+    half_level = bg - depth / 2.0
+
+    def crossing(direction: int) -> float:
+        i = floor_idx
+        while 0 < i < len(prof) - 1:
+            j = i + direction
+            if prof[j] >= half_level:
+                # linear interpolation between i (below) and j (at/above)
+                frac = (half_level - prof[i]) / max(prof[j] - prof[i], 1e-12)
+                return abs((ts[i] + frac * (ts[j] - ts[i])))
+            i = j
+        return float("nan")
+
+    a = crossing(+1)
+    b = crossing(-1)
+    if np.isnan(a) or np.isnan(b):
+        return float("nan")
+    return float(a + b)
+
+
+def intensity_width_stats(gray: np.ndarray, geom: CrackGeometry) -> dict:
+    """Intensity-domain sub-pixel widths over the junction-excluded skeleton points (NaN-aware)."""
+    tangents = _local_tangents(geom.skeleton)
+    vals = []
+    for r, c in geom.widths.points:
+        wv = profile_width_intensity(gray, (int(r), int(c)), tangents.get((int(r), int(c)), 0.0))
+        if not np.isnan(wv):
+            vals.append(wv)
+    if not vals:
+        return {"n_points": 0, "intensity_median": None, "intensity_p95": None}
+    arr = np.asarray(vals)
+    return {
+        "n_points": int(len(arr)),
+        "intensity_median": float(np.median(arr)),
+        "intensity_p95": float(np.percentile(arr, 95)),
+    }
+
+
 def width_stats(geom: CrackGeometry) -> dict:
     """Robust summary of the dual width estimators (px), NaN-aware; empty-safe."""
     w1, w2 = geom.widths.width_edt, geom.widths.width_profile
