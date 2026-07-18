@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fisura</title>
+    <script>
+      // GitHub Pages serves 404.html for unknown deep links. Capture the intended path and bounce to the
+      // SPA root, where main.tsx restores it before the router mounts (sessionStorage key fs-redirect).
+      (function () {
+        try {
+          sessionStorage.setItem('fs-redirect', location.pathname + location.search + location.hash);
+        } catch (e) {}
+        var base = location.pathname.indexOf('/') === 0 ? '/' : './';
+        location.replace(base);
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>

@@ -1,0 +1,131 @@
+/* Fisura app styles on top of the shared design-system tokens (@fasl-work/caos-app-shell). The shell
+   ships the --color-* tokens, the header/footer chrome, Tabs/SubTabs, Equation, Cite/Refs and the theme
+   mechanism; this file adds the workbench layout, the pill chip (the shell does NOT ship .chip), panels,
+   badges, tables, and the doc-page prose. Light AND dark via tokens. Ported from the validated
+   RotorVitals/ChronoScope/ImageLab visual language, not reinvented. */
+
+/* ---- method-track semantic tones (the lab's spine: 7 tracks, used by badges + the track strip) ---- */
+:root {
+  --fs-classical: #2f81f7;  /* classical pipelines: deterministic, transparent */
+  --fs-learned: #2da44e;    /* trained segmentation/classification */
+  --fs-foundation: #8250df; /* promptable / frozen-feature foundation models */
+  --fs-anomaly: #d4a72c;    /* unsupervised anomaly detection */
+  --fs-multiclass: #bf3989; /* multi-class structural damage */
+  --fs-quantify: #1b7c83;   /* measurement: width, length, severity (the flagship) */
+  --fs-monitor: #cf222e;    /* change over time + deformation */
+  --fs-neutral: #6e7781;
+}
+:root[data-theme='dark'],
+.dark {
+  --fs-classical: #58a6ff;
+  --fs-learned: #3fb950;
+  --fs-foundation: #bc8cff;
+  --fs-anomaly: #e3b341;
+  --fs-multiclass: #ff7bc6;
+  --fs-quantify: #39c5cf;
+  --fs-monitor: #ff7b72;
+  --fs-neutral: #8b949e;
+}
+
+/* ---- validated pill chip ---- */
+.chip {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-fg-subtle);
+  border-radius: 999px;
+  padding: 0.3rem 0.72rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.chip:hover { color: var(--color-fg); border-color: var(--color-fg-faint); }
+.chip.on { background: var(--color-accent); color: var(--color-accent-fg); border-color: transparent; font-weight: 600; }
+.chip:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ---- workbench layout: sticky control sidebar + reactive main (the App page) ---- */
+.fs-layout { display: grid; grid-template-columns: 320px 1fr; gap: 1.5rem; align-items: start; }
+@media (max-width: 920px) { .fs-layout { grid-template-columns: 1fr; } }
+.fs-controls { display: flex; flex-direction: column; gap: 0.8rem; position: sticky; top: 0.5rem; }
+.fs-ctl { display: flex; flex-direction: column; gap: 0.28rem; font-size: 0.82rem; color: var(--color-fg-subtle); }
+.fs-ctl .range { width: 100%; }
+.fs-ctl-row { display: flex; justify-content: space-between; align-items: baseline; }
+.fs-ctl-row b { font-family: var(--font-mono); color: var(--color-fg); font-weight: 700; }
+.fs-sel { background: var(--color-surface); color: var(--color-fg); border: 1px solid var(--color-border); border-radius: 6px; padding: 0.25rem 0.4rem; font-size: 0.82rem; width: 100%; }
+.fs-main { display: flex; flex-direction: column; gap: 0.8rem; min-width: 0; }
+.fs-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+
+/* ---- panels ---- */
+.fs-panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; padding: 0.7rem 0.85rem; }
+.fs-panel-t { font-size: 0.84rem; color: var(--color-fg-subtle); margin-bottom: 0.45rem; font-weight: 600; }
+.fs-panel-sub { font-size: 0.74rem; color: var(--color-fg-faint); margin-bottom: 0.5rem; }
+
+/* ---- KPI strip ---- */
+.fs-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; }
+@media (max-width: 560px) { .fs-kpis { grid-template-columns: repeat(2, 1fr); } }
+.fs-kpi { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; padding: 0.5rem 0.6rem; text-align: center; }
+.fs-kpi-v { font-family: var(--font-mono); font-size: 1.25rem; font-weight: 700; color: var(--color-fg); line-height: 1.1; }
+.fs-kpi-l { font-size: 0.68rem; color: var(--color-fg-subtle); margin-top: 0.15rem; }
+
+/* ---- provenance + track badges ---- */
+.fs-badge { display: inline-block; padding: 0.12rem 0.5rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; border: 1px solid transparent; letter-spacing: 0.03em; }
+.fs-badge.live { background: color-mix(in oklab, var(--fs-classical) 20%, transparent); color: var(--fs-classical); border-color: color-mix(in oklab, var(--fs-classical) 45%, transparent); }
+.fs-badge.replay { background: color-mix(in oklab, var(--fs-neutral) 22%, transparent); color: var(--color-fg-subtle); border-color: var(--color-border); }
+.fs-badge.real { background: color-mix(in oklab, var(--fs-learned) 20%, transparent); color: var(--fs-learned); border-color: color-mix(in oklab, var(--fs-learned) 45%, transparent); }
+.fs-badge.todo { background: color-mix(in oklab, var(--fs-neutral) 14%, transparent); color: var(--color-fg-faint); border-color: var(--color-border); }
+.fs-badge.building { background: color-mix(in oklab, var(--fs-anomaly) 18%, transparent); color: var(--fs-anomaly); border-color: color-mix(in oklab, var(--fs-anomaly) 42%, transparent); }
+/* per-track tones */
+.fs-badge.tr-classical { background: color-mix(in oklab, var(--fs-classical) 18%, transparent); color: var(--fs-classical); border-color: color-mix(in oklab, var(--fs-classical) 42%, transparent); }
+.fs-badge.tr-learned { background: color-mix(in oklab, var(--fs-learned) 18%, transparent); color: var(--fs-learned); border-color: color-mix(in oklab, var(--fs-learned) 42%, transparent); }
+.fs-badge.tr-foundation { background: color-mix(in oklab, var(--fs-foundation) 18%, transparent); color: var(--fs-foundation); border-color: color-mix(in oklab, var(--fs-foundation) 42%, transparent); }
+.fs-badge.tr-anomaly { background: color-mix(in oklab, var(--fs-anomaly) 18%, transparent); color: var(--fs-anomaly); border-color: color-mix(in oklab, var(--fs-anomaly) 42%, transparent); }
+.fs-badge.tr-multiclass { background: color-mix(in oklab, var(--fs-multiclass) 18%, transparent); color: var(--fs-multiclass); border-color: color-mix(in oklab, var(--fs-multiclass) 42%, transparent); }
+.fs-badge.tr-quantify { background: color-mix(in oklab, var(--fs-quantify) 18%, transparent); color: var(--fs-quantify); border-color: color-mix(in oklab, var(--fs-quantify) 42%, transparent); }
+.fs-badge.tr-monitor { background: color-mix(in oklab, var(--fs-monitor) 18%, transparent); color: var(--fs-monitor); border-color: color-mix(in oklab, var(--fs-monitor) 42%, transparent); }
+
+/* ---- data tables ---- */
+.fs-table { border-collapse: collapse; width: 100%; font-size: 0.82rem; }
+.fs-table th { text-align: left; border-bottom: 1px solid var(--color-border); padding: 0.35rem 0.5rem; color: var(--color-fg-subtle); font-weight: 600; }
+.fs-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid color-mix(in oklab, var(--color-border) 45%, transparent); }
+.fs-table td.mono { font-family: var(--font-mono); }
+.fs-tablewrap { width: 100%; overflow-x: auto; }
+
+/* charts / canvases must never overflow the page */
+.fs-chart { width: 100%; overflow-x: auto; }
+.fs-canvas { image-rendering: pixelated; max-width: 100%; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); }
+
+/* ---- doc-page prose (Introduction / Methodology / Implementation / Experiments / Benchmark) ---- */
+.fs-doc { max-width: 60rem; margin: 0 auto; }
+.fs-doc h1 { font-size: 1.7rem; line-height: 1.2; margin: 0.2rem 0 0.4rem; }
+.fs-doc h2 { font-size: 1.2rem; margin: 1.8rem 0 0.5rem; padding-top: 0.4rem; border-top: 1px solid color-mix(in oklab, var(--color-border) 60%, transparent); }
+.fs-doc h3 { font-size: 1rem; margin: 1.1rem 0 0.35rem; color: var(--color-fg); }
+.fs-doc p, .fs-doc li { color: var(--color-fg-subtle); line-height: 1.62; }
+.fs-doc .fs-lead { font-size: 1.08rem; color: var(--color-fg); }
+.fs-doc code { font-family: var(--font-mono); font-size: 0.86em; background: color-mix(in oklab, var(--color-fg-subtle) 12%, transparent); padding: 0.05rem 0.3rem; border-radius: 4px; }
+.fs-doc a { color: var(--color-accent); }
+.fs-kicker { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.72rem; color: var(--color-fg-faint); font-weight: 600; }
+
+/* ---- the track strip: the 7 method tracks as a coloured ladder (Introduction) ---- */
+.fs-tracks { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.5rem; margin: 1rem 0; }
+.fs-tr-cell { border: 1px solid var(--color-border); border-top: 3px solid var(--tone, var(--fs-neutral)); border-radius: 8px; padding: 0.55rem 0.6rem; background: var(--color-surface); }
+.fs-tr-cell .n { font-size: 0.72rem; color: var(--color-fg-faint); font-family: var(--font-mono); }
+.fs-tr-cell .t { font-size: 0.86rem; font-weight: 600; color: var(--color-fg); margin: 0.15rem 0; }
+.fs-tr-cell .d { font-size: 0.72rem; color: var(--color-fg-subtle); line-height: 1.4; }
+
+/* ---- case grid (App landing + Experiments) ---- */
+.fs-cases { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0.6rem; margin: 0.8rem 0; }
+.fs-case { border: 1px solid var(--color-border); border-left: 3px solid var(--tone, var(--fs-neutral)); border-radius: 8px; padding: 0.55rem 0.65rem; background: var(--color-surface); }
+.fs-case .id { font-family: var(--font-mono); font-size: 0.7rem; color: var(--color-fg-faint); }
+.fs-case .t { font-size: 0.86rem; font-weight: 600; color: var(--color-fg); margin: 0.12rem 0; }
+.fs-case .d { font-size: 0.73rem; color: var(--color-fg-subtle); line-height: 1.4; margin-bottom: 0.35rem; }
+
+/* segmented control */
+.fs-seg { display: inline-flex; border: 1px solid var(--color-border); border-radius: 7px; overflow: hidden; flex-wrap: wrap; }
+.fs-seg button { background: transparent; border: none; padding: 0.3rem 0.62rem; font-size: 0.76rem; color: var(--color-fg-subtle); cursor: pointer; }
+.fs-seg button.on { background: var(--color-accent); color: var(--color-accent-fg); font-weight: 600; }
+.fs-seg button:not(.on):hover { color: var(--color-fg); }
+
+.range { width: 100%; }
+
+/* under-construction note (honest, while engines are being wired in) */
+.fs-wip { border: 1px dashed var(--color-border); border-radius: 10px; padding: 0.8rem 1rem; background: color-mix(in oklab, var(--fs-classical) 6%, transparent); color: var(--color-fg-subtle); font-size: 0.86rem; }
+.fs-wip b { color: var(--color-fg); }
