@@ -3,6 +3,25 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.03.000], 2026-07-18
+
+### Added
+- The real CONTRACT 1 for the image domain (`io/image_contract.py`): image + optional binary mask +
+  optional mm-per-px scale + material/source/license metadata, with hard-reject rules, soft flags
+  (near-constant image, suspicious mask coverage, tiny masks) and the redistribution boundary
+  (`is_redistributable`). Numpy-only core so the browser live lane reuses the exact validation.
+- Standard-format IO (`io/image_formats.py`): PNG/JPG readers, mask IO, float conversion, and the
+  committed-examples manifest loader.
+- Curated committed example set (`data/examples/`): 4 Bridge Crack Library patches with pixel masks
+  (CC0; concrete, steel, and an uncracked control) and 2 SDNET2018 patches (CC BY 4.0; cracked and
+  uncracked), each attributed in `manifest.json`; CI validates every example through CONTRACT 1.
+- `scripts/fetch-data.ps1` + `.sh`: idempotent acquisition of every direct-download dataset the lab
+  uses (Dataverse, S3, Zenodo, Mendeley API, GitHub, Kaggle mirrors, Drive), rooted at
+  `FISURA_DATA_ROOT`; gated sets documented as manual steps.
+- `data/README.md` rewritten as the dataset registry: license, retrieval and redistribution ruling
+  per source; the bring-your-own-data guide updated to the image contract.
+- Tests: contract validation paths + committed examples through the gate (7 new tests).
+
 ## [0.02.000], 2026-07-18
 
 ### Added
