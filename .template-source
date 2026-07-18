@@ -1,9 +1,0 @@
-This file marks the ARCHETYPE TEMPLATE source repo (ADR-0057 / ADR-0061).
-
-While it is present, scripts/check_template_residue.py is a no-op: the example lab
-(data-pipeline/fisuralab, the SIR model, the EX0* baked cases) is intentional here so
-a fresh clone runs end to end.
-
-INSTANTIATION MUST DELETE THIS FILE. Once it is gone, the residue guard enforces that
-no template example lab or placeholder text survives in the real product repo. See the
-README "Instantiate" steps.

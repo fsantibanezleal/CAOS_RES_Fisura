@@ -12,5 +12,5 @@ Otherwise the case is **precompute**: the offline pipeline bakes the artifact an
 a committed artifact always exists, so the site replays instantly on first paint (ADR-0054).
 
 The verdict + the measured numbers are written into the manifest (`gate` field) and CI fails if `manifest.lane`
-disagrees with the gate, so a heavy model can never be mislabeled "live". The EXAMPLE SIR case is pure-Python +
+disagrees with the gate, so a heavy model can never be mislabeled "live". The classical cases are pure-Python +
 numpy + small ⇒ classified `live`.

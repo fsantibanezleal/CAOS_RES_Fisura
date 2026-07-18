@@ -3,6 +3,41 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.04.000], 2026-07-18
+
+### Added
+- The classical engine (the anchor slice): staged S0-S8 pipeline composed into ladder L0-L5
+  (global-Otsu floor; flatten + Sauvola; oriented black-top-hat + hysteresis; NLM + multiscale
+  ridge sato/frangi/meijering; endpoint minimal-path bridging; LBP+GLCM+HOG random-forest fusion),
+  all numpy/scipy/scikit-image, Pyodide-safe by design.
+- The quantification core: dual width estimators (inscribed-circle 2xEDT at the skeleton vs
+  orthogonal profiles with sub-pixel crossings; disagreement as a per-point quality flag, junction
+  neighbourhoods excluded), skeleton length, orientation histograms, branch/endpoint topology.
+- The dual-tolerance evaluation harness: buffered P/R/F1 at BOTH 2 px and 5 px with the protocol
+  string attached to every record, plus strict IoU.
+- The synthetic validation battery (12 specimens, exact ground truth): the version-pinning
+  regression gate (expected bands fail the pipeline; unit tests fail a bare scikit-image upgrade).
+  Measured: L3 clean-bar mean F1@5px 0.952; width estimator median error 0.172 px.
+- Two shipped cases with committed artifacts (RLE masks + metrics + geometry + overlays):
+  `bcl_examples` (real CC0/CC BY imagery; honest per-patch spread, mean L4 F1@5px 0.455) and
+  `synthetic_battery`; CONTRACT 2 schemas fisura.manifest/artifact v1 with the TS mirror + RLE
+  decoder; the live-lane entrypoint (`live.py`) over the same model code.
+- The App workbench: case + sample selectors, the L0-L5 variant bar, Field canvas with client-side
+  RLE overlays (prediction/ground-truth/overlap), interactive uPlot charts (dual-protocol F1 per
+  level, orientation histogram), width KPI tiles, deep bilingual Context write-ups.
+- Docs: classical-stack framework card (pins + the version-sensitivity discipline), case docs with
+  measured behaviour, case taxonomy README.
+
+### Changed
+- Percentile hysteresis + shape rules recalibrated on real imagery (flatten without contrast
+  renormalization; permissive rules on large components); BCL example masks inverted once at
+  curation from the source's black-on-white convention (recorded in the case doc).
+- CI pipeline smoke now regenerates `synthetic_battery`.
+
+### Removed
+- The archetype's SIR example engine, its cases, baked artifacts and the `.template-source`
+  sentinel: the template-residue guard is now ARMED and CI-enforced.
+
 ## [0.03.000], 2026-07-18
 
 ### Added
@@ -37,7 +72,7 @@ while on mock/synthetic data. Tag every release.
 - Screenshot verification: all six pages captured light + dark (plus ES sanity), zero console errors.
 
 ### Removed
-- SIR frontend residue (App.tsx, SIRChart, Pyodide stub wired to the example engine); the SIR
+- SIR frontend residue (the example App view, its chart component, the Pyodide stub wired to the example engine); the SIR
   pipeline engine itself remains until the classical-ladder unit replaces it.
 
 ## [0.01.000], 2026-07-18

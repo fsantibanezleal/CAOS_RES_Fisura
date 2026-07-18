@@ -5,3 +5,7 @@
 # torch here, each PINNED to the version it installs+verifies.
 numpy==2.4.6
 imageio==2.37.2         # image IO for CONTRACT 1 (image domain), PNG/JPG readers in io/image_formats.py
+scipy==1.18.0           # ndimage, EDT, minimal paths (classical ladder + geometry)
+scikit-image==0.26.0    # PINNED: ridge filters carry version sensitivity; synthetic-bar battery gates upgrades
+scikit-learn==1.9.0     # L5 patch random forest (LBP+GLCM+HOG fusion)
+PyWavelets==1.9.0       # skimage estimate_sigma dependency (NLM denoise); wavelet stage later
