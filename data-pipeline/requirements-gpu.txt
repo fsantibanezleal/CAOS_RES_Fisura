@@ -1,10 +1,11 @@
 # GPU lane (LOCAL ONLY, never installed by CI): the learned-track training stack on the RTX 4070.
 # Install AFTER data-pipeline/requirements.txt:
-#   .venv-pipeline/Scripts/python -m pip install torch --index-url https://download.pytorch.org/whl/cu124
+#   .venv-pipeline/Scripts/python -m pip install torch --index-url https://download.pytorch.org/whl/cu128
 #   .venv-pipeline/Scripts/python -m pip install -r data-pipeline/requirements-gpu.txt
 # The learned modules import torch lazily and every training test skips without CUDA, so the
 # committed artifacts (baked locally) are what CI validates; CI never trains.
-torch>=2.6                     # via the cu124 index above (pin resolved by the index)
+torch==2.11.0                  # via the cu128 index above (2.11.0+cu128 verified on the 4070, 2026-07-18)
 segmentation-models-pytorch==0.5.0   # MIT; U-Net / DeepLabV3+ / SegFormer with timm encoders
 onnx==1.20.0                   # export graph format
 onnxruntime==1.23.2            # export verification (CPU EP is enough to check parity)
+onnxscript==0.7.1            # torch 2.11 dynamo ONNX exporter dependency
