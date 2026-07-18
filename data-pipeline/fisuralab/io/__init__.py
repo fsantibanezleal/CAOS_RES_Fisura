@@ -1,2 +1,2 @@
-"""I/O boundary: the ingestion data contract (contract.py), standard-format readers/writers (formats.py), and the
-typed objects passed between stages (schema.py)."""
+"""I/O boundary: the image ingestion contract (image_contract.py, CONTRACT 1), image readers/writers +
+examples manifest (image_formats.py), and small JSON helpers (formats.py)."""

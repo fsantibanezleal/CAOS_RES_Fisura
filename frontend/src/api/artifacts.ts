@@ -1,6 +1,6 @@
 // Fetch the committed artifacts (copied into public/data by copy-data.mjs). Works against the static site OR,
 // if app/ is activated, you can repoint these to the API, same shapes (CONTRACT 2).
-import type { CaseIndex, CaseManifest, Trace } from '../lib/contract.types';
+import type { CaseArtifact, CaseIndex, CaseManifest } from '../lib/contract.types';
 
 const base = import.meta.env.BASE_URL;
 
@@ -13,4 +13,9 @@ async function getJSON<T>(rel: string): Promise<T> {
 export const loadIndex = (): Promise<CaseIndex> => getJSON<CaseIndex>('manifests/index.json');
 export const loadManifest = (caseId: string): Promise<CaseManifest> =>
   getJSON<CaseManifest>(`manifests/${caseId}.json`);
-export const loadTrace = (artifactPath: string): Promise<Trace> => getJSON<Trace>(artifactPath);
+export const loadArtifact = (artifactPath: string): Promise<CaseArtifact> =>
+  getJSON<CaseArtifact>(artifactPath);
+
+/** URL of a committed overlay PNG (redistributable imagery only). */
+export const overlayUrl = (overlaysRel: string, suffix: string): string =>
+  `${base}data/${overlaysRel}${suffix}`;

@@ -3,7 +3,7 @@
 1. **Copy** the template tree into the new product repo (its own git repo; code-repo flow `task/* -> develop -> main`).
    Then **delete the `.template-source` sentinel file at the repo root.** This arms
    `scripts/check_template_residue.py` (a CI guard): from now on the build FAILS if any example lab or
-   placeholder text survives, so you cannot ship SIR/EX0* residue by accident.
+   placeholder text survives, so you cannot ship example-lab residue by accident.
 2. **Rename** the package `fisuralab` -> `<slug>lab` (the folder + all imports + `pyproject.toml`
    `[tool.setuptools.packages.find].where`/name + the scripts' `-m fisuralab.pipeline` + docs).
 3. **Replace the EXAMPLE engine**: `<slug>lab/model/` + the bodies of `stages/{preprocess,feature_extraction,train,

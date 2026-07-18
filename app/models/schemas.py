@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 class ArtifactRef(BaseModel):
     path: str
     format: str
-    trace_schema: str
+    artifact_schema: str
     bytes: int
 
 

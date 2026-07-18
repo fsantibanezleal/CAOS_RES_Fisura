@@ -78,6 +78,8 @@ export interface PlannedCase {
 }
 
 export const PLANNED_CASES: PlannedCase[] = [
+  { id: 'bcl_examples', track: 'classical', status: 'replay', en: 'BCL examples workbench', es: 'Banco de ejemplos BCL', data_en: 'Committed CC0/CC BY patches through ladder L0-L5; live in the App', data_es: 'Parches CC0/CC BY versionados por la escalera L0-L5; vivo en la App' },
+  { id: 'synthetic_battery', track: 'quantify', status: 'replay', en: 'Synthetic validation battery', es: 'Batería sintética de validación', data_en: 'Exact ground truth: ladder regression gate + width-estimator accuracy', data_es: 'Ground truth exacto: compuerta de regresión de la escalera + exactitud de estimadores de ancho' },
   { id: 'asphalt-cfd', track: 'classical', status: 'todo', en: 'Asphalt: CFD anchors', es: 'Asfalto: anclas CFD', data_en: 'CrackForest CFD; the published classical ladder floor-to-ceiling', data_es: 'CrackForest CFD; la escalera clásica publicada de piso a techo' },
   { id: 'pavement-crack500', track: 'classical', status: 'todo', en: 'Pavement: Crack500', es: 'Pavimento: Crack500', data_en: 'Crack500; classical vs learned, the protocol-duality exhibit', data_es: 'Crack500; clásico vs aprendido, la exhibición de dualidad de protocolo' },
   { id: 'concrete-deepcrack537', track: 'classical', status: 'todo', en: 'Concrete: DeepCrack-537', es: 'Hormigón: DeepCrack-537', data_en: 'Mixed surfaces; thin-structure loss ablations', data_es: 'Superficies mixtas; ablaciones de pérdidas para estructuras finas' },

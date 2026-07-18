@@ -7,35 +7,36 @@ from __future__ import annotations
 from typing import Any
 
 from .. import __version__
-from .trace import TRACE_SCHEMA
+from .artifact import ARTIFACT_SCHEMA
 
-MANIFEST_SCHEMA = "example.manifest/v2"
-INDEX_SCHEMA = "example.index/v1"
+MANIFEST_SCHEMA = "fisura.manifest/v1"
+INDEX_SCHEMA = "fisura.index/v1"
 
 
 def build_case_manifest(
     *,
     case: Any,
-    params: Any,
+    params: dict,
     seed: int,
     artifact_rel: str,
-    trace_bytes: int,
+    artifact_bytes: int,
     gate: dict,
     flags: list[dict],
     metrics: dict,
 ) -> dict:
-    # Deterministic: a pure function of (params, seed). No wall-clock here (would dirty git on re-run), the
+    # Deterministic: a pure function of (params, seed). No wall-clock here (would dirty git on re-run); the
     # lane/gate verdict + budgets carry the lane decision; live timing is measured in the browser, not committed.
     return {
         "schema": MANIFEST_SCHEMA,
         "case_id": case.id,
         "category": case.category,
+        "title": case.title,
         "real_or_synthetic": case.real_or_synthetic,
         "expected_band": case.expected_band,
-        "engine": {"package": "fisuralab", "version": __version__, "model": "SIR (EXAMPLE, replace per product)"},
-        "params": {"beta": params.beta, "gamma": params.gamma, "N": params.N, "I0": params.I0, "days": params.days},
+        "engine": {"package": "fisuralab", "version": __version__, "model": "classical ladder L0-L5 (staged S0-S8)"},
+        "params": params,
         "seed": seed,
-        "artifact": {"path": artifact_rel, "format": "json", "trace_schema": TRACE_SCHEMA, "bytes": trace_bytes},
+        "artifact": {"path": artifact_rel, "format": "json", "artifact_schema": ARTIFACT_SCHEMA, "bytes": artifact_bytes},
         "lane": gate["lane"],
         "gate": gate,
         "flags": flags,

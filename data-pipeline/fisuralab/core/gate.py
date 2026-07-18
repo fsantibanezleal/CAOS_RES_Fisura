@@ -4,9 +4,9 @@ PRECOMPUTE and the SPA replays the committed artifact. The verdict + the measure
 and CI fails on mislabeling. This is a MEASUREMENT, never a hand-wave."""
 from __future__ import annotations
 
-LIVE_WHEELS: set[str] = {"numpy"}   # the Pyodide-safe wheel set the live lane is allowed to import
+LIVE_WHEELS: set[str] = {"numpy", "scipy", "scikit-image"}  # Pyodide-safe wheels the live lane may import
 RUN_MS_GATE = 1500.0                 # a live run must complete well within an interaction budget
-TRACE_BYTES_GATE = 256 * 1024        # a live/replay artifact must stay small
+TRACE_BYTES_GATE = 512 * 1024        # a live/replay artifact must stay small (RLE masks + metrics)
 
 
 def classify_lane(*, pure_python: bool, wheels: set[str], run_ms: float, trace_bytes: int) -> dict:

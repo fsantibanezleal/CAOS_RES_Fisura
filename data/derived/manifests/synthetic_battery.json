@@ -1,0 +1,105 @@
+{
+ "schema": "fisura.manifest/v1",
+ "case_id": "synthetic_battery",
+ "category": "quantification-validation",
+ "title": "Synthetic crack battery: exact ground truth for ladder + width validation",
+ "real_or_synthetic": "synthetic",
+ "expected_band": {
+  "metric": "mean_f1_L3_tol5_clean_bars",
+  "min": 0.8,
+  "max": 1.0
+ },
+ "engine": {
+  "package": "fisuralab",
+  "version": "0.04.000",
+  "model": "classical ladder L0-L5 (staged S0-S8)"
+ },
+ "params": {
+  "ladder": {
+   "ridge_method": "sato",
+   "sigmas": [
+    1.0,
+    2.0,
+    3.0,
+    4.5
+   ],
+   "flatten_radius": 21,
+   "sauvola_window": 31,
+   "sauvola_k": 0.25,
+   "tophat_length": 21,
+   "hyst_low_pct": 92.0,
+   "hyst_high_pct": 98.5,
+   "max_gap": 20,
+   "rules": {
+    "min_area": 20,
+    "min_eccentricity": 0.85,
+    "max_extent": 0.6
+   }
+  },
+  "train": {
+   "trained": true,
+   "n_samples": 12,
+   "features": "LBP(8,1)+LBP(16,2)+GLCM(contrast,homogeneity,energy,correlation)+HOG",
+   "model": "RandomForestClassifier(n_estimators=120, min_samples_leaf=2)",
+   "seed": 42
+  }
+ },
+ "seed": 42,
+ "artifact": {
+  "path": "synthetic_battery/artifact.json",
+  "format": "json",
+  "artifact_schema": "fisura.artifact/v1",
+  "bytes": 1069769
+ },
+ "lane": "precompute",
+ "gate": {
+  "lane": "precompute",
+  "pure_python": true,
+  "wheels": [
+   "imageio",
+   "numpy",
+   "scikit-image",
+   "scikit-learn",
+   "scipy"
+  ],
+  "trace_bytes": 1069769,
+  "run_ms_budget": 1500.0,
+  "trace_bytes_budget": 524288,
+  "reasons": [
+   "wheels not Pyodide-safe: ['imageio', 'scikit-learn']",
+   "runtime exceeds the 1500ms budget",
+   "trace_bytes 1069769 > 524288"
+  ]
+ },
+ "flags": [
+  {
+   "sample_id": "synth-10-uncracked",
+   "flags": [
+    "mask: empty (no positive pixels); valid for uncracked samples"
+   ]
+  },
+  {
+   "sample_id": "synth-11-uncracked",
+   "flags": [
+    "mask: empty (no positive pixels); valid for uncracked samples"
+   ]
+  }
+ ],
+ "metrics": {
+  "protocol": "buffered P/R/F1 at 2 px AND 5 px tolerances; strict IoU; no thinning/NMS",
+  "mean_f1_L0_2px": 0.9147,
+  "mean_f1_L0_5px": 0.9196,
+  "mean_f1_L1_2px": 0.9,
+  "mean_f1_L1_5px": 0.9,
+  "mean_f1_L2_2px": 0.9899,
+  "mean_f1_L2_5px": 1.0,
+  "mean_f1_L3_2px": 0.7793,
+  "mean_f1_L3_5px": 0.9443,
+  "mean_f1_L4_2px": 0.7793,
+  "mean_f1_L4_5px": 0.9443,
+  "mean_f1_L5_2px": 0.6221,
+  "mean_f1_L5_5px": 0.8067,
+  "mean_f1_L3_tol5_clean_bars": 0.9521,
+  "width_edt_abs_error_median_px": 0.172
+ }
+}

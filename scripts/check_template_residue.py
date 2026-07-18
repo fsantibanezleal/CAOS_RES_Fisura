@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fail an INSTANTIATED product repo that still ships template residue (ADR-0057 / ADR-0061).
 
-The archetype template ships an intentional example lab (`data-pipeline/fisuralab/`, an SIR model,
+The archetype template ships an intentional example lab (`data-pipeline/examplelab/`, an SIR model,
 `EX0*` baked cases) so a fresh clone runs end to end. Instantiation is supposed to REPLACE all of
 it with the real product; five shipped products proved that replacement is easy to forget, leaving
 SIR/Pyodide/EX0* text presented as product docs. This guard makes that structurally impossible.
@@ -27,7 +27,7 @@ SELF = {"scripts/check_template_residue.py", "scripts/.template_residue_allow"}
 # Tracked PATHS that must not exist in an instantiated product (the example lab + its baked cases +
 # known scaffold residue). Matched as substring on the path or a suffix for extensions.
 FORBIDDEN_PATH_SUBSTR = (
-    "data-pipeline/fisuralab/",
+    "data-pipeline/examplelab/",
     "data/derived/EX01_subcritical",
     "data/derived/EX02_epidemic",
     "data/derived/EX03_fast_burn",
@@ -46,7 +46,7 @@ FORBIDDEN_PATH_NAME = (
 # Tracked TEXT content that must not survive instantiation (unambiguous template tokens only;
 # generic capability words like "Pyodide" are intentionally NOT listed, a product may truly use it).
 FORBIDDEN_CONTENT = (
-    "fisuralab",
+    "examplelab",
     "SIRChart",
     "CAOS product template",
     "PENDING-training",
@@ -119,7 +119,7 @@ def main() -> int:
         print(f"  forbidden file: {p}")
     for rel, token in sorted(content_hits):
         print(f"  forbidden text: {rel}  (contains '{token}')")
-    print("\nReplace the example lab (data-pipeline/fisuralab -> your product's lab), rebake the real")
+    print("\nReplace the example lab (data-pipeline/examplelab -> your product's lab), rebake the real")
     print("cases, and purge the placeholder text. If a hit is a false positive, add a path fragment to")
     print("scripts/.template_residue_allow. This guard is skipped only in the template (.template-source).")
     return 1

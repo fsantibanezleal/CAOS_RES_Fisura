@@ -8,7 +8,7 @@ A product is only real if data flows through two **enforced** contracts. Both ar
 reason**, never silently coerced; suspicious-but-plausible rows are flagged (the flag is recorded in the
 manifest). This is what lets a third party point the tool at THEIR data instead of only replaying baked cases.
 
-EXAMPLE (SIR): columns `case_id,beta,gamma,N,I0[,days]`; ranges per `RANGES`; reject NaN/Inf/out-of-range/`I0>N`;
+Image domain: image + optional binary mask + optional mm-per-px + material/source/license metadata; hard rejects with reasons;
 flag `R0>20`. Full table: [`data/README.md`](../../data/README.md).
 
 ## CONTRACT 2, artifact (`pipeline → web`)
