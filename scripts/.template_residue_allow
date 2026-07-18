@@ -1,3 +1,6 @@
 # Path fragments exempt from scripts/check_template_residue.py (one per line, '#' comments ignored).
 # A fragment matches if it appears anywhere in a tracked file's path. Keep this list tiny and
 # justified — it exists for the rare genuine collision, not to silence real residue.
+# architecture.ts.txt: the ADR-0058 modal base shipped by the template; consumed (renamed to
+# architecture.ts) by the arch-modal unit BL-014, which also removes this entry.
+frontend/src/architecture.ts.txt

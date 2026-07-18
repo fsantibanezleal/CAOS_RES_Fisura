@@ -4,9 +4,10 @@
 [![License](https://img.shields.io/github/license/fsantibanezleal/CAOS_RES_Fisura)](LICENSE)
 [![Version](https://img.shields.io/github/v/tag/fsantibanezleal/CAOS_RES_Fisura?label=version&sort=semver)](https://github.com/fsantibanezleal/CAOS_RES_Fisura/tags)
 
-> **Status: under active construction.** The repository is instantiated from the CAOS product-repo
-> archetype and currently still carries the archetype's reference engine while the crack-detection
-> engines are wired in, one vertical unit at a time (code + tests + deep docs per unit). Build tracker:
+> **Status: under active construction.** The classical engine is real (staged S0-S8 pipeline,
+> ladder L0-L5, dual-tolerance evaluation, synthetic regression battery, two replayable cases in
+> the workbench); the learned, foundation, anomaly, multi-class, monitoring and DIC units land one
+> vertical slice at a time (code + tests + deep docs per unit). Build tracker:
 > [issue #1](https://github.com/fsantibanezleal/CAOS_RES_Fisura/issues/1). Live demo (planned):
 > `fisura.fasl-work.com`.
 

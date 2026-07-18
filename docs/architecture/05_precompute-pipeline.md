@@ -7,7 +7,7 @@
 | preprocess | `stages/preprocess.py` | read raw → apply **CONTRACT 1** (validate + outlier policy) |
 | feature_extraction | `stages/feature_extraction.py` | validated params → feature rows |
 | train | `stages/train.py` | fit the model → `models/` (OFFLINE; skippable; EXAMPLE = numpy lstsq surrogate) |
-| infer | `stages/infer.py` | run the engine → trace (EXAMPLE = SIR) |
+| infer | `stages/infer.py` | run the ladder L0-L5 over every sample |
 | evaluate | `stages/evaluate.py` | held-out, leakage-safe metrics (R²/RMSE) |
 | export | `stages/export.py` | **CONTRACT 2**, compact artifact + manifest |
 

@@ -1,27 +1,18 @@
-"""Standard-format readers/writers. EXAMPLE: CSV in (params), JSON out (compact committed artifact). A real product
-adds the formats its domain demands here (parquet/npz/.vtk/.vtu/.h5/GeoTIFF), never a bespoke ad-hoc format."""
+"""Small JSON helpers shared by the pipeline (standard formats; image IO lives in image_formats)."""
 from __future__ import annotations
 
-import csv
 import json
 from pathlib import Path
-from typing import Any
 
 
-def read_csv_rows(path: str | Path) -> list[dict[str, str]]:
-    with open(path, newline="", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
-
-
-def write_json(path: str | Path, obj: Any) -> int:
-    """Write compact JSON; return the byte size (used by the gate + manifest)."""
+def write_json(path: str | Path, payload: dict) -> int:
+    """Write deterministic, diff-friendly JSON; returns the byte size on disk."""
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    data = json.dumps(obj, separators=(",", ":"), ensure_ascii=False)
-    encoded = data.encode("utf-8")
-    p.write_bytes(encoded)
-    return len(encoded)
+    text = json.dumps(payload, indent=1, sort_keys=False, ensure_ascii=False)
+    p.write_text(text + "\n", encoding="utf-8")
+    return p.stat().st_size
 
 
-def read_json(path: str | Path) -> Any:
+def read_json(path: str | Path) -> dict:
     return json.loads(Path(path).read_text(encoding="utf-8"))

@@ -1,35 +1,28 @@
-"""Stage 3, train (OFFLINE): fit a tiny surrogate (numpy least-squares) mapping R0 -> peak-infected fraction,
-using the SIR engine as ground truth on the TRAINING params. Saves coeffs to models/surrogate.json. Skippable for
-products with no learned tier. (EXAMPLE, a real product trains its research-chosen model here, exporting ONNX.)"""
+"""Stage 3, train: the L5 patch classifier (LBP + GLCM + HOG, random forest).
+
+Trained deterministically on the MASKED samples of the case at hand (the committed examples in CI;
+the fetched vault datasets in full local runs, same function). The trained model is used in-process
+by infer; vault-scale runs may persist it locally (models/ is git-ignored for binaries by the base
+guards, and the manifest records the training provenance instead).
+"""
 from __future__ import annotations
 
-import math
-from pathlib import Path
-
-import numpy as np
-
-from ..io.formats import write_json
-from ..io.schema import SIRParams
-from ..model.sir import simulate
+from ..io.image_contract import ImageSample
+from ..model.classical import train_patch_rf
 
 
-def _design(r0: float) -> list[float]:
-    r0 = max(1e-6, r0)
-    return [1.0, r0, math.log(r0), 1.0 / r0]
-
-
-def run(train_params: list[SIRParams], models_dir: str) -> dict:
-    X, y = [], []
-    for p in train_params:
-        r0 = (p.beta / p.gamma) if p.gamma > 0 else 1e-6
-        X.append(_design(r0))
-        y.append((simulate(p).peak_I / p.N) if p.N > 0 else 0.0)
-    coeffs, _res, _rank, _sv = np.linalg.lstsq(np.array(X), np.array(y), rcond=None)
-    model = {"kind": "linear-lstsq", "basis": ["1", "r0", "ln(r0)", "1/r0"], "coeffs": coeffs.tolist()}
-    Path(models_dir).mkdir(parents=True, exist_ok=True)
-    write_json(Path(models_dir) / "surrogate.json", model)
-    return model
-
-
-def predict(model: dict, r0: float) -> float:
-    return float(np.dot(np.array(model["coeffs"]), np.array(_design(r0))))
+def run(samples: list[ImageSample], seed: int):
+    """Returns (rf, provenance dict). rf is None when no masked samples exist (L5 then unavailable)."""
+    labelled = [s for s in samples if s.mask is not None]
+    if not labelled:
+        return None, {"trained": False, "reason": "no masked samples in this case"}
+    rf = train_patch_rf([s.image for s in labelled], [s.mask for s in labelled], seed=seed)
+    if rf is None:
+        return None, {"trained": False, "reason": "single-class patch labels; L5 unavailable"}
+    return rf, {
+        "trained": True,
+        "n_samples": len(labelled),
+        "features": "LBP(8,1)+LBP(16,2)+GLCM(contrast,homogeneity,energy,correlation)+HOG",
+        "model": "RandomForestClassifier(n_estimators=120, min_samples_leaf=2)",
+        "seed": seed,
+    }

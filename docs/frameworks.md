@@ -6,5 +6,5 @@ engine the research prescribed.
 
 - [00, card TEMPLATE](frameworks/00_TEMPLATE.md), copy per engine to `frameworks/<NN>_<tool>/<tool>.md`
 
-*(The template's EXAMPLE engine is numpy-only SIR, so it ships no SOTA card. A real product adds e.g.
+*(The classical stack card is 01; further engine cards land with their units, e.g.
 `01_yade/`, `02_ortools/`, `03_mintpy/`, `04_torch/`.)*

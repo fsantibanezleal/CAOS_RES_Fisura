@@ -8,7 +8,7 @@ Rename `fisuralab` → `<slug>lab` per product. The **single source of physics/a
 - `fisuralab/registry.py`, cases grouped by CATEGORY · `fisuralab/live.py`, Pyodide live entrypoint
 - `fisuralab/io/`, `contract.py` (**CONTRACT 1**) · `formats.py` (standard readers/writers) · `schema.py` (types)
 - `fisuralab/core/`, `rng.py` (seeded determinism) · `trace.py` · `manifest.py` (**CONTRACT 2**) · `gate.py`
-- `fisuralab/model/`, the shared pure-Python core (Pyodide-safe); EXAMPLE = SIR
+- `fisuralab/model/`, the shared pure-Python core (Pyodide-safe): classical primitives + ladder, geometry, metrics, synthetic generators
 - `fisuralab/stages/`, `preprocess → feature_extraction → train → infer → evaluate → export`
 - `fisuralab/cases/`, documented cases
 
