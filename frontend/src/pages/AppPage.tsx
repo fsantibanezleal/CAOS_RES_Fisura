@@ -328,7 +328,7 @@ function ContextView({ caseId, es }: { caseId: string; es: boolean }) {
         <p>
           {t(
             'Generated cracks are the only place where ground truth is EXACT: the centerline, the mask and the width are known by construction. That makes this case the regression gate of the whole classical stack (the pinned scientific-Python versions must reproduce these scores) and the reference for the dual width estimators (the inscribed-circle estimator lands within about 0.2 px of the true width here).',
-            'Las grietas generadas son el único lugar donde el ground truth es EXACTO: la línea central, la máscara y el ancho se conocen por construcción. Eso convierte este caso en la compuerta de regresión de todo el stack clásico (las versiones fijadas de Python científico deben reproducir estos puntajes) y en la referencia de los dos estimadores de ancho (el estimador de círculo inscrito cae a unos 0.2 px del ancho verdadero aquí).',
+            'Las grietas generadas son el único lugar donde el ground truth es exacto: la línea central, la máscara y el ancho se conocen por construcción. Eso convierte este caso en la compuerta de regresión de todo el stack clásico (las versiones fijadas de Python científico deben reproducir estos puntajes) y en la referencia de los dos estimadores de ancho (el estimador de círculo inscrito cae a unos 0.2 px del ancho verdadero aquí).',
           )}
         </p>
         <p>
