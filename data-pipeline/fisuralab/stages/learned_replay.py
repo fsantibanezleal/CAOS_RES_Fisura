@@ -138,6 +138,7 @@ def run(*, case, seed: int, derived_dir: str, manifests_dir: str) -> dict:
         gate=gate,
         flags=flags,
         metrics=metrics,
+        engine_model="learned ladder A (SMP U-Net r18, DeepLabV3+ r18, SegFormer mit_b2), replayed from the GPU run",
     )
     write_json(Path(manifests_dir) / f"{case.id}.json", manifest)
     return manifest

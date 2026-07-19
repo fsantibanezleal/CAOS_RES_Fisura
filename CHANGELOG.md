@@ -3,6 +3,25 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.06.000], 2026-07-18
+
+### Added
+- Learned ladder A, trained in-repo on the local RTX 4070 (the research recipe: 512 reflect-padded
+  crops, flip/rot90, batch 6 x 2 accumulation, AdamW 3e-4 cosine, AMP, BCE(pos_weight 8) + Dice,
+  early stop on val F1 at the STRICT 2 px protocol, seeded): SMP U-Net resnet18 (val F1@2px 0.752,
+  11.6 min), DeepLabV3+ resnet18 (0.720, 13.0 min) and SegFormer mit_b2 (0.766, 24.5 min) on a
+  3,000-image CrackSeg9k subset (9,159 pairs indexed; the full-data rerun is the same command
+  without the limit and re-bakes the case).
+- Case `learned_on_examples`: the three trained architectures replayed on the SAME committed
+  patches as the classical ladder, same harness, same workbench. Measured: examples mean F1@5px
+  0.681 (DeepLabV3+) / 0.653 (SegFormer) / 0.486 (U-Net) vs the classical ladder's 0.455: the
+  learned advantage on hard real patches, quantified on identical pixels.
+- ONNX exports with CPU-parity verification and sha256 recorded in the manifest (49 to 99 MB, in
+  the local model vault; the live-lane unit later commits the one compact browser model).
+- The GPU lane (`data-pipeline/requirements-gpu.txt`, torch 2.11 cu128 + SMP + onnxscript) is
+  local-only: all torch imports are lazy, training tests skip without CUDA, and the pipeline bakes
+  the learned case torch-free from the persisted run record (CI unchanged).
+
 ## [0.05.000], 2026-07-18
 
 ### Added

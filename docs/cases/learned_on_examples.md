@@ -30,10 +30,20 @@ python -m fisuralab.learned.run_ladder_a            # trains, evaluates, exports
 python -m fisuralab.pipeline learned_on_examples     # bakes the replay artifact (torch-free)
 ```
 
+## Measured results (first bake, 2026-07-18; 3,000-image subset, seed 42)
+
+| Architecture | CrackSeg9k val F1@2px | Examples mean F1@5px | Train minutes | ONNX |
+|---|---|---|---|---|
+| SegFormer mit_b2 | **0.766** | 0.653 | 24.5 | 99.4 MB, parity OK |
+| U-Net resnet18 | 0.752 | 0.486 | 11.6 | 56 MB class, parity OK |
+| DeepLabV3+ resnet18 | 0.720 | **0.681** | 13.0 | 49.3 MB, parity OK |
+
+The research's honest pattern, now measured on identical pixels: every learned architecture beats
+the classical ladder's 0.455 mean on the hard committed patches (DeepLabV3+ by 22 points), and the
+best-on-val model is not the best-on-examples model, the plain transfer lesson. The classical
+ladder still wins on transparency and CPU cost; both facts live in the same workbench.
+
 ## Reading the workbench
 
 The variant bar shows the three architectures instead of L0-L5; the Charts view scores them at
-both tolerances against the same ground truth as the classical case. Expected honest pattern per
-the research: the learned models generalize far better on the hard patches (the wide diffuse crack,
-the scratched steel) than the classical ladder, at the price of GPU training and opaque failure
-modes; the numbers on this page are the evidence either way.
+both tolerances against the same ground truth as the classical case.
