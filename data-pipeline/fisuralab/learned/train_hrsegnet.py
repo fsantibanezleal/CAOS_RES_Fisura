@@ -25,6 +25,54 @@ from .hrsegnet import build_hrsegnet
 from .shards import data_root, ensure_crackseg9k_index, read_image_mask
 
 
+class HrSegDataset:
+    """Module-level (Windows-spawn picklable) dataset with the paper's augmentation."""
+
+    def __init__(self, recs, train, seed):
+        self.recs, self.train, self.seed = recs, train, seed
+
+    def __len__(self):
+        return len(self.recs)
+
+    def __getitem__(self, i):
+        import numpy as np  # noqa: PLC0415
+        import torch  # noqa: PLC0415
+
+        rng = np.random.default_rng(self.seed * 7 + i)
+        img, mask = read_image_mask(self.recs[i])
+        g = img.astype(np.float32) / 255.0 if img.dtype == np.uint8 else img.astype(np.float32)
+        if g.ndim == 2:
+            g = np.stack([g, g, g], axis=-1)
+        m = mask
+        if self.train:
+            s = float(rng.uniform(0.5, 2.0))
+            from skimage.transform import resize as _resize  # noqa: PLC0415
+
+            hh, ww = max(8, int(g.shape[0] * s)), max(8, int(g.shape[1] * s))
+            g = _resize(g, (hh, ww), order=1, preserve_range=True, anti_aliasing=s < 1).astype(np.float32)
+            m = _resize(m.astype(np.float32), (hh, ww), order=0, preserve_range=True) > 0.5
+            ph, pw = max(0, 400 - g.shape[0]), max(0, 400 - g.shape[1])
+            if ph or pw:
+                g = np.pad(g, ((0, ph), (0, pw), (0, 0)), mode="reflect")
+                m = np.pad(m, ((0, ph), (0, pw)), mode="reflect")
+            r = int(rng.integers(0, g.shape[0] - 400 + 1))
+            c = int(rng.integers(0, g.shape[1] - 400 + 1))
+            g, m = g[r : r + 400, c : c + 400], m[r : r + 400, c : c + 400]
+            if rng.random() < 0.5:
+                g, m = g[:, ::-1], m[:, ::-1]
+            jitter = 1.0 + rng.uniform(-0.5, 0.5)
+            g = np.clip(g * jitter, 0, 1)
+        else:
+            ph, pw = max(0, 400 - g.shape[0]), max(0, 400 - g.shape[1])
+            if ph or pw:
+                g = np.pad(g, ((0, ph), (0, pw), (0, 0)), mode="reflect")
+                m = np.pad(m, ((0, ph), (0, pw)), mode="reflect")
+            g, m = g[:400, :400], m[:400, :400]
+        x = torch.from_numpy(np.ascontiguousarray(np.transpose(g, (2, 0, 1))))
+        y = torch.from_numpy(np.ascontiguousarray(m.astype(np.int64)))
+        return x, y
+
+
 def _miou_2class(pred: np.ndarray, gt: np.ndarray) -> float:
     ious = []
     for cls in (False, True):
@@ -37,7 +85,7 @@ def _miou_2class(pred: np.ndarray, gt: np.ndarray) -> float:
 def main() -> None:
     import torch  # noqa: PLC0415
     from torch import nn  # noqa: PLC0415
-    from torch.utils.data import DataLoader, Dataset  # noqa: PLC0415
+    from torch.utils.data import DataLoader  # noqa: PLC0415
 
     ap = argparse.ArgumentParser(prog="fisuralab.learned.train_hrsegnet")
     ap.add_argument("--base", type=int, default=16, choices=(16, 32, 48))
@@ -54,51 +102,9 @@ def main() -> None:
     index = json.loads(Path(idx_path).read_text(encoding="utf-8"))
     train_recs, val_recs = index["train"], index["val"][: args.limit_val]
 
-    class DS(Dataset):
-        def __init__(self, recs, train):
-            self.recs, self.train = recs, train
 
-        def __len__(self):
-            return len(self.recs)
-
-        def __getitem__(self, i):
-            rng = np.random.default_rng(args.seed * 7 + i)
-            img, mask = read_image_mask(self.recs[i])
-            g = img.astype(np.float32) / 255.0 if img.dtype == np.uint8 else img.astype(np.float32)
-            if g.ndim == 2:
-                g = np.stack([g, g, g], axis=-1)
-            m = mask
-            if self.train:
-                # random resize 0.5-2.0 then random 400 crop (reflect-pad if short)
-                s = float(rng.uniform(0.5, 2.0))
-                from skimage.transform import resize as _resize  # noqa: PLC0415
-
-                hh, ww = max(8, int(g.shape[0] * s)), max(8, int(g.shape[1] * s))
-                g = _resize(g, (hh, ww), order=1, preserve_range=True, anti_aliasing=s < 1).astype(np.float32)
-                m = _resize(m.astype(np.float32), (hh, ww), order=0, preserve_range=True) > 0.5
-                ph, pw = max(0, 400 - g.shape[0]), max(0, 400 - g.shape[1])
-                if ph or pw:
-                    g = np.pad(g, ((0, ph), (0, pw), (0, 0)), mode="reflect")
-                    m = np.pad(m, ((0, ph), (0, pw)), mode="reflect")
-                r = int(rng.integers(0, g.shape[0] - 400 + 1))
-                c = int(rng.integers(0, g.shape[1] - 400 + 1))
-                g, m = g[r : r + 400, c : c + 400], m[r : r + 400, c : c + 400]
-                if rng.random() < 0.5:
-                    g, m = g[:, ::-1], m[:, ::-1]
-                jitter = 1.0 + rng.uniform(-0.5, 0.5)
-                g = np.clip(g * jitter, 0, 1)
-            else:
-                ph, pw = max(0, 400 - g.shape[0]), max(0, 400 - g.shape[1])
-                if ph or pw:
-                    g = np.pad(g, ((0, ph), (0, pw), (0, 0)), mode="reflect")
-                    m = np.pad(m, ((0, ph), (0, pw)), mode="reflect")
-                g, m = g[:400, :400], m[:400, :400]
-            x = torch.from_numpy(np.ascontiguousarray(np.transpose(g, (2, 0, 1))))
-            y = torch.from_numpy(np.ascontiguousarray(m.astype(np.int64)))
-            return x, y
-
-    dl_train = DataLoader(DS(train_recs, True), batch_size=args.batch, shuffle=True, num_workers=2, pin_memory=True, persistent_workers=True, drop_last=True)
-    dl_val = DataLoader(DS(val_recs, False), batch_size=args.batch, shuffle=False, num_workers=2, pin_memory=True, persistent_workers=True)
+    dl_train = DataLoader(HrSegDataset(train_recs, True, args.seed), batch_size=args.batch, shuffle=True, num_workers=2, pin_memory=True, persistent_workers=True, drop_last=True)
+    dl_val = DataLoader(HrSegDataset(val_recs, False, args.seed), batch_size=args.batch, shuffle=False, num_workers=2, pin_memory=True, persistent_workers=True)
 
     model = build_hrsegnet(base=args.base).to(device)
     opt = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
