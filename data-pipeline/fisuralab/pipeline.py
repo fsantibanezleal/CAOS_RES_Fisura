@@ -27,6 +27,10 @@ STAGES = ("preprocess", "feature_extraction", "train", "infer", "evaluate", "exp
 def precompute(case_id: str, seed: int | None = None) -> dict:
     case = registry.get_case(case_id)
     seed = case.seed if seed is None else seed
+    if getattr(case, "engine", "classical") == "learned_replay":
+        from .stages import learned_replay  # noqa: PLC0415
+
+        return learned_replay.run(case=case, seed=seed, derived_dir=str(DERIVED), manifests_dir=str(MANIFESTS))
     t0 = time.perf_counter()
 
     samples, flags = preprocess.run(case)

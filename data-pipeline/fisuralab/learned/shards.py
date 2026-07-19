@@ -30,25 +30,31 @@ def data_root() -> Path:
 
 
 def find_crackseg9k_pairs(root: Path | None = None) -> list[tuple[Path, Path]]:
-    """Locate image/mask pairs in the extracted CrackSeg9k volumes (searched, not hardcoded)."""
+    """Locate image/mask pairs in the extracted CrackSeg9k volumes.
+
+    Observed layout (Dataverse v4, extracted 2026-07-18): images under ``Final-Dataset-Vol1/Images``
+    and ``Final-Dataset-Vol2/Images-2``; every mask (both volumes) under
+    ``Final-Dataset-Vol1/Final_Masks/Masks`` with matching stems ("Heads" holds DINO attention maps,
+    ignored). The search is by directory NAME PATTERN so a re-download keeps working.
+    """
     base = (root or data_root()) / "raw" / "crackseg9k" / "extracted"
     if not base.exists():
         return []
-    img_dirs = [d for d in base.rglob("*") if d.is_dir() and d.name.lower() in ("images", "image", "img")]
+    img_dirs = [d for d in base.rglob("*") if d.is_dir() and d.name.lower().startswith("images")]
+    mask_dirs = [d for d in base.rglob("*") if d.is_dir() and d.name.lower() == "masks"]
+    masks_by_stem: dict[str, Path] = {}
+    for mdir in mask_dirs:
+        for m in mdir.iterdir():
+            if m.suffix.lower() in (".png", ".jpg", ".bmp"):
+                masks_by_stem.setdefault(m.stem, m)
     pairs: list[tuple[Path, Path]] = []
     for idir in img_dirs:
-        for mname in ("masks", "mask", "labels", "label"):
-            mdir = idir.parent / mname
-            if mdir.exists():
-                for img in sorted(idir.iterdir()):
-                    if img.suffix.lower() not in (".jpg", ".jpeg", ".png"):
-                        continue
-                    for ext in (".png", ".jpg", ".bmp"):
-                        m = mdir / (img.stem + ext)
-                        if m.exists():
-                            pairs.append((img, m))
-                            break
-                break
+        for img in sorted(idir.iterdir()):
+            if img.suffix.lower() not in (".jpg", ".jpeg", ".png"):
+                continue
+            m = masks_by_stem.get(img.stem)
+            if m is not None:
+                pairs.append((img, m))
     return pairs
 
 

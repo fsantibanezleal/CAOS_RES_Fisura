@@ -23,6 +23,7 @@ def build_case_manifest(
     gate: dict,
     flags: list[dict],
     metrics: dict,
+    engine_model: str = "classical ladder L0-L5 (staged S0-S8)",
 ) -> dict:
     # Deterministic: a pure function of (params, seed). No wall-clock here (would dirty git on re-run); the
     # lane/gate verdict + budgets carry the lane decision; live timing is measured in the browser, not committed.
@@ -33,7 +34,7 @@ def build_case_manifest(
         "title": case.title,
         "real_or_synthetic": case.real_or_synthetic,
         "expected_band": case.expected_band,
-        "engine": {"package": "fisuralab", "version": __version__, "model": "classical ladder L0-L5 (staged S0-S8)"},
+        "engine": {"package": "fisuralab", "version": __version__, "model": engine_model},
         "params": params,
         "seed": seed,
         "artifact": {"path": artifact_rel, "format": "json", "artifact_schema": ARTIFACT_SCHEMA, "bytes": artifact_bytes},

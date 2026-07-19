@@ -1,0 +1,130 @@
+{
+ "schema": "fisura.manifest/v1",
+ "case_id": "learned_on_examples",
+ "category": "learned-segmentation",
+ "title": "Learned ladder A on the committed examples (U-Net, DeepLabV3+, SegFormer-B2)",
+ "real_or_synthetic": "real",
+ "expected_band": {
+  "metric": "best_val_f1_2px",
+  "min": 0.45,
+  "max": 1.0
+ },
+ "engine": {
+  "package": "fisuralab",
+  "version": "0.06.000",
+  "model": "learned ladder A (SMP U-Net r18, DeepLabV3+ r18, SegFormer mit_b2), replayed from the GPU run"
+ },
+ "params": {
+  "ladder_a": {
+   "deeplabv3p_r18": {
+    "arch": "deeplabv3p_r18",
+    "seed": 42,
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "n_train": 3000,
+    "n_val": 400,
+    "crop": 512,
+    "batch": 6,
+    "accum": 2,
+    "loss": "BCE(pos_weight=8) + Dice",
+    "optimizer": "AdamW 3e-4 cosine",
+    "amp": true,
+    "best_val_f1_2px": 0.7198770848485208,
+    "best_epoch": 6,
+    "epochs_run": 8,
+    "train_minutes": 13.0,
+    "checkpoint": "E:\\_Datos\\fisura\\derived\\learned\\checkpoints\\deeplabv3p_r18.pt",
+    "history": "see ladder_a_results.json"
+   },
+   "segformer_b2": {
+    "arch": "segformer_b2",
+    "seed": 42,
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "n_train": 3000,
+    "n_val": 400,
+    "crop": 512,
+    "batch": 6,
+    "accum": 2,
+    "loss": "BCE(pos_weight=8) + Dice",
+    "optimizer": "AdamW 3e-4 cosine",
+    "amp": true,
+    "best_val_f1_2px": 0.7657785520353293,
+    "best_epoch": 5,
+    "epochs_run": 8,
+    "train_minutes": 24.5,
+    "checkpoint": "E:\\_Datos\\fisura\\derived\\learned\\checkpoints\\segformer_b2.pt",
+    "history": "see ladder_a_results.json"
+   },
+   "unet_r18": {
+    "arch": "unet_r18",
+    "seed": 42,
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "n_train": 3000,
+    "n_val": 400,
+    "crop": 512,
+    "batch": 6,
+    "accum": 2,
+    "loss": "BCE(pos_weight=8) + Dice",
+    "optimizer": "AdamW 3e-4 cosine",
+    "amp": true,
+    "best_val_f1_2px": 0.7523092806753621,
+    "best_epoch": 7,
+    "epochs_run": 8,
+    "train_minutes": 11.6,
+    "checkpoint": "E:\\_Datos\\fisura\\derived\\learned\\checkpoints\\unet_r18.pt",
+    "history": "see ladder_a_results.json"
+   }
+  }
+ },
+ "seed": 42,
+ "artifact": {
+  "path": "learned_on_examples/artifact.json",
+  "format": "json",
+  "artifact_schema": "fisura.artifact/v1",
+  "bytes": 98157
+ },
+ "lane": "precompute",
+ "gate": {
+  "lane": "precompute",
+  "pure_python": false,
+  "wheels": [
+   "segmentation-models-pytorch",
+   "torch"
+  ],
+  "trace_bytes": 98157,
+  "run_ms_budget": 1500.0,
+  "trace_bytes_budget": 524288,
+  "reasons": [
+   "not pure-python",
+   "wheels not Pyodide-safe: ['segmentation-models-pytorch', 'torch']",
+   "runtime exceeds the 1500ms budget"
+  ]
+ },
+ "flags": [
+  {
+   "sample_id": "-",
+   "flags": [
+    "learned masks replayed from the local GPU run recorded in ladder_a_results.json (seed, recipe, ONNX hashes in this manifest's metrics)"
+   ]
+  }
+ ],
+ "metrics": {
+  "protocol": "buffered P/R/F1 at 2 px AND 5 px tolerances; strict IoU; no thinning/NMS",
+  "deeplabv3p_r18_val_f1_2px": 0.7199,
+  "deeplabv3p_r18_examples_mean_f1_5px": 0.6813,
+  "deeplabv3p_r18_onnx_sha256": "8100c058caaf3866",
+  "deeplabv3p_r18_train_minutes": 13.0,
+  "segformer_b2_val_f1_2px": 0.7658,
+  "segformer_b2_examples_mean_f1_5px": 0.6526,
+  "segformer_b2_onnx_sha256": "7b4679737f2506be",
+  "segformer_b2_train_minutes": 24.5,
+  "unet_r18_val_f1_2px": 0.7523,
+  "unet_r18_examples_mean_f1_5px": 0.4855,
+  "unet_r18_onnx_sha256": "9fe3320373785b58",
+  "unet_r18_train_minutes": 11.6,
+  "best_arch_val": "segformer_b2",
+  "best_val_f1_2px": 0.7658
+ }
+}

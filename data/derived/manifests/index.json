@@ -1,12 +1,17 @@
 {
  "schema": "fisura.index/v1",
- "engine_version": "0.05.000",
- "n_cases": 4,
+ "engine_version": "0.06.000",
+ "n_cases": 5,
  "cases": [
   {
    "case_id": "bcl_examples",
    "category": "classical-segmentation",
    "manifest_path": "manifests/bcl_examples.json"
+  },
+  {
+   "case_id": "learned_on_examples",
+   "category": "learned-segmentation",
+   "manifest_path": "manifests/learned_on_examples.json"
   },
   {
    "case_id": "severity_grading",
