@@ -93,6 +93,7 @@ def main() -> None:
     ap.add_argument("--batch", type=int, default=16)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--limit-val", type=int, default=400)
+    ap.add_argument("--workers", type=int, default=0)  # 0 = in-process (Windows-safe default)
     args = ap.parse_args()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -103,8 +104,8 @@ def main() -> None:
     train_recs, val_recs = index["train"], index["val"][: args.limit_val]
 
 
-    dl_train = DataLoader(HrSegDataset(train_recs, True, args.seed), batch_size=args.batch, shuffle=True, num_workers=2, pin_memory=True, persistent_workers=True, drop_last=True)
-    dl_val = DataLoader(HrSegDataset(val_recs, False, args.seed), batch_size=args.batch, shuffle=False, num_workers=2, pin_memory=True, persistent_workers=True)
+    dl_train = DataLoader(HrSegDataset(train_recs, True, args.seed), batch_size=args.batch, shuffle=True, num_workers=args.workers, pin_memory=True, persistent_workers=args.workers > 0, drop_last=True)
+    dl_val = DataLoader(HrSegDataset(val_recs, False, args.seed), batch_size=args.batch, shuffle=False, num_workers=args.workers, pin_memory=True, persistent_workers=args.workers > 0)
 
     model = build_hrsegnet(base=args.base).to(device)
     opt = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
