@@ -25,9 +25,10 @@ series); planned cases live in the product plan, not here.
 | `synthetic_battery` | quantification-validation | generated cracks, exact ground truth | [synthetic_battery.md](synthetic_battery.md) |
 | `width_bench` | quantification-validation | soft-edged bars, sub-px widths, mm calibration | [width_bench.md](width_bench.md) |
 | `severity_grading` | quantification-validation | BCL patches, mm widths vs ACI/EC2 bands | [severity_grading.md](severity_grading.md) |
+| `learned_on_examples` | learned-segmentation | ladder A (U-Net, DeepLabV3+, SegFormer-B2) on the committed examples | [learned_on_examples.md](learned_on_examples.md) |
 
 ## Coverage matrix (shipped / validated plan)
 
-Classical-segmentation 1 of 4 planned; quantification-validation 3 shipped (battery, width bench, severity context); every other
+Classical-segmentation 1 of 4 planned; quantification-validation 3 shipped; learned-segmentation 1 shipped (ladder A); every other
 category 0 shipped (engines arrive per unit). The validated 16-case matrix lives in the product
 plan; this table only ever lists what is real.

@@ -31,6 +31,8 @@ class Case:
     # Demonstration scale injected on masked samples (mm per px), for the severity-context case.
     # Explicitly labelled a demonstration in the artifact; the lab never invents a real scale.
     mm_per_px_demo: float | None = None
+    # "classical" runs the ladder in-pipeline; "learned_replay" bakes from the persisted GPU run.
+    engine: str = "classical"
 
 
 CASES: list[Case] = [
@@ -80,5 +82,16 @@ CASES: list[Case] = [
         ladder=LadderParams(sigmas=(1.0, 1.5, 2.0, 3.0), flatten_radius=15, tophat_length=15),
         seed=42,
         mm_per_px_demo=0.10,
+    ),
+    Case(
+        id="learned_on_examples",
+        category="learned-segmentation",
+        title="Learned ladder A on the committed examples (U-Net, DeepLabV3+, SegFormer-B2)",
+        real_or_synthetic="real",
+        source="examples",
+        engine="learned_replay",
+        # Band: the best architecture's CrackSeg9k val F1 at the strict 2 px protocol.
+        expected_band={"metric": "best_val_f1_2px", "min": 0.45, "max": 1.0},
+        seed=42,
     ),
 ]

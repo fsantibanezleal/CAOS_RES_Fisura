@@ -11,7 +11,7 @@
  },
  "engine": {
   "package": "fisuralab",
-  "version": "0.05.000",
+  "version": "0.06.000",
   "model": "classical ladder L0-L5 (staged S0-S8)"
  },
  "params": {
@@ -49,7 +49,7 @@
   "path": "synthetic_battery/artifact.json",
   "format": "json",
   "artifact_schema": "fisura.artifact/v1",
-  "bytes": 1071872
+  "bytes": 980856
  },
  "lane": "precompute",
  "gate": {
@@ -62,13 +62,13 @@
    "scikit-learn",
    "scipy"
   ],
-  "trace_bytes": 1071872,
+  "trace_bytes": 980856,
   "run_ms_budget": 1500.0,
   "trace_bytes_budget": 524288,
   "reasons": [
    "wheels not Pyodide-safe: ['imageio', 'scikit-learn']",
    "runtime exceeds the 1500ms budget",
-   "trace_bytes 1071872 > 524288"
+   "trace_bytes 980856 > 524288"
   ]
  },
  "flags": [
