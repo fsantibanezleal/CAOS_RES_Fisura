@@ -37,7 +37,38 @@ def build_model(arch: str):
         return smp.DeepLabV3Plus("resnet18", encoder_weights="imagenet", in_channels=3, classes=1)
     if arch == "segformer_b2":
         return smp.Segformer("mit_b2", encoder_weights="imagenet", in_channels=3, classes=1)
+    if arch.startswith("hrsegnet_b"):
+        from .hrsegnet import build_hrsegnet  # noqa: PLC0415
+
+        return _TwoClassAsLogit(build_hrsegnet(base=int(arch.split("_b")[1])))
     raise ValueError(f"unknown arch {arch}")
+
+
+def _TwoClassAsLogit(net):
+    """Wrap the 2-class HrSegNet so it exposes the same 1-channel-logit interface as the SMP models
+    (logit = crack-class logit minus background logit; sigmoid of that equals 2-class softmax crack prob)."""
+    import torch  # noqa: PLC0415
+    from torch import nn  # noqa: PLC0415
+
+    class Wrap(nn.Module):
+        def __init__(self, inner):
+            super().__init__()
+            self.inner = inner
+
+        def forward(self, x):
+            out = self.inner(x)
+            if isinstance(out, tuple):
+                out = out[0]
+            return (out[:, 1:2] - out[:, 0:1])
+
+        def load_state_dict(self, sd, **kw):
+            # checkpoints are saved from the RAW HrSegNet; delegate so both layouts load
+            if any(k.startswith("inner.") for k in sd):
+                return super().load_state_dict(sd, **kw)
+            return self.inner.load_state_dict(sd, **kw)
+
+    _ = torch
+    return Wrap(net)
 
 
 def _to_chw3(img: np.ndarray) -> np.ndarray:
