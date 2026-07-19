@@ -49,7 +49,7 @@
   "path": "severity_grading/artifact.json",
   "format": "json",
   "artifact_schema": "fisura.artifact/v1",
-  "bytes": 599171
+  "bytes": 548457
  },
  "lane": "precompute",
  "gate": {
@@ -62,13 +62,13 @@
    "scikit-learn",
    "scipy"
   ],
-  "trace_bytes": 599171,
+  "trace_bytes": 548457,
   "run_ms_budget": 1500.0,
   "trace_bytes_budget": 524288,
   "reasons": [
    "wheels not Pyodide-safe: ['imageio', 'scikit-learn']",
    "runtime exceeds the 1500ms budget",
-   "trace_bytes 599171 > 524288"
+   "trace_bytes 548457 > 524288"
   ]
  },
  "flags": [

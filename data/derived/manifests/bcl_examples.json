@@ -49,7 +49,7 @@
   "path": "bcl_examples/artifact.json",
   "format": "json",
   "artifact_schema": "fisura.artifact/v1",
-  "bytes": 591353
+  "bytes": 540873
  },
  "lane": "precompute",
  "gate": {
@@ -62,13 +62,13 @@
    "scikit-learn",
    "scipy"
   ],
-  "trace_bytes": 591353,
+  "trace_bytes": 540873,
   "run_ms_budget": 1500.0,
   "trace_bytes_budget": 524288,
   "reasons": [
    "wheels not Pyodide-safe: ['imageio', 'scikit-learn']",
    "runtime exceeds the 1500ms budget",
-   "trace_bytes 591353 > 524288"
+   "trace_bytes 540873 > 524288"
   ]
  },
  "flags": [

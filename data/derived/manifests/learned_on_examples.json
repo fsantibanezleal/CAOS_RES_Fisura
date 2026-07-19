@@ -83,7 +83,7 @@
   "path": "learned_on_examples/artifact.json",
   "format": "json",
   "artifact_schema": "fisura.artifact/v1",
-  "bytes": 106508
+  "bytes": 98157
  },
  "lane": "precompute",
  "gate": {
@@ -93,7 +93,7 @@
    "segmentation-models-pytorch",
    "torch"
   ],
-  "trace_bytes": 106508,
+  "trace_bytes": 98157,
   "run_ms_budget": 1500.0,
   "trace_bytes_budget": 524288,
   "reasons": [
