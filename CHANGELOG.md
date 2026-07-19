@@ -3,6 +3,32 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.07.000], 2026-07-19
+
+### Added
+- Learned ladder B: HrSegNet reimplemented in PyTorch in-repo from the published paper (two parallel
+  paths, a high-resolution path kept at 1/4 resolution plus an auxiliary semantic-guidance path fused
+  by elementwise sum; head = transposed conv + bilinear; loss = CE + 0.5 x two auxiliary CEs; the
+  paper's SGD/poly/from-scratch recipe with brightness/flip/random-resize augmentation). The
+  reference implementation is Apache-2.0 PaddlePaddle; this is a clean PyTorch re-expression, nothing
+  vendored.
+- HrSegNet-B16 trained on the 4070 (4,000-iteration budget, honestly recorded vs the paper's 100k):
+  val F1@2px 0.547 / mIoU 0.654, examples mean F1@5px 0.540, joining the `learned_on_examples`
+  workbench as a 4th architecture next to the SMP ladder A. It beats the classical ladder's 0.455 on
+  the hard committed patches at a fraction of the parameters.
+- Framework card 02 (the learned segmentation stack: SMP ladder A + the HrSegNet reimplementation +
+  the CrackFormer-II reference-only handling).
+- CrackFormer-II is cited as a published reference on the Benchmark page (no-license upstream,
+  unverified Drive weights): never vendored, never quoted per-dataset without the paper's tables.
+
+### Changed
+- `deploy-pages.yml` builds the SPA from the committed artifacts (git-as-data) instead of
+  regenerating in CI: the learned cases are baked locally on the GPU and cannot regenerate in a
+  torch-free CI runner; drift + the classical smoke stay enforced in `ci.yml`.
+- Added `frontend/public/CNAME` (fisura.fasl-work.com) for the Pages custom domain.
+- `write_json` newline pinning + the GPU lane (`requirements-gpu.txt`, torch 2.11 cu128) carried from
+  the learned track; all torch imports lazy, so CI stays pure-Python.
+
 ## [0.06.000], 2026-07-18
 
 ### Added

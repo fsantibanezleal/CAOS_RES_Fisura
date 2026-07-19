@@ -11,7 +11,7 @@
  },
  "engine": {
   "package": "fisuralab",
-  "version": "0.06.000",
+  "version": "0.07.000",
   "model": "learned ladder A (SMP U-Net r18, DeepLabV3+ r18, SegFormer mit_b2), replayed from the GPU run"
  },
  "params": {
@@ -34,6 +34,27 @@
     "epochs_run": 8,
     "train_minutes": 13.0,
     "checkpoint": "E:\\_Datos\\fisura\\derived\\learned\\checkpoints\\deeplabv3p_r18.pt",
+    "history": "see ladder_a_results.json"
+   },
+   "hrsegnet_b16": {
+    "arch": "hrsegnet_b16",
+    "base": 16,
+    "seed": 42,
+    "iters": 4000,
+    "batch": 16,
+    "recipe": "paper: SGD 0.01 poly 0.9 wd 5e-4, warmup 2000, CE + 0.5x2 aux CE, 400 crops, jitter/flip/resize",
+    "published_reference": {
+     "B16_miou_100k_b32": 78.43,
+     "B32": 79.7,
+     "B48": 80.32
+    },
+    "val_miou_2class": 0.6541,
+    "val_f1_2px": 0.5472,
+    "val_f1_5px": 0.6113,
+    "n_val": 400,
+    "train_minutes": 46.6,
+    "checkpoint": "E:\\_Datos\\fisura\\derived\\learned\\checkpoints\\hrsegnet_b16.pt",
+    "best_val_f1_2px": 0.5472,
     "history": "see ladder_a_results.json"
    },
    "segformer_b2": {
@@ -83,7 +104,7 @@
   "path": "learned_on_examples/artifact.json",
   "format": "json",
   "artifact_schema": "fisura.artifact/v1",
-  "bytes": 98157
+  "bytes": 114816
  },
  "lane": "precompute",
  "gate": {
@@ -93,7 +114,7 @@
    "segmentation-models-pytorch",
    "torch"
   ],
-  "trace_bytes": 98157,
+  "trace_bytes": 114816,
   "run_ms_budget": 1500.0,
   "trace_bytes_budget": 524288,
   "reasons": [
@@ -116,6 +137,10 @@
   "deeplabv3p_r18_examples_mean_f1_5px": 0.6813,
   "deeplabv3p_r18_onnx_sha256": "8100c058caaf3866",
   "deeplabv3p_r18_train_minutes": 13.0,
+  "hrsegnet_b16_val_f1_2px": 0.5472,
+  "hrsegnet_b16_examples_mean_f1_5px": 0.5404,
+  "hrsegnet_b16_onnx_sha256": "9cb94c87a1b95383",
+  "hrsegnet_b16_train_minutes": 46.6,
   "segformer_b2_val_f1_2px": 0.7658,
   "segformer_b2_examples_mean_f1_5px": 0.6526,
   "segformer_b2_onnx_sha256": "7b4679737f2506be",

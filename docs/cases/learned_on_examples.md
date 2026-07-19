@@ -30,20 +30,36 @@ python -m fisuralab.learned.run_ladder_a            # trains, evaluates, exports
 python -m fisuralab.pipeline learned_on_examples     # bakes the replay artifact (torch-free)
 ```
 
-## Measured results (first bake, 2026-07-18; 3,000-image subset, seed 42)
+## Measured results (2026-07-18/19; 3,000-image CrackSeg9k subset, seed 42)
 
-| Architecture | CrackSeg9k val F1@2px | Examples mean F1@5px | Train minutes | ONNX |
-|---|---|---|---|---|
-| SegFormer mit_b2 | **0.766** | 0.653 | 24.5 | 99.4 MB, parity OK |
-| U-Net resnet18 | 0.752 | 0.486 | 11.6 | 56 MB class, parity OK |
-| DeepLabV3+ resnet18 | 0.720 | **0.681** | 13.0 | 49.3 MB, parity OK |
+| Architecture | Track | CrackSeg9k val F1@2px | Examples mean F1@5px | Train minutes | Export |
+|---|---|---|---|---|---|
+| SegFormer mit_b2 | ladder A (SMP) | **0.766** | 0.653 | 24.5 | ONNX 99.4 MB, parity OK |
+| U-Net resnet18 | ladder A (SMP) | 0.752 | 0.486 | 11.6 | ONNX 56 MB, parity OK |
+| DeepLabV3+ resnet18 | ladder A (SMP) | 0.720 | **0.681** | 13.0 | ONNX 49.3 MB, parity OK |
+| HrSegNet-B16 | ladder B (reimpl) | 0.547 (mIoU 0.654) | 0.540 | 46.6 | ONNX, parity OK |
+
+HrSegNet-B16 is the in-repo PyTorch reimplementation (ladder B), trained from scratch per the paper
+recipe (no ImageNet pretraining) at an honestly-recorded 4,000-iteration budget: the paper reaches
+78.43 mIoU at 100k iterations, so 0.654 mIoU here is the expected short-budget point, not a failure,
+and the manifest records the exact iters/batch so nothing pretends to be the full run. It already
+beats the classical ladder's 0.455 mean on the hard committed patches.
 
 The research's honest pattern, now measured on identical pixels: every learned architecture beats
-the classical ladder's 0.455 mean on the hard committed patches (DeepLabV3+ by 22 points), and the
-best-on-val model is not the best-on-examples model, the plain transfer lesson. The classical
-ladder still wins on transparency and CPU cost; both facts live in the same workbench.
+the classical ladder's 0.455 mean (DeepLabV3+ by 22 points), the best-on-val model is not the
+best-on-examples model (the plain transfer lesson), and a tiny from-scratch specialist (HrSegNet-B16)
+is competitive with the pretrained SMP models at a fraction of the parameters. The classical ladder
+still wins on transparency and CPU cost; all of it lives in the same workbench.
+
+## CrackFormer-II: cited reference, not vendored
+
+CrackFormer-II (Liu et al., T-ITS 2023; ODS 0.869-0.914) is the accuracy-oriented transformer in
+the research verdict. Its repository ships no license file and its per-dataset weights sit on
+unverified Google Drive links, so Fisura cites it as a published reference on the Benchmark page
+rather than vendoring its code or quoting an unverified per-dataset cell. If a license-clean
+re-implementation is later warranted it becomes its own unit.
 
 ## Reading the workbench
 
-The variant bar shows the three architectures instead of L0-L5; the Charts view scores them at
+The variant bar shows the four architectures instead of L0-L5; the Charts view scores them at
 both tolerances against the same ground truth as the classical case.
