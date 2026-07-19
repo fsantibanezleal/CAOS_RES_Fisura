@@ -5,6 +5,7 @@ gets a card here AND an exact pin in the matching `requirements-*.txt`. No hand-
 engine the research prescribed.
 
 - [00, card TEMPLATE](frameworks/00_TEMPLATE.md), copy per engine to `frameworks/<NN>_<tool>/<tool>.md`
+- [01, the classical imaging stack](frameworks/01_classical-imaging-stack.md), scikit-image / SciPy / scikit-learn, the pinned classical ladder + the version-sensitivity discipline.
+- [02, the learned segmentation stack](frameworks/02_learned-segmentation-stack.md), PyTorch + segmentation-models-pytorch (ladder A) + the in-repo HrSegNet reimplementation (ladder B), ONNX export; CrackFormer-II handled as a cited reference.
 
-*(The classical stack card is 01; further engine cards land with their units, e.g.
-`01_yade/`, `02_ortools/`, `03_mintpy/`, `04_torch/`.)*
+*(Further engine cards land with their units: anomalib, SAM/DINOv2 adapters, muDIC.)*
