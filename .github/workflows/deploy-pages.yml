@@ -19,19 +19,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Regenerate artifacts (fresh deterministic replay outputs)
-        run: |
-          pip install -r data-pipeline/requirements.txt -e .
-          python -m fisuralab.pipeline all
+      # The committed artifacts under data/derived ARE canonical (git-as-data, ADR-0057): the SPA
+      # replays them. We do NOT regenerate in CI (the learned cases need the local GPU + torch and
+      # are baked locally); drift and the classical smoke are already enforced in ci.yml.
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - name: Build the SPA (copy-data.mjs overlays data/derived -> public/)
+      - name: Build the SPA (copy-data.mjs overlays the committed data/derived -> public/)
         run: cd frontend && npm ci && npm run build
       - uses: actions/upload-pages-artifact@v3
         with:

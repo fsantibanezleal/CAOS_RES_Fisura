@@ -140,8 +140,10 @@ def main() -> None:
             scaler.step(opt)
             scaler.update()
             it += 1
-            if it % 1000 == 0:
-                print(f"[{name}] iter {it}/{args.iters} loss {float(loss):.4f} lr {lr_at(it):.5f}")
+            if it % 500 == 0:
+                print(f"[{name}] iter {it}/{args.iters} loss {float(loss):.4f} lr {lr_at(it):.5f}", flush=True)
+            if it % 2000 == 0:
+                torch.save(model.state_dict(), ckpt)  # periodic checkpoint: run is stoppable with a usable model
 
     # validation: paper protocol (2-class mIoU) + the lab's dual-tolerance F1
     model.eval()
