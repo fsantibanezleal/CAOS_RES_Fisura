@@ -1,6 +1,6 @@
 {
  "schema": "fisura.index/v1",
- "engine_version": "0.06.000",
+ "engine_version": "0.07.000",
  "n_cases": 5,
  "cases": [
   {
