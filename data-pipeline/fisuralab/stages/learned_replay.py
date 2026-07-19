@@ -80,9 +80,15 @@ def run(*, case, seed: int, derived_dir: str, manifests_dir: str) -> dict:
             if not png or not Path(png).exists():
                 continue
             mask = read_mask(png)
+            if arch.startswith("dinov2"):
+                note = f"{arch}: DINOv2 frozen features + linear head (518 resize, 1/14-resolution probe, coarse by design)"
+            elif arch.startswith("hrsegnet"):
+                note = f"{arch}: in-repo HrSegNet reimplementation trained on CrackSeg9k (seed {results['seed']})"
+            else:
+                note = f"{arch}: SMP model trained on CrackSeg9k (seed {results['seed']}), tiled 512 inference"
             lentry: dict = {
                 "mask_rle": rle_encode(mask),
-                "notes": [f"{arch}: trained on CrackSeg9k shards (seed {results['seed']}), tiled 512 inference"],
+                "notes": [note],
                 "segmentation": evaluate_mask(mask, sample.mask) if sample.mask is not None else None,
             }
             _overlay_png(derived / "overlays" / f"{sample.sample_id}_{arch}.png", gray, mask)
@@ -138,7 +144,7 @@ def run(*, case, seed: int, derived_dir: str, manifests_dir: str) -> dict:
         gate=gate,
         flags=flags,
         metrics=metrics,
-        engine_model="learned ladder A (SMP U-Net r18, DeepLabV3+ r18, SegFormer mit_b2), replayed from the GPU run",
+        engine_model=f"learned track ({', '.join(archs)}), replayed from the local GPU runs",
     )
     write_json(Path(manifests_dir) / f"{case.id}.json", manifest)
     return manifest

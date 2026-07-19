@@ -3,6 +3,21 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.08.000], 2026-07-19
+
+### Added
+- Foundation rung: DINOv2 (Apache-2.0) frozen-features + linear probe. A frozen ViT-S/14 backbone
+  (loaded from the vault weights; architecture code cached from torch.hub) with a single 1x1-conv
+  head on the last-layer patch tokens (the only trained weights: 385 parameters, BCE + Dice,
+  AdamW, seeded). Trained on the CrackSeg9k subset; reaches CrackSeg9k val F1@2px 0.671 / F1@5px
+  0.735 and examples mean F1@5px 0.620, competitive with the fully-trained SMP models and 17 points
+  above the classical ladder while training essentially nothing. The masks are honestly coarse
+  (1/14 patch resolution), which the 2 px number and the overlay make visible; the crack-specific
+  probe number is a lab contribution the literature had not established.
+- The DINOv2 probe joins `learned_on_examples` as a 5th architecture in the workbench; framework
+  card 02 gains a DINOv2 section; per-architecture replay notes and the case engine label are now
+  method-accurate (SMP tiled 512, HrSegNet reimplementation, DINOv2 518-resize probe).
+
 ## [0.07.000], 2026-07-19
 
 ### Added

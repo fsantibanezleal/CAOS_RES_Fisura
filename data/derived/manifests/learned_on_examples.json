@@ -11,8 +11,8 @@
  },
  "engine": {
   "package": "fisuralab",
-  "version": "0.07.000",
-  "model": "learned ladder A (SMP U-Net r18, DeepLabV3+ r18, SegFormer mit_b2), replayed from the GPU run"
+  "version": "0.08.000",
+  "model": "learned track (deeplabv3p_r18, dinov2s14_linear, hrsegnet_b16, segformer_b2, unet_r18), replayed from the local GPU runs"
  },
  "params": {
   "ladder_a": {
@@ -34,6 +34,24 @@
     "epochs_run": 8,
     "train_minutes": 13.0,
     "checkpoint": "E:\\_Datos\\fisura\\derived\\learned\\checkpoints\\deeplabv3p_r18.pt",
+    "history": "see ladder_a_results.json"
+   },
+   "dinov2s14_linear": {
+    "arch": "dinov2s14_linear",
+    "backbone": "DINOv2 ViT-S/14 (frozen, Apache-2.0 vault weights)",
+    "head": "1x1 conv linear probe (385 trained params)",
+    "seed": 42,
+    "iters": 3000,
+    "batch": 8,
+    "input": 518,
+    "patch_resolution": "37x37 (1/14; masks are honestly coarse for thin cracks)",
+    "loss": "BCE(pos_weight=8) + Dice, AdamW 1e-3",
+    "val_f1_2px": 0.6707,
+    "val_f1_5px": 0.7348,
+    "best_val_f1_2px": 0.6707,
+    "n_val": 400,
+    "train_minutes": 15.5,
+    "checkpoint": "E:\\_Datos\\fisura\\derived\\learned\\checkpoints\\dinov2s14_linear.pt",
     "history": "see ladder_a_results.json"
    },
    "hrsegnet_b16": {
@@ -104,7 +122,7 @@
   "path": "learned_on_examples/artifact.json",
   "format": "json",
   "artifact_schema": "fisura.artifact/v1",
-  "bytes": 114816
+  "bytes": 144869
  },
  "lane": "precompute",
  "gate": {
@@ -114,7 +132,7 @@
    "segmentation-models-pytorch",
    "torch"
   ],
-  "trace_bytes": 114816,
+  "trace_bytes": 144869,
   "run_ms_budget": 1500.0,
   "trace_bytes_budget": 524288,
   "reasons": [
@@ -137,6 +155,10 @@
   "deeplabv3p_r18_examples_mean_f1_5px": 0.6813,
   "deeplabv3p_r18_onnx_sha256": "8100c058caaf3866",
   "deeplabv3p_r18_train_minutes": 13.0,
+  "dinov2s14_linear_val_f1_2px": 0.6707,
+  "dinov2s14_linear_examples_mean_f1_5px": 0.6204,
+  "dinov2s14_linear_onnx_sha256": "d7d3973a0f9e1e6c",
+  "dinov2s14_linear_train_minutes": 15.5,
   "hrsegnet_b16_val_f1_2px": 0.5472,
   "hrsegnet_b16_examples_mean_f1_5px": 0.5404,
   "hrsegnet_b16_onnx_sha256": "9cb94c87a1b95383",

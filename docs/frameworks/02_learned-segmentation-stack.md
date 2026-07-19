@@ -61,9 +61,32 @@ and quoting a per-dataset number requires the paper's PDF tables (the abstract d
 dataset-to-score mapping, flagged UNVERIFIED). If a license-clean re-implementation is later
 warranted, it becomes its own unit.
 
+## Foundation probe: DINOv2 frozen features + linear head
+
+DINOv2 (Meta, Apache-2.0; Oquab et al. 2023) is the cheapest credible foundation baseline for dense
+crack prediction, and the research flagged that its crack-specific numbers are NOT established, so a
+clean linear probe is a result the lab can contribute (`fisuralab.learned.dinov2_probe`):
+
+- The ViT-S/14 backbone is loaded from the vault weights (`E:\\_Models\\fisura\\dinov2\\
+  dinov2_vits14_pretrain.pth`; the architecture code is fetched once from torch.hub,
+  `facebookresearch/dinov2`, cached under `TORCH_HOME`) and FROZEN: `requires_grad_(False)` on all
+  22M backbone parameters.
+- A single 1x1-convolution head on the last-layer patch tokens is the ONLY thing trained (a genuine
+  linear probe): last-layer `x_norm_patchtokens` at a 518-input give a 37x37x384 feature map, the
+  head maps 384->1, bilinearly upsampled to full resolution. Trained with BCE(pos_weight 8) + Dice,
+  AdamW 1e-3, seeded; ImageNet normalization on the input as DINOv2 expects.
+- The probe's masks are honestly COARSE for thin cracks (patch tokens live at 1/14 resolution); that
+  coarseness is the finding, reported next to the trained-model ladder on identical pixels, not
+  hidden. No xFormers is required (the backbone warns and runs without it).
+- The checkpoint saves ONLY the head (the backbone is the vault weights); the record carries the
+  head sha256 and the backbone provenance. Full-backbone ONNX export is heavy and belongs to the
+  live-lane unit, so the probe records its provenance instead of an export at this stage.
+- Run: `python -m fisuralab.learned.dinov2_probe --iters 3000` (joins the same learned workbench).
+
 ## ONNX
 
-Every trained model exports to ONNX via the legacy exporter (`dynamo=False`, reliable for SMP and
-the HrSegNet graph on torch 2.11) with CPU-parity verification and a sha256 recorded in the case
-manifest; exports live in the local model vault (`FISURA_MODEL_ROOT`). The live-lane unit selects
-the one compact model the browser ships.
+Every trained SMP/HrSegNet model exports to ONNX via the legacy exporter (`dynamo=False`, reliable
+for SMP and the HrSegNet graph on torch 2.11) with CPU-parity verification and a sha256 recorded in
+the case manifest; exports live in the local model vault (`FISURA_MODEL_ROOT`). The live-lane unit
+selects the one compact model the browser ships. The DINOv2 probe is the exception noted above
+(head-only checkpoint; backbone export deferred).
