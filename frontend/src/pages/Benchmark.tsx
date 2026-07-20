@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Callout, Cite, ReferenceList } from '@fasl-work/caos-app-shell';
+import { Callout, Cite, Refs } from '@fasl-work/caos-app-shell';
 import { useT } from '../lib/i18n';
 import { UPlotChart } from '../render/UPlotChart';
 
@@ -187,7 +187,7 @@ export default function Benchmark() {
         )}
       </Callout>
 
-      <ReferenceList ids={['shi2016crackforest', 'zou2012cracktree', 'amhaz2016mps', 'yang2019fphbn', 'zou2019deepcrack', 'liu2019deepcrack', 'li2023hrsegnet', 'liu2023crackformer2', 'sac2025', 'benz2024omnicrack', 'flotzinger2024dacl10k', 'roth2022patchcore', 'heckler2026mvtec2']} />
+      <Refs label={t('Refs','Refs')} ids={['shi2016crackforest', 'zou2012cracktree', 'amhaz2016mps', 'yang2019fphbn', 'zou2019deepcrack', 'liu2019deepcrack', 'li2023hrsegnet', 'liu2023crackformer2', 'sac2025', 'benz2024omnicrack', 'flotzinger2024dacl10k', 'roth2022patchcore', 'heckler2026mvtec2']} />
     </div>
   );
 }
