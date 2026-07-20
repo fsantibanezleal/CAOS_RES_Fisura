@@ -1,5 +1,6 @@
 import { Callout, Cite, Refs } from '@fasl-work/caos-app-shell';
 import { useT } from '../lib/i18n';
+import { ThemedSvg } from '../render/ThemedSvg';
 
 export default function Implementation() {
   const t = useT();
@@ -38,6 +39,16 @@ export default function Implementation() {
           )}
         </li>
       </ul>
+
+      <figure className="fig-svg wide">
+        <ThemedSvg src="svg/tech/impl-architecture.svg" title={t('Offline pipeline, committed artifact, browser lane', 'Pipeline offline, artefacto versionado, carril del navegador')} />
+        <figcaption>
+          {t(
+            'The offline lane (local GPU) shards datasets, trains and fits the models, evaluates at both tolerances, exports ONNX with parity checks, and bakes the compact artifacts. The web app reads ONLY those committed artifacts, gated by a TypeScript mirror of the manifest schema that fails the build on any drift, and replays them; the live in-browser lane (BL-013) runs the classical subset and compact ONNX on a photo that never leaves the browser.',
+            'El carril offline (GPU local) fragmenta datasets, entrena y ajusta los modelos, evalúa en ambas tolerancias, exporta ONNX con chequeos de paridad, y hornea los artefactos compactos. La aplicación web lee SOLO esos artefactos versionados, con una compuerta de espejo TypeScript del esquema del manifiesto que rompe el build ante cualquier deriva, y los reproduce; el carril en vivo en el navegador (BL-013) corre el subconjunto clásico y ONNX compacto sobre una foto que nunca sale del navegador.',
+          )}
+        </figcaption>
+      </figure>
 
       <h2>{t('Two data contracts', 'Dos contratos de datos')}</h2>
       <p>
