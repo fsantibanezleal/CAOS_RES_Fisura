@@ -26,3 +26,22 @@ export const heatUrl = (heatRel: string): string => `${base}data/${heatRel}`;
 /** URL of a committed overlay PNG (redistributable imagery only). */
 export const overlayUrl = (overlaysRel: string, suffix: string): string =>
   `${base}data/${overlaysRel}${suffix}`;
+
+/** URL of any committed workbench PNG (preprocessing intermediates, SLIC variants). */
+export const workbenchUrl = (rel: string): string => `${base}data/${rel}`;
+
+// The per-image workbench index (preprocessing intermediates + the SLIC grid).
+export interface WorkbenchPrep { gray: string; flatten: string; denoise: string; ridge: string; }
+export interface WorkbenchSample {
+  material: string;
+  size: [number, number];
+  prep: WorkbenchPrep;
+  slic: Record<string, string>;             // key "<n>_<c>" -> png rel path
+  slic_real_counts: Record<string, number>; // key "<n>_<c>" -> actual superpixel count
+}
+export interface WorkbenchIndex {
+  schema: string;
+  slic_grid: { n_segments: number[]; compactness: number[] };
+  samples: Record<string, WorkbenchSample>;
+}
+export const loadWorkbench = (): Promise<WorkbenchIndex> => getJSON<WorkbenchIndex>('workbench/index.json');

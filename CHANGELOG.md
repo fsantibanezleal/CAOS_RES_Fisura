@@ -3,6 +3,26 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.11.000], 2026-07-20
+
+### Changed (App rebuilt into a per-image interactive WORKBENCH, Felipe's spec 2026-07-20)
+- The App is no longer method-per-tab. It is a per-case workbench: the LEFT COLUMN is the selection +
+  parameter area (case source: Prebaked / Pretrained / Upload-your-own; the image thumbnail strip; and the
+  parameters that drive the tabs, including the SLIC superpixel-count and compactness sliders), and the TABS
+  walk the pipeline ON the selected image, left to right: Overview, Preprocessing, Semantic segmentation,
+  SLIC, Classical, SOTA, Beyond SOTA, Summary. Every method is VISIBLE ON THE IMAGE; nothing is a bare table.
+- Preprocessing tab shows the REAL classical stages applied to the image (grayscale, illumination-flattened,
+  NLM-denoised, Hessian ridge response), baked as committed PNGs from `fisuralab.model.classical`.
+- SLIC tab renders scikit-image superpixel boundaries over the image and REACTS to the left-column sliders
+  (a baked grid over n_segments x compactness; the slider snaps to the nearest baked variant, replay lane).
+- Summary tab is the full comparison matrix: every method applied to the image at once, the winner (highest
+  F1@2px) starred, plus a cross-method F1 ranking at both tolerance protocols.
+
+### Added
+- `fisuralab.cases.bake_workbench`: bakes the preprocessing intermediates + the SLIC grid per example image
+  (`data/derived/workbench/`), plus the workbench index. `render/MethodTile.tsx` (compact prediction-on-image
+  tile) and the workbench loader in `api/artifacts.ts`.
+
 ## [0.10.001], 2026-07-20
 
 ### Changed (Experiments rebuilt from a card grid to a real protocol page, ADR-0017 section 2)
