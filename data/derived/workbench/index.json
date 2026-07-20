@@ -1,0 +1,227 @@
+{
+ "schema": "fisura.workbench/v1",
+ "slic_grid": {
+  "n_segments": [
+   80,
+   150,
+   300
+  ],
+  "compactness": [
+   5,
+   10,
+   20
+  ]
+ },
+ "samples": {
+  "bcl-nonsteel-c1": {
+   "material": "concrete",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/bcl-nonsteel-c1/prep_gray.png",
+    "flatten": "workbench/bcl-nonsteel-c1/prep_flatten.png",
+    "denoise": "workbench/bcl-nonsteel-c1/prep_denoise.png",
+    "ridge": "workbench/bcl-nonsteel-c1/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/bcl-nonsteel-c1/slic_n80_c5.png",
+    "80_10": "workbench/bcl-nonsteel-c1/slic_n80_c10.png",
+    "80_20": "workbench/bcl-nonsteel-c1/slic_n80_c20.png",
+    "150_5": "workbench/bcl-nonsteel-c1/slic_n150_c5.png",
+    "150_10": "workbench/bcl-nonsteel-c1/slic_n150_c10.png",
+    "150_20": "workbench/bcl-nonsteel-c1/slic_n150_c20.png",
+    "300_5": "workbench/bcl-nonsteel-c1/slic_n300_c5.png",
+    "300_10": "workbench/bcl-nonsteel-c1/slic_n300_c10.png",
+    "300_20": "workbench/bcl-nonsteel-c1/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 72,
+    "80_10": 75,
+    "80_20": 76,
+    "150_5": 130,
+    "150_10": 135,
+    "150_20": 140,
+    "300_5": 269,
+    "300_10": 281,
+    "300_20": 286
+   }
+  },
+  "bcl-nonsteel-c10": {
+   "material": "concrete",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/bcl-nonsteel-c10/prep_gray.png",
+    "flatten": "workbench/bcl-nonsteel-c10/prep_flatten.png",
+    "denoise": "workbench/bcl-nonsteel-c10/prep_denoise.png",
+    "ridge": "workbench/bcl-nonsteel-c10/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/bcl-nonsteel-c10/slic_n80_c5.png",
+    "80_10": "workbench/bcl-nonsteel-c10/slic_n80_c10.png",
+    "80_20": "workbench/bcl-nonsteel-c10/slic_n80_c20.png",
+    "150_5": "workbench/bcl-nonsteel-c10/slic_n150_c5.png",
+    "150_10": "workbench/bcl-nonsteel-c10/slic_n150_c10.png",
+    "150_20": "workbench/bcl-nonsteel-c10/slic_n150_c20.png",
+    "300_5": "workbench/bcl-nonsteel-c10/slic_n300_c5.png",
+    "300_10": "workbench/bcl-nonsteel-c10/slic_n300_c10.png",
+    "300_20": "workbench/bcl-nonsteel-c10/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 72,
+    "80_10": 77,
+    "80_20": 80,
+    "150_5": 121,
+    "150_10": 134,
+    "150_20": 141,
+    "300_5": 251,
+    "300_10": 278,
+    "300_20": 283
+   }
+  },
+  "bcl-steel-s1": {
+   "material": "steel",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/bcl-steel-s1/prep_gray.png",
+    "flatten": "workbench/bcl-steel-s1/prep_flatten.png",
+    "denoise": "workbench/bcl-steel-s1/prep_denoise.png",
+    "ridge": "workbench/bcl-steel-s1/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/bcl-steel-s1/slic_n80_c5.png",
+    "80_10": "workbench/bcl-steel-s1/slic_n80_c10.png",
+    "80_20": "workbench/bcl-steel-s1/slic_n80_c20.png",
+    "150_5": "workbench/bcl-steel-s1/slic_n150_c5.png",
+    "150_10": "workbench/bcl-steel-s1/slic_n150_c10.png",
+    "150_20": "workbench/bcl-steel-s1/slic_n150_c20.png",
+    "300_5": "workbench/bcl-steel-s1/slic_n300_c5.png",
+    "300_10": "workbench/bcl-steel-s1/slic_n300_c10.png",
+    "300_20": "workbench/bcl-steel-s1/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 73,
+    "80_10": 81,
+    "80_20": 81,
+    "150_5": 130,
+    "150_10": 141,
+    "150_20": 143,
+    "300_5": 271,
+    "300_10": 284,
+    "300_20": 288
+   }
+  },
+  "bcl-noise-f1": {
+   "material": "concrete",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/bcl-noise-f1/prep_gray.png",
+    "flatten": "workbench/bcl-noise-f1/prep_flatten.png",
+    "denoise": "workbench/bcl-noise-f1/prep_denoise.png",
+    "ridge": "workbench/bcl-noise-f1/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/bcl-noise-f1/slic_n80_c5.png",
+    "80_10": "workbench/bcl-noise-f1/slic_n80_c10.png",
+    "80_20": "workbench/bcl-noise-f1/slic_n80_c20.png",
+    "150_5": "workbench/bcl-noise-f1/slic_n150_c5.png",
+    "150_10": "workbench/bcl-noise-f1/slic_n150_c10.png",
+    "150_20": "workbench/bcl-noise-f1/slic_n150_c20.png",
+    "300_5": "workbench/bcl-noise-f1/slic_n300_c5.png",
+    "300_10": "workbench/bcl-noise-f1/slic_n300_c10.png",
+    "300_20": "workbench/bcl-noise-f1/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 66,
+    "80_10": 77,
+    "80_20": 81,
+    "150_5": 115,
+    "150_10": 136,
+    "150_20": 143,
+    "300_5": 255,
+    "300_10": 283,
+    "300_20": 288
+   }
+  },
+  "sdnet-cp-001-100": {
+   "material": "concrete",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/sdnet-cp-001-100/prep_gray.png",
+    "flatten": "workbench/sdnet-cp-001-100/prep_flatten.png",
+    "denoise": "workbench/sdnet-cp-001-100/prep_denoise.png",
+    "ridge": "workbench/sdnet-cp-001-100/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/sdnet-cp-001-100/slic_n80_c5.png",
+    "80_10": "workbench/sdnet-cp-001-100/slic_n80_c10.png",
+    "80_20": "workbench/sdnet-cp-001-100/slic_n80_c20.png",
+    "150_5": "workbench/sdnet-cp-001-100/slic_n150_c5.png",
+    "150_10": "workbench/sdnet-cp-001-100/slic_n150_c10.png",
+    "150_20": "workbench/sdnet-cp-001-100/slic_n150_c20.png",
+    "300_5": "workbench/sdnet-cp-001-100/slic_n300_c5.png",
+    "300_10": "workbench/sdnet-cp-001-100/slic_n300_c10.png",
+    "300_20": "workbench/sdnet-cp-001-100/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 29,
+    "80_10": 60,
+    "80_20": 77,
+    "150_5": 70,
+    "150_10": 116,
+    "150_20": 141,
+    "300_5": 161,
+    "300_10": 241,
+    "300_20": 280
+   }
+  },
+  "sdnet-up-001-1": {
+   "material": "concrete",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/sdnet-up-001-1/prep_gray.png",
+    "flatten": "workbench/sdnet-up-001-1/prep_flatten.png",
+    "denoise": "workbench/sdnet-up-001-1/prep_denoise.png",
+    "ridge": "workbench/sdnet-up-001-1/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/sdnet-up-001-1/slic_n80_c5.png",
+    "80_10": "workbench/sdnet-up-001-1/slic_n80_c10.png",
+    "80_20": "workbench/sdnet-up-001-1/slic_n80_c20.png",
+    "150_5": "workbench/sdnet-up-001-1/slic_n150_c5.png",
+    "150_10": "workbench/sdnet-up-001-1/slic_n150_c10.png",
+    "150_20": "workbench/sdnet-up-001-1/slic_n150_c20.png",
+    "300_5": "workbench/sdnet-up-001-1/slic_n300_c5.png",
+    "300_10": "workbench/sdnet-up-001-1/slic_n300_c10.png",
+    "300_20": "workbench/sdnet-up-001-1/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 73,
+    "80_10": 77,
+    "80_20": 81,
+    "150_5": 132,
+    "150_10": 140,
+    "150_20": 144,
+    "300_5": 276,
+    "300_10": 281,
+    "300_20": 289
+   }
+  }
+ }
+}
