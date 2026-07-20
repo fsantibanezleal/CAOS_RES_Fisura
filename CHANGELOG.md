@@ -3,6 +3,32 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.14.000], 2026-07-20
+
+### Added (BL-010 multi-class damage track: dacl10k 19-class segmentation)
+- The App's binary crack ladder gains real bridge-inspection grading. New `fisuralab.multiclass`
+  module (from the verified dossier `wip/fisura/research/BL-010-multiclass-research-2026-07-19.md`):
+  - `dacl10k.py`: the 19-class list (13 damage + 6 object, toolkit TARGET_LIST verbatim; NOT vegetation,
+    which the dossier corrected as an S2DS class) + a LabelMe-polygon rasterizer to a (19, H, W)
+    multi-label mask (a pixel can carry several classes) + the split lister.
+  - `train_dacl10k.py`: an SMP EfficientNet-B4 + FPN multi-label segmenter (sigmoid + BCE + Dice,
+    512-crop, macro-mIoU), GPU local lane. Trained 12 epochs on 2,500 images: measured **val mIoU
+    0.117** (peaked 0.122). Below the 0.424 WACV 2024 paper baseline, the honest cost of the reduced
+    budget (2,500 of 6,935 images on an 8 GB laptop GPU), stated rather than hidden; a full-data rerun
+    is one flag away.
+  - `bake_dacl10k.py`: writes the committed metrics artifact (`data/derived/multiclass/dacl10k.json`)
+    + five low-resolution class-coloured overlays. dacl10k is CC BY-NC 4.0: the raw images and trained
+    weights stay local; only metrics + tiny transformative low-res derivatives ship.
+- New **Multi-class** page: the measured mIoU vs the 0.424 baseline, a class-coloured prediction viewer
+  over real inspection crops with a per-image present-classes legend, the per-class IoU chart (the
+  honest imbalance: Graffiti 0.38 down to thin classes near 0), and the license/honesty framing.
+- CODEBRIM box-detection code (`codebrim.py` VOC parser, `train_codebrim.py` Faster R-CNN, `bake_codebrim.py`)
+  is complete and lint-clean but NOT shipped: the local `CODEBRIM_original_images.zip` is truncated
+  (~284 MB short, every image entry past the 4 GB Zip64 mark is unreadable), a download failure that
+  needs a re-download. It ships as the next rung; the Multi-class page names it as such.
+- `tests/test_multiclass.py`: the 19-class + 5-defect lists, the rasterizer multi-label contract, and
+  the committed-artifact coherence (all CI-safe, torch-free).
+
 ## [0.13.000], 2026-07-20
 
 ### Changed (ADR-0016 section 6 compliance: the five content pages now use Tabs/SubTabs)
