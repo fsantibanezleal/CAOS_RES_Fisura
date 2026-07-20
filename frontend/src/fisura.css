@@ -70,6 +70,16 @@
 .fs-kpis-2 { grid-template-columns: repeat(2, 1fr); }
 .fs-note { font-size: 0.74rem; color: var(--color-fg-subtle); line-height: 1.5; background: color-mix(in oklab, var(--color-fg-subtle) 8%, transparent); border-radius: 6px; padding: 0.4rem 0.55rem; margin: 0; }
 
+/* ---- Experiments: coverage rows + inlined themed SVG ---- */
+.fs-cov-row { border: 1px solid var(--color-border); border-radius: 10px; padding: 0.6rem 0.75rem; margin: 0.5rem 0; background: var(--color-surface); }
+.fs-cov-head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.fs-cov-head b { color: var(--color-fg); font-size: 0.92rem; }
+.fs-cov-count { margin-left: auto; font-family: var(--font-mono); font-size: 0.74rem; color: var(--color-fg-subtle); }
+.fs-cov-cases { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.fs-svg-inline { width: 100%; }
+.fs-svg-inline svg { width: 100%; height: auto; display: block; }
+.fs-svg-fallback { width: 100%; aspect-ratio: 880 / 470; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; }
+
 /* ---- workbench layout: sticky control sidebar + reactive main (the App page) ---- */
 .fs-layout { display: grid; grid-template-columns: 320px 1fr; gap: 1.5rem; align-items: start; }
 @media (max-width: 920px) { .fs-layout { grid-template-columns: 1fr; } }
