@@ -1,5 +1,64 @@
+import { useEffect, useState } from 'react';
 import { Callout, Cite, ReferenceList } from '@fasl-work/caos-app-shell';
 import { useT } from '../lib/i18n';
+import { UPlotChart } from '../render/UPlotChart';
+
+interface ConcreteTransfer {
+  method: string;
+  study: string;
+  dataset: string;
+  n_fit_uncracked: number;
+  n_test_cracked: number;
+  n_test_uncracked: number;
+  image_auroc: number;
+  tpr_at_median: number;
+  tnr_at_median: number;
+  score_hist: { centers: number[]; cracked: number[]; uncracked: number[] };
+  minutes: number;
+}
+
+function AnomalyTransfer({ es }: { es: boolean }) {
+  const t = (en: string, esx: string) => (es ? esx : en);
+  const [d, setD] = useState<ConcreteTransfer | null>(null);
+  const [err, setErr] = useState(false);
+  useEffect(() => {
+    fetch(`${import.meta.env.BASE_URL}data/anomaly/concrete_transfer.json`)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then(setD)
+      .catch(() => setErr(true));
+  }, []);
+  if (err || !d) return null;
+  return (
+    <div className="fs-panel" style={{ marginTop: '0.8rem' }}>
+      <div className="fs-panel-t">{t('Measured: the concrete-transfer study (PatchCore, fit on uncracked concrete only)', 'Medido: el estudio de transferencia a hormigón (PatchCore, ajustado solo en hormigón sin grieta)')}</div>
+      <div className="fs-kpis">
+        <div className="fs-kpi"><div className="fs-kpi-v">{d.image_auroc.toFixed(3)}</div><div className="fs-kpi-l">{t('image AUROC (cracked vs uncracked)', 'AUROC de imagen (con vs sin grieta)')}</div></div>
+        <div className="fs-kpi"><div className="fs-kpi-v">{(d.tpr_at_median * 100).toFixed(0)}%</div><div className="fs-kpi-l">{t('TPR at median threshold', 'TPR al umbral mediano')}</div></div>
+        <div className="fs-kpi"><div className="fs-kpi-v">{(d.tnr_at_median * 100).toFixed(0)}%</div><div className="fs-kpi-l">{t('TNR at median threshold', 'TNR al umbral mediano')}</div></div>
+        <div className="fs-kpi"><div className="fs-kpi-v">{d.n_fit_uncracked}</div><div className="fs-kpi-l">{t('uncracked fit images', 'imágenes sin grieta de ajuste')}</div></div>
+      </div>
+      <div className="fs-chart" style={{ marginTop: '0.6rem' }}>
+        <UPlotChart
+          data={[d.score_hist.centers, d.score_hist.uncracked, d.score_hist.cracked]}
+          series={[
+            {},
+            { label: t('uncracked', 'sin grieta'), stroke: '#2da44e', width: 2 },
+            { label: t('cracked', 'con grieta'), stroke: '#cf222e', width: 2 },
+          ]}
+          axes={[{ label: t('anomaly score', 'puntaje de anomalía') }, { label: t('count', 'conteo') }]}
+          scales={{ x: { time: false } }}
+          height={200}
+        />
+      </div>
+      <p className="fs-panel-sub">
+        {t(
+          `PatchCore (reimplemented in-repo) fit on ${d.n_fit_uncracked} uncracked SDNET2018 concrete patches, never seeing a crack, then scored ${d.n_test_cracked} cracked + ${d.n_test_uncracked} uncracked test patches. AUROC ${d.image_auroc.toFixed(3)}: modest-but-real transfer, far below the 0.996 the same method reaches on industrial MVTec AD. The head-to-head the literature lacked, measured. Metrics only; SDNET2018 imagery stays local (CC BY 4.0).`,
+          `PatchCore (reimplementado en el repo) ajustado en ${d.n_fit_uncracked} parches de hormigón SDNET2018 sin grieta, sin ver nunca una grieta, luego evaluó ${d.n_test_cracked} parches con grieta + ${d.n_test_uncracked} sin grieta. AUROC ${d.image_auroc.toFixed(3)}: transferencia modesta pero real, muy por debajo del 0.996 que el mismo método alcanza en MVTec AD industrial. El head-to-head que faltaba en la literatura, medido. Solo métricas; la imagenería SDNET2018 se queda local (CC BY 4.0).`,
+        )}
+      </p>
+    </div>
+  );
+}
 
 // The benchmark page starts as the PUBLISHED-ANCHOR record: verified numbers from the primary
 // literature that Fisura's own runs must reproduce or be measured against. The lab's own numbers
@@ -114,10 +173,12 @@ export default function Benchmark() {
         )}
         (<Cite id="heckler2026mvtec2" />).
         {t(
-          ' Fisura reports AU-PRO everywhere, and its concrete-transfer study will state plainly whether industrial anomaly detection survives contact with civil surfaces: no published head-to-head exists, so the lab measures it.',
-          ' Fisura reporta AU-PRO en todas partes, y su estudio de transferencia a hormigón dirá claramente si la detección industrial de anomalías sobrevive el contacto con superficies civiles: no existe un head-to-head publicado, así que el laboratorio lo mide.',
+          ' No published head-to-head of industrial anomaly detection on civil surfaces exists, so the lab measures it directly (below).',
+          ' No existe un head-to-head publicado de detección de anomalías industrial sobre superficies civiles, así que el laboratorio lo mide directamente (abajo).',
         )}
       </p>
+
+      <AnomalyTransfer es={t('x', 'y') === 'y'} />
 
       <Callout variant="note" title={t('Where the Fisura numbers will appear', 'Dónde aparecerán los números de Fisura')}>
         {t(

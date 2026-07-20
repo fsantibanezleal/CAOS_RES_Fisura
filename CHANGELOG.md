@@ -3,6 +3,24 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.09.000], 2026-07-19
+
+### Added
+- Anomaly track: PatchCore (Roth et al., CVPR 2022) reimplemented faithfully in-repo (torchvision
+  wide_resnet50_2 layer2+3 locally-aware patch features, greedy k-center coreset with a JL random
+  projection on the GPU, kNN memory-bank scoring). Reimplemented rather than via anomalib because
+  anomalib's dependency tree conflicts with torch 2.11; the real algorithm, not a substitute
+  (same choice as HrSegNet).
+- The concrete-transfer study (the dossier's flagged missing head-to-head): PatchCore fit on
+  UNCRACKED SDNET2018 concrete only, then scoring cracked vs held-out uncracked. Measured image
+  AUROC 0.720 (TPR/TNR 66/66 at the median threshold) over 300 uncracked fit + 100/100 test
+  patches: modest-but-real transfer, far below the 0.996 the same method reaches on industrial
+  MVTec AD. The committed study artifact carries metrics + the score histogram only; SDNET2018
+  imagery stays local (CC BY 4.0).
+- The Benchmark page renders the measured concrete-transfer result live (AUROC + TPR/TNR KPIs +
+  the cracked-vs-uncracked score-distribution chart + the honest framing). Framework card 03
+  (anomaly stack); torchvision pinned in the GPU lane.
+
 ## [0.08.000], 2026-07-19
 
 ### Added

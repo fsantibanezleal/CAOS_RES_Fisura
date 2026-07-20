@@ -50,8 +50,8 @@ const config: ShellConfig = {
   version: displayVersion,
   footer: {
     provenance: {
-      en: 'Data: open crack and damage datasets, each attributed with its license (CC0 and CC BY sets sampled in-repo; non-commercial sets used locally, metrics only). Engines: scikit-image, OpenCV, PyTorch and anomalib offline on a local GPU; the classical pipeline and compact ONNX models run live in the browser.',
-      es: 'Datos: datasets abiertos de grietas y daños, cada uno atribuido con su licencia (muestras CC0 y CC BY en el repo; los no comerciales se usan localmente, solo métricas). Motores: scikit-image, OpenCV, PyTorch y anomalib offline en una GPU local; el pipeline clásico y modelos ONNX compactos corren en vivo en el navegador.',
+      en: 'Data: open crack and damage datasets, each attributed with its license (CC0 and CC BY sets sampled in-repo; non-commercial sets used locally, metrics only). Engines: scikit-image, OpenCV and PyTorch offline on a local GPU (learned segmentation and an in-repo PatchCore reimplementation); the classical pipeline and compact ONNX models run live in the browser.',
+      es: 'Datos: datasets abiertos de grietas y daños, cada uno atribuido con su licencia (muestras CC0 y CC BY en el repo; los no comerciales se usan localmente, solo métricas). Motores: scikit-image, OpenCV y PyTorch offline en una GPU local (segmentación aprendida y una reimplementación de PatchCore en el repo); el pipeline clásico y modelos ONNX compactos corren en vivo en el navegador.',
     },
     disclaimer: {
       en: 'A research lab, not a certified inspection tool: outputs are reproducible research artifacts for method comparison. Severity references quote published guidance as context; nothing here is a structural safety verdict. Your images never leave the browser.',

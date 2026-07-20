@@ -5,6 +5,7 @@
 # The learned modules import torch lazily and every training test skips without CUDA, so the
 # committed artifacts (baked locally) are what CI validates; CI never trains.
 torch==2.11.0                  # via the cu128 index above (2.11.0+cu128 verified on the 4070, 2026-07-18)
+torchvision==0.26.0            # via the cu128 index; wide_resnet50_2 backbone for the anomaly track (PatchCore)
 segmentation-models-pytorch==0.5.0   # MIT; U-Net / DeepLabV3+ / SegFormer with timm encoders
 onnx==1.20.0                   # export graph format
 onnxruntime==1.23.2            # export verification (CPU EP is enough to check parity)
