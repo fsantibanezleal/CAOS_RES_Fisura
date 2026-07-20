@@ -148,6 +148,12 @@ def main() -> None:
         return (1 - (2 * inter + eps) / (denom + eps)).mean()
 
     print(f"dacl10k {args.arch}: train {len(train_pairs)}, val {len(val_pairs)}, {N_CLASSES} classes")
+    out_dir = data_root() / "derived" / "multiclass"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    best_ckpt = out_dir / f"{args.arch}.pt"
+    best_miou = -1.0
+    best_per_class = None
+    best_present = None
     t0 = time.perf_counter()
     for ep in range(args.epochs):
         net.train()
@@ -180,12 +186,19 @@ def main() -> None:
         per_class = (iou_sum / iou_cnt.clamp(min=1)).cpu().numpy()
         present = iou_cnt.cpu().numpy() > 0
         miou = float(per_class[present].mean()) if present.any() else 0.0
-        print(f"epoch {ep}: train_loss {run / max(1, len(tl)):.4f}  val_mIoU {miou:.4f}")
+        star = ""
+        if miou > best_miou:
+            best_miou = miou
+            best_per_class = per_class
+            best_present = present
+            torch.save(net.state_dict(), best_ckpt)  # keep the BEST epoch, not the last
+            star = " *best (saved)"
+        print(f"epoch {ep}: train_loss {run / max(1, len(tl)):.4f}  val_mIoU {miou:.4f}{star}")
 
-    out_dir = data_root() / "derived" / "multiclass"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    ckpt = out_dir / f"{args.arch}.pt"
-    torch.save(net.state_dict(), ckpt)
+    per_class = best_per_class
+    present = best_present
+    miou = best_miou
+    ckpt = best_ckpt
     rec = {
         "arch": args.arch,
         "dataset": "dacl10k v2 (CC BY-NC 4.0; local, metrics only)",

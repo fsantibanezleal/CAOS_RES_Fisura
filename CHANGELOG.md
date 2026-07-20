@@ -3,6 +3,27 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.15.000], 2026-07-20
+
+### Added (BL-011 monitoring: two-epoch registration + differential crack mapping)
+- Detection becomes prognosis. New `fisuralab.monitoring` module (dossier 04 section 4), CPU-only
+  (scikit-image + numpy):
+  - `registration.py`: ORB features + RANSAC homography to register two surveys into a common frame,
+    then differential crack mapping (skeleton + inscribed-circle width per epoch) reporting per-branch
+    width deltas + new-branch pixels + tip extension, never raw pixel differences (which lighting
+    dominates).
+  - `bake_growth.py`: a synthetic two-epoch case with a crack that GROWS between epoch 1 and epoch 2
+    under a camera-pose change, with EXACT ground truth by construction (the only honest way to validate
+    a monitoring pipeline). The pipeline recovers the pose from features and measures the growth: median
+    width +0.095 mm vs a ground-truth +0.095 mm (absolute error 0.000 mm), tip extension 63 px vs 64 px,
+    993 ORB inliers.
+- New **Monitoring** page: the change map (green = crack in both surveys, red = new growth in epoch 2),
+  a view switcher (change / epoch 1 / epoch 2 raw pose / epoch 2 registered), the measured-vs-ground-truth
+  callout, the epoch-comparison table, and the honest scope note (Fisura measures and publishes the
+  crack-length history a(N); it does not certify remaining life, Paris-law being out of an optical
+  concrete scope).
+- `tests/test_monitoring.py`: growth detection, no-change, and committed-artifact coherence (CI-safe).
+
 ## [0.14.000], 2026-07-20
 
 ### Added (BL-010 multi-class damage track: dacl10k 19-class segmentation)

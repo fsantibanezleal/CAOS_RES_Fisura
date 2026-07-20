@@ -1,0 +1,33 @@
+{
+ "schema": "fisura.monitoring/v1",
+ "case": "synthetic two-epoch growth (exact ground truth)",
+ "mm_per_px": 0.08,
+ "registration": {
+  "method": "ORB + RANSAC homography",
+  "inliers": 993
+ },
+ "measured": {
+  "unit": "mm",
+  "width_median_ep1": 0.3578,
+  "width_median_ep2": 0.4525,
+  "width_delta_median": 0.0948,
+  "width_p95_ep1": 0.469,
+  "width_p95_ep2": 0.64,
+  "length_ep1_px": 169,
+  "length_ep2_px": 232,
+  "length_delta_px": 63,
+  "new_branch_px": 58,
+  "grew": true
+ },
+ "ground_truth": {
+  "true_width_median_delta_mm": 0.0948,
+  "true_length_delta_px": 64
+ },
+ "overlays": {
+  "epoch1": "monitoring/overlays/epoch1.png",
+  "epoch2_raw": "monitoring/overlays/epoch2_raw.png",
+  "epoch2_registered": "monitoring/overlays/epoch2_registered.png",
+  "change": "monitoring/overlays/change.png"
+ },
+ "framing": "Change detection runs AFTER metric registration; the reported signal is per-branch width growth and new-branch pixels, not raw pixel differences (which lighting dominates). Synthetic pair with exact ground truth validates the pipeline; real registered pairs are the field goal."
+}
