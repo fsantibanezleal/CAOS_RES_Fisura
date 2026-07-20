@@ -45,3 +45,28 @@ export interface WorkbenchIndex {
   samples: Record<string, WorkbenchSample>;
 }
 export const loadWorkbench = (): Promise<WorkbenchIndex> => getJSON<WorkbenchIndex>('workbench/index.json');
+
+// The per-image enrichment artifact (skeleton graph, width profile, orientation rose, per-model metrics).
+export interface SkeletonNode { x: number; y: number; degree: number; }
+export interface SkeletonEdge { polyline: [number, number][]; length_px: number; mean_halfwidth_px: number; }
+export interface EnrichSkeleton { nodes: SkeletonNode[]; edges: SkeletonEdge[]; n_endpoints: number; n_junctions: number; }
+export interface WidthProfile { s_px: number[]; w_dt_px: number[]; mm_per_px: number | null; }
+export interface Rose { bins_deg: number[]; weight: number[]; }
+export interface ModelMetrics {
+  sweep: { tol_px: number[]; f1: number[] };
+  confusion: { tp: number; fp: number; fn: number; tol_px: number };
+  f1_2px: number | null;
+  f1_5px: number | null;
+}
+export interface Enrichment {
+  sample_id: string;
+  size: [number, number];
+  material: string;
+  has_gt: boolean;
+  skeleton?: EnrichSkeleton;
+  width_profile?: WidthProfile;
+  rose?: Rose;
+  uncertainty?: { mean_std: number; disagree_px: number; n_models: number };
+  models: Record<string, ModelMetrics>;
+}
+export const loadEnrichment = (sampleId: string): Promise<Enrichment> => getJSON<Enrichment>(`enrichment/${sampleId}.json`);

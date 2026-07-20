@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Callout, Tabs } from '@fasl-work/caos-app-shell';
 import {
-  heatUrl, loadCaseArtifact, loadWorkbench, overlayUrl, workbenchUrl,
-  type WorkbenchIndex, type WorkbenchSample,
+  heatUrl, loadCaseArtifact, loadEnrichment, loadWorkbench, overlayUrl, workbenchUrl,
+  type Enrichment, type WorkbenchIndex, type WorkbenchSample,
 } from '../api/artifacts';
 import type { ArtifactSample, CaseArtifact, LevelRecord } from '../lib/contract.types';
 import { useT } from '../lib/i18n';
 import { MethodTile } from '../render/MethodTile';
 import { PanelBoundary } from '../render/PanelBoundary';
 import { UPlotChart } from '../render/UPlotChart';
+import { MetricsTab, QuantTab } from './workbench/QuantMetricsTabs';
 
 // The App is a per-case interactive WORKBENCH (Felipe's spec, 2026-07-20):
 //   LEFT COLUMN: pick the case source (prebaked / pretrained / upload your own), pick the image,
@@ -62,6 +63,7 @@ export default function AppPage() {
   const [learned, setLearned] = useState<CaseArtifact | null>(null);
   const [anomaly, setAnomaly] = useState<CaseArtifact | null>(null);
   const [wb, setWb] = useState<WorkbenchIndex | null>(null);
+  const [enrich, setEnrich] = useState<Enrichment | null>(null);
   const [sampleId, setSampleId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,6 +87,12 @@ export default function AppPage() {
     loadWorkbench().then(setWb).catch(() => setWb(null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!sampleId) return;
+    setEnrich(null);
+    loadEnrichment(sampleId).then(setEnrich).catch(() => setEnrich(null));
+  }, [sampleId]);
 
   const cSample = useMemo(() => classical?.samples.find((s) => s.sample_id === sampleId) ?? null, [classical, sampleId]);
   const lSample = useMemo(() => learned?.samples.find((s) => s.sample_id === sampleId) ?? null, [learned, sampleId]);
@@ -187,9 +195,11 @@ export default function AppPage() {
                 { id: 'prep', label: t('Preprocessing', 'Preprocesamiento'), content: <PrepTab wb={wbSample} es={es} /> },
                 { id: 'semantic', label: t('Semantic seg', 'Segm. semántica'), content: <SemanticTab cSample={cSample} lSample={lSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} es={es} /> },
                 { id: 'slic', label: t('SLIC', 'SLIC'), content: <SlicTab wb={wbSample} n={snapN} c={snapC} es={es} /> },
+                { id: 'quant', label: t('Quantification', 'Cuantificación'), content: <QuantTab enrich={enrich} imageUrl={imageUrl} es={es} /> },
                 { id: 'classical', label: t('Classical', 'Clásico'), content: <FamilyTab methods={CLASSICAL_METHODS} sample={cSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} /> },
                 { id: 'sota', label: t('SOTA', 'SOTA'), content: <FamilyTab methods={LEARNED_METHODS} sample={lSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} /> },
                 { id: 'beyond', label: t('Beyond SOTA', 'Más allá SOTA'), content: <FamilyTab methods={ANOMALY_METHODS} sample={aSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} anomalyHeat={aSample?.heat_rel ? heatUrl(aSample.heat_rel) : null} /> },
+                { id: 'metrics', label: t('Metrics', 'Métricas'), content: <MetricsTab enrich={enrich} es={es} /> },
                 { id: 'summary', label: t('Summary', 'Resumen'), content: <SummaryTab cSample={cSample} lSample={lSample} aSample={aSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} es={es} /> },
               ]}
             />

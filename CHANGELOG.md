@@ -3,6 +3,22 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.12.000], 2026-07-20
+
+### Added (workbench enrichment: Quantification + Metrics tabs, from the enrichment research shortlist)
+- Deep online research (`wip/fisura/research/app-enrichment-viz-methods-2026-07-20.md`, 12-item primary-source
+  shortlist) surfaced the highest-ROI rich visualizations. This lands the first two as new workbench tabs.
+- **Quantification tab**: the crack turned into engineering quantities on the image, the skeleton graph
+  overlay (branch polylines + junction/endpoint nodes by degree, hoverable), the width-along-arc-length
+  profile w(s) (inscribed-circle width traced down the centerline, the crack-opening-displacement view the
+  severity bands read against), and a length-weighted orientation rose (dominant crack direction).
+- **Metrics tab**: the honest scoring, F1-vs-tolerance sweep (0..8 px) for all five learned models on the
+  selected image (the tolerance axis that makes the same method read 0.85 or 0.23), a TP/FP/FN confusion
+  table at 2 px, and the ensemble-disagreement uncertainty (per-pixel stdev across the models, free).
+- `fisuralab.cases.bake_enrichment` computes these per committed image from the GT/reference crack + the
+  per-model masks (scikit-image/scipy only, all from the existing geometry engine): `data/derived/enrichment/`.
+  New `render/SkeletonOverlay.tsx` (SVG graph on the image) + `render/RoseDiagram.tsx` (themed polar SVG).
+
 ## [0.11.000], 2026-07-20
 
 ### Changed (App rebuilt into a per-image interactive WORKBENCH, Felipe's spec 2026-07-20)
