@@ -1,4 +1,4 @@
-import { Callout, Cite, ReferenceList } from '@fasl-work/caos-app-shell';
+import { Callout, Cite, Refs } from '@fasl-work/caos-app-shell';
 import { useT } from '../lib/i18n';
 
 export default function Implementation() {
@@ -73,8 +73,8 @@ export default function Implementation() {
 
       <Callout variant="note" title={t('Current state, stated plainly', 'Estado actual, dicho claramente')}>
         {t(
-          'Wired today: the shell, the pages you are reading, the research layer, the dataset and model acquisition, and the archetype base (contracts, gate, staged pipeline skeleton). The archetype reference engine still occupies the pipeline until the classical ladder unit replaces it. Each engine unit will flip its cases from planned to real, with its tests and docs in the same commit.',
-          'Conectado hoy: la carcasa, las páginas que estás leyendo, la capa de investigación, la adquisición de datasets y modelos, y la base del arquetipo (contratos, compuerta, esqueleto del pipeline por etapas). El motor de referencia del arquetipo todavía ocupa el pipeline hasta que la unidad de la escalera clásica lo reemplace. Cada unidad de motor cambiará sus casos de planificado a real, con sus tests y su documentación en el mismo commit.',
+          'Wired today: the shell and the six pages, the research layer, the dataset and model acquisition, and the real engines. The classical ladder (S0 to S8 stages, L0 to L5 levels) and the quantification flagship (dual width estimators, sub-pixel FWHM, ACI and Eurocode severity bands) are live. The learned ladder ships U-Net, DeepLabV3+ and SegFormer-B2 trained on CrackSeg9k, an in-repo HrSegNet reimplementation, and a DINOv2 frozen-features linear probe, all exported to ONNX with parity checks. The anomaly track ships an in-repo PatchCore and the concrete-transfer study (image AUROC 0.72). Five of sixteen cases are replayable in the workbench. Remaining rungs (PaDiM, FastFlow, EfficientAD, multi-class dacl10k and CODEBRIM, monitoring, DIC, the live browser lane) land in their own units, each flipping its cases from planned to real with tests and docs in the same commit.',
+          'Conectado hoy: la carcasa y las seis páginas, la capa de investigación, la adquisición de datasets y modelos, y los motores reales. La escalera clásica (etapas S0 a S8, niveles L0 a L5) y el buque insignia de cuantificación (estimadores duales de ancho, FWHM subpíxel, bandas de severidad ACI y Eurocódigo) están vivos. La escalera aprendida trae U-Net, DeepLabV3+ y SegFormer-B2 entrenados sobre CrackSeg9k, una reimplementación de HrSegNet en el repo, y una sonda lineal sobre features congeladas de DINOv2, todos exportados a ONNX con chequeos de paridad. La pista de anomalías trae un PatchCore en el repo y el estudio de transferencia a hormigón (AUROC por imagen 0.72). Cinco de dieciséis casos son reproducibles en el banco. Los peldaños restantes (PaDiM, FastFlow, EfficientAD, multiclase dacl10k y CODEBRIM, monitoreo, DIC, el carril en vivo del navegador) landan en sus propias unidades, cada una cambiando sus casos de planificado a real con tests y docs en el mismo commit.',
         )}
       </Callout>
 
@@ -83,8 +83,7 @@ export default function Implementation() {
         <Cite id="kulkarni2022crackseg9k" />, <Cite id="ye2021bcl" />, <Cite id="dorafshan2018sdnet" />, <Cite id="ozgenel2018" />, <Cite id="zou2022visa" />
         {t(', each documented with its license and retrieval mechanism in the data registry.', ', cada uno documentado con su licencia y mecanismo de descarga en el registro de datos.')}
       </p>
-
-      <ReferenceList ids={['kulkarni2022crackseg9k', 'ye2021bcl', 'dorafshan2018sdnet', 'ozgenel2018', 'zou2022visa']} />
+      <Refs label={t('Refs','Refs')} ids={['kulkarni2022crackseg9k', 'ye2021bcl', 'dorafshan2018sdnet', 'ozgenel2018', 'zou2022visa']} />
     </div>
   );
 }

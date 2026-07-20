@@ -1,4 +1,4 @@
-import { Callout, Equation, InlineMath, Cite, ReferenceList } from '@fasl-work/caos-app-shell';
+import { Callout, Equation, InlineMath, Cite, Refs } from '@fasl-work/caos-app-shell';
 import { useT } from '../lib/i18n';
 import { TRACKS } from '../lib/tracks';
 
@@ -26,6 +26,7 @@ export default function Introduction() {
           ' Fisura cubre ambas, con un énfasis deliberado: una máscara de segmentación nunca es el resultado final. El laboratorio siempre empuja un paso más, hacia las cantidades que un ingeniero puede usar: ancho en milímetros, largo, orientación, densidad, crecimiento entre visitas.',
         )}
       </p>
+      <Refs label={t('Refs','Refs')} ids={['spencer2019']} />
 
       <h2>{t('The whole ladder, on the same cases', 'La escalera completa, sobre los mismos casos')}</h2>
       <p>
@@ -60,6 +61,7 @@ export default function Introduction() {
         )}
         (<Cite id="kirillov2023sam" />, <Cite id="sac2025" />, <Cite id="benz2024omnicrack" />).
       </p>
+      <Refs label={t('Refs','Refs')} ids={['shi2016crackforest', 'amhaz2016mps', 'zou2019deepcrack', 'liu2019deepcrack', 'kirillov2023sam', 'sac2025', 'benz2024omnicrack']} />
 
       <h2>{t('Masks become numbers', 'Las máscaras se vuelven números')}</h2>
       <p>
@@ -102,6 +104,7 @@ export default function Introduction() {
           ' Fisura reporta percentiles de ancho contra esas bandas como contexto, y repite el caveat que ambos documentos llevan: el ancho por sí solo no es un indicador confiable de corrosión ni de condición estructural. Nada en este laboratorio es un veredicto de seguridad.',
         )}
       </p>
+      <Refs label={t('Refs','Refs')} ids={['aci224r01', 'en1992']} />
 
       <h2>{t('Honesty as method', 'La honestidad como método')}</h2>
       <p>
@@ -115,6 +118,7 @@ export default function Introduction() {
           '), las licencias deciden qué viaja en el repo, y los datasets con acceso restringido siempre tienen alternativas abiertas. Tercero, honestidad de alcance: un laboratorio óptico ve aperturas superficiales, nunca profundidad; los métodos de subsuperficie (termografía, radar, impact-echo) se documentan como contexto y no se prometen.',
         )}
       </p>
+      <Refs label={t('Refs','Refs')} ids={['dorafshan2018sdnet']} />
 
       <Callout variant="note" title={t('Where to go next', 'Dónde seguir')}>
         {t(
@@ -122,8 +126,6 @@ export default function Introduction() {
           'Metodología explica cada pista y el protocolo de evaluación en profundidad. Implementación muestra cómo están construidos el repositorio, el pipeline y los carriles del navegador. Experimentos contiene la matriz de casos, y Benchmark las tablas cruzadas con las anclas publicadas.',
         )}
       </Callout>
-
-      <ReferenceList ids={['spencer2019', 'shi2016crackforest', 'amhaz2016mps', 'zou2019deepcrack', 'liu2019deepcrack', 'kirillov2023sam', 'sac2025', 'benz2024omnicrack', 'aci224r01', 'en1992', 'dorafshan2018sdnet']} />
     </div>
   );
 }

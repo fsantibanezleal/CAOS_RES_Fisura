@@ -1,4 +1,4 @@
-import { Callout, Equation, Cite, ReferenceList } from '@fasl-work/caos-app-shell';
+import { Callout, Equation, Cite, Refs } from '@fasl-work/caos-app-shell';
 import { useT } from '../lib/i18n';
 
 export default function Methodology() {
@@ -32,6 +32,7 @@ export default function Methodology() {
           ' Los métodos cuyas implementaciones de referencia ya no existen en forma abierta mantenida (percolación, selección de caminos mínimos, anisotropía de forma libre) se reconstruyen desde sus papers, validados contra el comportamiento y los números que esos papers reportan. Dos reglas de ingeniería de la investigación son vinculantes: los filtros de crestas de Python científico se fijan por versión y se someten a pruebas de regresión sobre barras sintéticas en cada actualización, y cada método clásico con licencia restringida vive tras una frontera de plugin opcional para que la escalera central sea totalmente permisiva.',
         )}
       </p>
+      <Refs label={t('Refs','Refs')} ids={['zou2012cracktree', 'amhaz2016mps', 'shi2016crackforest']} />
 
       <h2>{t('2. Learned segmentation', '2. Segmentación aprendida')}</h2>
       <p>
@@ -56,6 +57,7 @@ export default function Methodology() {
         )}
         (<Cite id="cha2018damage" />).
       </p>
+      <Refs label={t('Refs','Refs')} ids={['li2023hrsegnet', 'liu2021crackformer', 'liu2023crackformer2', 'shit2021cldice', 'cha2018damage']} />
 
       <h2>{t('3. Foundation models, without the hype', '3. Modelos fundacionales, sin humo')}</h2>
       <p>
@@ -65,15 +67,17 @@ export default function Methodology() {
         )}{' '}
         (<Cite id="kirillov2023sam" />, <Cite id="ravi2024sam2" />, <Cite id="ge2024cracksam" />, <Cite id="sac2025" />, <Cite id="oquab2023dinov2" />)
       </p>
+      <Refs label={t('Refs','Refs')} ids={['kirillov2023sam', 'ravi2024sam2', 'ge2024cracksam', 'sac2025', 'oquab2023dinov2']} />
 
       <h2>{t('4. Unsupervised anomaly detection', '4. Detección de anomalías no supervisada')}</h2>
       <p>
         {t(
-          'Industrial anomaly detection trains only on defect-free surfaces and flags deviations, which matches the economics of inspection (good surface is abundant, labeled damage is scarce). Fisura runs the established ladder (PatchCore memory banks, PaDiM, FastFlow, and the millisecond-latency EfficientAD) through the anomalib framework, reports the region-overlap metric AU-PRO rather than inflated image-level scores, and adds the study the literature is missing: how well these methods transfer from industrial textures to concrete surfaces, trained on uncracked patches from open crack datasets. The honest counterweight is stated up front: on the hardest current industrial benchmark, state of the art remains below 60 percent AU-PRO.',
-          'La detección de anomalías industrial entrena solo con superficies sin defecto y marca desviaciones, lo que calza con la economía de la inspección (la superficie sana abunda, el daño etiquetado escasea). Fisura corre la escalera establecida (bancos de memoria PatchCore, PaDiM, FastFlow, y EfficientAD de latencia de milisegundos) a través del framework anomalib, reporta la métrica de solape por regiones AU-PRO en vez de puntajes inflados a nivel de imagen, y agrega el estudio que falta en la literatura: qué tan bien transfieren estos métodos desde texturas industriales a superficies de hormigón, entrenados en parches sin grieta de datasets abiertos. El contrapeso honesto se declara de entrada: en el benchmark industrial más duro actual, el estado del arte sigue bajo 60 por ciento AU-PRO.',
+          'Industrial anomaly detection trains only on defect-free surfaces and flags deviations, which matches the economics of inspection (good surface is abundant, labeled damage is scarce). Fisura implements the memory-bank method PatchCore directly in the repository (torchvision WideResNet50 layer features, a greedy k-center coreset with a Johnson-Lindenstrauss projection run on the GPU, kNN scoring) rather than through the anomalib framework, because anomalib pins an older torch and conflicts with the learned track. PaDiM, FastFlow and the millisecond-latency EfficientAD are the remaining rungs of this ladder. The lab reports the region-overlap metric AU-PRO rather than inflated image-level scores, and adds the study the literature is missing: how well these methods transfer from industrial textures to concrete surfaces, trained on uncracked patches from open crack datasets. The first measured result is modest but real: a PatchCore fit on uncracked SDNET2018 concrete reaches image AUROC 0.72 separating cracked from uncracked, far below the 0.996 the same method reaches on industrial MVTec AD. The honest counterweight is stated up front: on the hardest current industrial benchmark, state of the art remains below 60 percent AU-PRO.',
+          'La detección de anomalías industrial entrena solo con superficies sin defecto y marca desviaciones, lo que calza con la economía de la inspección (la superficie sana abunda, el daño etiquetado escasea). Fisura implementa el método de banco de memoria PatchCore directamente en el repositorio (features de capa de torchvision WideResNet50, un coreset k-center voraz con una proyección de Johnson-Lindenstrauss en la GPU, scoring kNN) en vez de a través del framework anomalib, porque anomalib fija un torch más antiguo y conflictúa con la pista aprendida. PaDiM, FastFlow y EfficientAD de latencia de milisegundos son los peldaños restantes de esta escalera. El laboratorio reporta la métrica de solape por regiones AU-PRO en vez de puntajes inflados a nivel de imagen, y agrega el estudio que falta en la literatura: qué tan bien transfieren estos métodos desde texturas industriales a superficies de hormigón, entrenados en parches sin grieta de datasets abiertos. El primer resultado medido es modesto pero real: un PatchCore ajustado sobre hormigón sin grieta de SDNET2018 alcanza AUROC por imagen de 0.72 separando con y sin grieta, muy por debajo del 0.996 que el mismo método alcanza en el industrial MVTec AD. El contrapeso honesto se declara de entrada: en el benchmark industrial más duro actual, el estado del arte sigue bajo 60 por ciento AU-PRO.',
         )}{' '}
         (<Cite id="roth2022patchcore" />, <Cite id="batzner2024efficientad" />, <Cite id="akcay2022anomalib" />, <Cite id="bergmann2019mvtec" />, <Cite id="heckler2026mvtec2" />)
       </p>
+      <Refs label={t('Refs','Refs')} ids={['roth2022patchcore', 'batzner2024efficientad', 'akcay2022anomalib', 'bergmann2019mvtec', 'heckler2026mvtec2']} />
 
       <h2>{t('5. Multi-class structural damage', '5. Daño estructural multiclase')}</h2>
       <p>
@@ -83,6 +87,7 @@ export default function Methodology() {
         )}{' '}
         (<Cite id="flotzinger2024dacl10k" />, <Cite id="mundt2019codebrim" />)
       </p>
+      <Refs label={t('Refs','Refs')} ids={['flotzinger2024dacl10k', 'mundt2019codebrim']} />
 
       <h2>{t('6. Quantification: the measurement bench', '6. Cuantificación: el banco de medición')}</h2>
       <p>
@@ -131,6 +136,7 @@ export default function Methodology() {
         )}
         (<Cite id="pan2009dic" />, <Cite id="olufsen2020mudic" />, <Cite id="jiang2023opencorr" />).
       </p>
+      <Refs label={t('Refs','Refs')} ids={['zhu2023crackpropnet', 'melching2022', 'paris1963', 'pan2009dic', 'olufsen2020mudic', 'jiang2023opencorr']} />
 
       <h2>{t('The evaluation protocol (read this before any table)', 'El protocolo de evaluación (lee esto antes de cualquier tabla)')}</h2>
       <p>
@@ -145,6 +151,7 @@ export default function Methodology() {
         )}
         (<Cite id="zhang2025review" />).
       </p>
+      <Refs label={t('Refs','Refs')} ids={['yang2019fphbn', 'zhang2025review']} />
 
       <Callout variant="honest" title={t('What this lab does not claim', 'Lo que este laboratorio no afirma')}>
         {t(
@@ -152,8 +159,6 @@ export default function Methodology() {
           'Sin veredictos de seguridad estructural. Sin profundidad de grieta desde una fotografía (los métodos ópticos ven aperturas superficiales). Sin promesas de monitoreo de puentes en terreno con hardware de consumo. Sin magia de modelos fundacionales: deciden los números.',
         )}
       </Callout>
-
-      <ReferenceList ids={['zou2012cracktree', 'amhaz2016mps', 'shi2016crackforest', 'li2023hrsegnet', 'liu2021crackformer', 'liu2023crackformer2', 'shit2021cldice', 'cha2018damage', 'kirillov2023sam', 'ravi2024sam2', 'ge2024cracksam', 'sac2025', 'oquab2023dinov2', 'roth2022patchcore', 'batzner2024efficientad', 'akcay2022anomalib', 'bergmann2019mvtec', 'heckler2026mvtec2', 'flotzinger2024dacl10k', 'mundt2019codebrim', 'zhu2023crackpropnet', 'melching2022', 'paris1963', 'pan2009dic', 'olufsen2020mudic', 'jiang2023opencorr', 'yang2019fphbn', 'zhang2025review']} />
     </div>
   );
 }
