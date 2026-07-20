@@ -1,15 +1,12 @@
-import { Callout, Equation, InlineMath, Cite, Refs } from '@fasl-work/caos-app-shell';
+import { Callout, Equation, InlineMath, Cite, Refs, Tabs } from '@fasl-work/caos-app-shell';
 import { useT } from '../lib/i18n';
 import { TRACKS } from '../lib/tracks';
 import { ThemedSvg } from '../render/ThemedSvg';
 
 export default function Introduction() {
   const t = useT();
-  return (
-    <div className="fs-doc">
-      <p className="fs-kicker">{t('Introduction', 'Introducción')}</p>
-      <h1>{t('From a photo of a wall to an engineering number', 'De la foto de un muro a un número de ingeniería')}</h1>
-
+  const secLead = (
+    <>
       <p className="fs-lead">
         {t(
           'Cracks are the most universal symptom of distress in built materials: concrete shrinks and settles, pavements fatigue under traffic, masonry moves, steel corrodes under its coating. Inspection practice still finds most of them the same way it did a century ago, a person looking at a surface. Computer vision promises to look instead: earlier, everywhere, repeatably. Fisura is a research lab about what that promise is actually worth today.',
@@ -28,8 +25,11 @@ export default function Introduction() {
         )}
       </p>
       <Refs label={t('Refs','Refs')} ids={['spencer2019']} />
-
-      <h2>{t('The whole ladder, on the same cases', 'La escalera completa, sobre los mismos casos')}</h2>
+    </>
+  );
+  const secLadder = (
+    <>
+      <h3>{t('The whole ladder, on the same cases', 'La escalera completa, sobre los mismos casos')}</h3>
       <p>
         {t(
           'Most crack-detection repositories demonstrate one model on one dataset. Fisura is built as a comparison instrument instead: seven method tracks, from a global threshold that fails honestly to promptable foundation models, all run on the same open cases with the same metrics and the same evaluation protocol, so the reader sees what each rung of the ladder actually buys.',
@@ -73,8 +73,10 @@ export default function Introduction() {
           )}
         </figcaption>
       </figure>
-
-      <h2>{t('Masks become numbers', 'Las máscaras se vuelven números')}</h2>
+    </>
+  );
+  const secMasks = (
+    <>
       <p>
         {t(
           'The flagship of the lab is quantification. Once a crack is segmented, its skeleton S and the Euclidean distance transform D of the mask give a first width estimate at every skeleton point: the diameter of the largest inscribed circle,',
@@ -116,8 +118,10 @@ export default function Introduction() {
         )}
       </p>
       <Refs label={t('Refs','Refs')} ids={['aci224r01', 'en1992']} />
-
-      <h2>{t('Honesty as method', 'La honestidad como método')}</h2>
+    </>
+  );
+  const secHonesty = (
+    <>
       <p>
         {t(
           'Three disciplines run through everything. First, protocol transparency: crack papers report tolerance-based F-measures under incompatible protocols, so every number in Fisura states its tolerance and split next to the value. Second, dataset honesty: label noise is documented where it exists (the classification workhorse SDNET2018 ships known mislabels ',
@@ -130,6 +134,24 @@ export default function Introduction() {
         )}
       </p>
       <Refs label={t('Refs','Refs')} ids={['dorafshan2018sdnet']} />
+    </>
+  );
+
+  return (
+    <div className="fs-doc">
+      <p className="fs-kicker">{t('Introduction', 'Introducción')}</p>
+      <h1>{t('From a photo of a wall to an engineering number', 'De la foto de un muro a un número de ingeniería')}</h1>
+
+      <Tabs
+        ariaLabel={t('introduction sections', 'secciones de introducción')}
+        initial="lead"
+        tabs={[
+          { id: 'lead', label: t('What Fisura is', 'Qué es Fisura'), content: secLead },
+          { id: 'ladder', label: t('The whole ladder', 'La escalera completa'), content: secLadder },
+          { id: 'masks', label: t('Masks become numbers', 'Máscaras a números'), content: secMasks },
+          { id: 'honesty', label: t('Honesty as method', 'Honestidad como método'), content: secHonesty },
+        ]}
+      />
 
       <Callout variant="note" title={t('Where to go next', 'Dónde seguir')}>
         {t(

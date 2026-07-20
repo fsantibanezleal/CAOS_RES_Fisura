@@ -132,6 +132,14 @@
 .fs-rose-wedge { fill: color-mix(in oklab, var(--fs-quantify) 55%, transparent); stroke: var(--fs-quantify); stroke-width: 0.5; }
 .fs-rose-lbl { fill: var(--color-fg-subtle); font-size: 9px; font-family: var(--font-mono); }
 
+/* ---- overlay legend (colour -> label for every image overlay; accessibility) ---- */
+.fs-legend { display: flex; flex-wrap: wrap; gap: 0.4rem 0.9rem; list-style: none; margin: 0.4rem 0 0; padding: 0.45rem 0.55rem; background: color-mix(in oklab, var(--color-fg-subtle) 7%, transparent); border-radius: 7px; }
+.fs-legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; color: var(--color-fg-subtle); }
+.fs-legend-sw { width: 13px; height: 13px; border-radius: 3px; flex: none; }
+.fs-legend-sw.gradient { width: 26px; }
+.fs-legend-sw.outline { background: transparent; border: 2px solid; }
+.fs-legend-l { white-space: nowrap; }
+
 /* ---- Experiments: coverage rows + inlined themed SVG ---- */
 .fs-cov-row { border: 1px solid var(--color-border); border-radius: 10px; padding: 0.6rem 0.75rem; margin: 0.5rem 0; background: var(--color-surface); }
 .fs-cov-head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }

@@ -32,12 +32,14 @@ export const workbenchUrl = (rel: string): string => `${base}data/${rel}`;
 
 // The per-image workbench index (preprocessing intermediates + the SLIC grid).
 export interface WorkbenchPrep { gray: string; flatten: string; denoise: string; ridge: string; }
+export interface WorkbenchScaleSpace { sigmas: number[]; maps: Record<string, string>; } // "<sigma>"|"argmax" -> png
 export interface WorkbenchSample {
   material: string;
   size: [number, number];
   prep: WorkbenchPrep;
   slic: Record<string, string>;             // key "<n>_<c>" -> png rel path
   slic_real_counts: Record<string, number>; // key "<n>_<c>" -> actual superpixel count
+  scale_space?: WorkbenchScaleSpace;
 }
 export interface WorkbenchIndex {
   schema: string;
