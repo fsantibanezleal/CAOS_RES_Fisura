@@ -1,7 +1,7 @@
 {
   "name": "fisura-web",
   "private": true,
-  "version": "0.9.1",
+  "version": "0.10.0",
   "license": "MIT",
   "type": "module",
   "description": "Fisura SPA: crack, damage and defect detection and quantification on concrete and construction materials, from classical pipelines to foundation models, with replay of committed artifacts and an in-browser live lane.",

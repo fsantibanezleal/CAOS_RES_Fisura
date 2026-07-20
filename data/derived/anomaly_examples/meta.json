@@ -1,0 +1,26 @@
+{
+ "method": "PatchCore (in-repo): WideResNet50 layer2+3, greedy coreset, kNN, fit on uncracked concrete",
+ "memory_bank": {
+  "bank_patches_total": 156800,
+  "bank_pool": 120000,
+  "memory_patches": 6000,
+  "feature_dim": 1536,
+  "grid": [
+   28,
+   28
+  ]
+ },
+ "shared_scale": {
+  "lo": 1.2985483407974243,
+  "hi": 3.264734983444214
+ },
+ "scores": {
+  "bcl-nonsteel-c1": 3.2647,
+  "bcl-nonsteel-c10": 2.7414,
+  "bcl-steel-s1": 2.8102,
+  "bcl-noise-f1": 2.8894,
+  "sdnet-cp-001-100": 2.5875,
+  "sdnet-up-001-1": 3.1765
+ },
+ "minutes": 0.7
+}

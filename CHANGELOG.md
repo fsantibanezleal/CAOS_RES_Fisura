@@ -3,6 +3,31 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.10.000], 2026-07-20
+
+### Changed (App workbench rebuilt to the ADR-0017 section 3 structure)
+- The App is re-architected so the methods are VISIBLE ON THE IMAGE, not in a table. The left column
+  is now parametrization only: a data-source segmented control (Synthetic knobs / Real cases / Your
+  own image), the sample picker, the per-method parameters (classical rung, SOTA model, overlay and
+  anomaly-heat opacity, ground-truth toggle), and a live diagnosis read-out that updates with every
+  control (classical best F1 vs SOTA best F1 vs anomaly score, plus a one-line verdict of whether the
+  learned model earns its complexity on this sample).
+- The top tabs are the METHODS in ladder order: Classical (L0-L5), SOTA (learned: U-Net, DeepLabV3+,
+  SegFormer-B2, HrSegNet, DINOv2 linear probe), Beyond SOTA (PatchCore anomaly), Quantification,
+  Context. Every method tab renders its prediction ON the same image with a value read-out; sweeping
+  the classical rung or the SOTA model in the sidebar changes the overlay and the F1 live. This is the
+  "what does each rung buy on the same pixels" comparison the Introduction promised, now realized in
+  the interactive surface instead of stranded as a Benchmark table.
+
+### Added
+- The Beyond-SOTA anomaly output is now visible per image: `fisuralab.anomaly.bake_examples` fits a
+  PatchCore memory bank on uncracked concrete only and scores the six shared example images, baking a
+  per-image anomaly heatmap (warm = far from the healthy-concrete memory bank) plus a thresholded
+  anomaly region and the honest anomaly score. The heat overlays are committed (derived, redistributable);
+  the SDNET2018 fit imagery stays local. `HeatCanvas` blends the heat over the base image with the GT
+  crack and the anomaly-region outline. The tab carries the honest framing (0.72 AUROC, a screen not a
+  detector).
+
 ## [0.09.000], 2026-07-19
 
 ### Added

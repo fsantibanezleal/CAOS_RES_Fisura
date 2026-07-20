@@ -78,6 +78,8 @@ export interface LevelRecord {
   mask_rle: MaskRLE;
   notes: string[];
   segmentation: SegmentationRecord | null;
+  anomaly_score?: number;        // Beyond-SOTA: raw PatchCore image anomaly score
+  anomaly_score_norm?: number;   // normalised on the shared 6-image scale [0,1]
 }
 
 export interface ArtifactSample {
@@ -97,6 +99,7 @@ export interface ArtifactSample {
   width_mm?: WidthMm | null;
   severity?: SeverityRecord | null;
   overlays_rel?: string;               // derived/<case>/overlays/<sample_id> prefix (redistributable only)
+  heat_rel?: string;                   // Beyond-SOTA: committed anomaly heatmap PNG (rel to data/)
 }
 
 export interface CaseArtifact {
