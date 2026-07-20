@@ -1,0 +1,82 @@
+<svg viewBox="0 0 880 470" width="880" class="arch-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Leakage-safe evaluation protocol">
+  <style>
+    .bx { fill: var(--color-surface-2); stroke: var(--color-border); stroke-width: 1; }
+    .bx-ok { fill: var(--color-surface-2); stroke: var(--color-good); stroke-width: 1.6; }
+    .bx-hi { fill: var(--color-surface-2); stroke: var(--color-accent); stroke-width: 1.6; }
+    .bx-bad { fill: var(--color-surface-2); stroke: var(--color-magenta); stroke-width: 1.6; stroke-dasharray: 4 3; }
+    .ttl { fill: var(--color-fg); font: 600 12.5px var(--font-sans, sans-serif); }
+    .it { fill: var(--color-fg-subtle); font: 10.5px var(--font-sans, sans-serif); }
+    .mono { fill: var(--color-accent); font: 10px var(--font-mono, monospace); }
+    .mu { fill: var(--color-fg-faint); font: 10px var(--font-sans, sans-serif); }
+    .bad-t { fill: var(--color-magenta); font: 600 11px var(--font-sans, sans-serif); }
+    .ok-t { fill: var(--color-good); font: 600 11px var(--font-sans, sans-serif); }
+    .flow { fill: none; stroke: var(--color-fg-subtle); stroke-width: 1.5; }
+    .lbl { fill: var(--color-fg-faint); font: 9.5px var(--font-sans, sans-serif); }
+    .band { fill: var(--color-fg); font: 600 11.5px var(--font-sans, sans-serif); }
+    .strike { stroke: var(--color-magenta); stroke-width: 2; }
+  </style>
+  <defs>
+    <marker id="ah" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto-start-reverse">
+      <path d="M0,0 L6,3 L0,6 Z" fill="var(--color-fg-subtle)" />
+    </marker>
+  </defs>
+
+  <text x="20" y="22" class="band">Split by physical SURFACE, never by patch (one surface spawns many patches)</text>
+
+  <rect x="20" y="42" width="170" height="72" class="bx bx-hi" rx="8" />
+  <text x="34" y="66" class="ttl">Raw dataset</text>
+  <text x="34" y="84" class="mono">data/ingest/*.py</text>
+  <text x="34" y="102" class="it">grouped by surface id</text>
+
+  <path class="flow" d="M190,78 L232,78" marker-end="url(#ah)" />
+  <text x="188" y="70" class="lbl">split</text>
+
+  <text x="256" y="36" class="ok-t">Leakage-safe path</text>
+  <rect x="256" y="42" width="176" height="72" class="bx bx-ok" rx="8" />
+  <text x="270" y="66" class="ttl">Train surfaces</text>
+  <text x="270" y="84" class="it">patches never seen at test</text>
+  <text x="270" y="102" class="mu">70 percent of surfaces</text>
+
+  <rect x="448" y="42" width="176" height="72" class="bx bx-ok" rx="8" />
+  <text x="462" y="66" class="ttl">Held-out surfaces</text>
+  <text x="462" y="84" class="it">every patch is new terrain</text>
+  <text x="462" y="102" class="mu">30 percent of surfaces</text>
+
+  <path class="flow" d="M624,78 L666,78" marker-end="url(#ah)" />
+  <rect x="666" y="42" width="194" height="72" class="bx bx-hi" rx="8" />
+  <text x="680" y="66" class="ttl">Report</text>
+  <text x="680" y="84" class="it">F1 at 2px AND 5px</text>
+  <text x="680" y="102" class="mono">eval/harness.py</text>
+
+  <path class="flow" d="M256,114 C240,150 244,168 262,182" marker-end="url(#ah)" />
+
+  <text x="256" y="150" class="bad-t">Forbidden path: tile everything, THEN split at random</text>
+  <rect x="256" y="162" width="368" height="80" class="bx bx-bad" rx="8" />
+  <text x="270" y="186" class="ttl">Random patch split</text>
+  <text x="270" y="205" class="it">patches of the same surface land in train AND test</text>
+  <text x="270" y="226" class="mu">the network memorises the surface, not the crack: inflated F1</text>
+  <line x1="270" y1="171" x2="610" y2="233" class="strike" />
+  <line x1="610" y1="171" x2="270" y2="233" class="strike" />
+
+  <text x="20" y="300" class="band">The tolerance protocol (why a single F1 is never enough)</text>
+  <rect x="20" y="316" width="272" height="128" class="bx" rx="8" />
+  <text x="34" y="340" class="ttl">Buffered precision / recall / F1</text>
+  <text x="34" y="360" class="it">a predicted pixel counts as correct if</text>
+  <text x="34" y="377" class="it">a true crack pixel lies within d pixels</text>
+  <text x="34" y="398" class="mono">dilation radius = d; no thinning/NMS</text>
+  <text x="34" y="424" class="mu">d was never standardised across papers</text>
+
+  <rect x="308" y="316" width="250" height="128" class="bx bx-hi" rx="8" />
+  <text x="322" y="340" class="ttl">d = 2 px (strict)</text>
+  <text x="322" y="360" class="it">the deep-era convention</text>
+  <text x="322" y="382" class="ttl">d = 5 px (loose)</text>
+  <text x="322" y="402" class="it">the classical convention</text>
+  <text x="322" y="428" class="mu">same masks, different number</text>
+
+  <rect x="574" y="316" width="286" height="128" class="bx" rx="8" />
+  <text x="588" y="340" class="ttl">The incomparability trap</text>
+  <text x="588" y="360" class="it">FPHBN uses a diagonal-proportional</text>
+  <text x="588" y="377" class="it">tolerance after NMS, comparable to</text>
+  <text x="588" y="394" class="it">neither fixed radius</text>
+  <text x="588" y="424" class="mu">so the protocol travels with the number</text>
+</svg>

@@ -3,6 +3,19 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.10.001], 2026-07-20
+
+### Changed (Experiments rebuilt from a card grid to a real protocol page, ADR-0017 section 2)
+- The Experiments page was a grid of status cards (the exact "info-box cards" ADR-0017 forbids). It is
+  now prose + tabs separating the distinct experimental questions: The metric (buffered P/R/F1 with the
+  exact equation and the dual 2px/5px convention), Leakage-safe protocol (split by physical surface, with
+  a hand-authored theme-aware SVG that draws the forbidden random-patch split STRUCK OUT plus the
+  tolerance-protocol band), Datasets (a real table with per-set license + redistribution mode + live/planned
+  status), Coverage matrix (the 7 tracks x 16 cases with real per-track live counts), and Results so far
+  (per-architecture mean F1 at 2px and 5px read LIVE from the committed learned-on-examples artifact, not
+  typed into the page: DeepLabV3+ 0.504, SegFormer 0.472, HrSegNet 0.445, DINOv2 probe 0.440, U-Net 0.335).
+- New `svg/tech/exp-protocol.svg` (theme-aware, CSS-var tokens, zero hardcoded hex); per-section `<Refs>`.
+
 ## [0.10.000], 2026-07-20
 
 ### Changed (App workbench rebuilt to the ADR-0017 section 3 structure)
