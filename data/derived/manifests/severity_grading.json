@@ -11,7 +11,7 @@
  },
  "engine": {
   "package": "fisuralab",
-  "version": "0.13.000",
+  "version": "0.14.000",
   "model": "classical ladder L0-L5 (staged S0-S8)"
  },
  "params": {

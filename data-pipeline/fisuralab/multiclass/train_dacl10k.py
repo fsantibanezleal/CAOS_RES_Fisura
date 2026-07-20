@@ -1,0 +1,208 @@
+"""Train a multi-label semantic segmenter on dacl10k (BL-010, GPU local lane, RTX 4070).
+
+Modest-bar architecture from the dossier (section 6.1): SMP with a SegFormer (MiT) or EfficientNet
+encoder + FPN/Unet head, 19 sigmoid outputs, BCE + Dice loss, 512-crop training. Target: beat the
+WACV 2024 paper baseline of 0.424 mIoU on the test split (macro IoU over the 19 classes).
+
+Everything heavy stays OUTSIDE git (FISURA_DATA_ROOT/derived/multiclass); only the metrics record +
+tiny qualitative overlays ship. Torch imported lazily; the module skips without CUDA (CI never trains).
+
+    python -m fisuralab.multiclass.train_dacl10k --arch segformer --epochs 30
+    python -m fisuralab.multiclass.train_dacl10k --arch effb4 --epochs 1 --limit-train 200   # smoke
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import time
+
+import numpy as np
+
+from ..io.image_formats import read_image
+from ..learned.shards import data_root
+from .dacl10k import CLASSES, N_CLASSES, list_split, rasterize
+
+CROP = 512
+
+
+def _build(arch: str):
+    import segmentation_models_pytorch as smp  # noqa: PLC0415
+
+    if arch == "segformer":
+        return smp.Segformer(encoder_name="mit_b2", encoder_weights="imagenet", in_channels=3, classes=N_CLASSES)
+    if arch == "effb4":
+        return smp.FPN(encoder_name="tu-efficientnet_b4", encoder_weights="imagenet", in_channels=3, classes=N_CLASSES)
+    if arch == "unet_r34":
+        return smp.Unet(encoder_name="resnet34", encoder_weights="imagenet", in_channels=3, classes=N_CLASSES)
+    raise ValueError(f"unknown arch '{arch}' (segformer | effb4 | unet_r34)")
+
+
+_MEAN = np.array([0.485, 0.456, 0.406], np.float32)
+_STD = np.array([0.229, 0.224, 0.225], np.float32)
+
+
+def _dacl_item(img_p, ann_p, train: bool, rng):
+    """One (image, mask) sample: read, rasterize, 512-crop, normalize. Torch-free (returns numpy)."""
+    img = read_image(img_p)
+    if img.ndim == 2:
+        img = np.stack([img, img, img], -1)
+    img = img[..., :3].astype(np.float32) / 255.0
+    m = rasterize(ann_p, out_hw=img.shape[:2])  # (C,H,W)
+    H, W = img.shape[:2]
+    if H < CROP or W < CROP:
+        ph, pw = max(0, CROP - H), max(0, CROP - W)
+        img = np.pad(img, ((0, ph), (0, pw), (0, 0)))
+        m = np.pad(m, ((0, 0), (0, ph), (0, pw)))
+        H, W = img.shape[:2]
+    if train:
+        y0 = int(rng.integers(0, H - CROP + 1))
+        x0 = int(rng.integers(0, W - CROP + 1))
+    else:
+        y0, x0 = (H - CROP) // 2, (W - CROP) // 2
+    img = img[y0:y0 + CROP, x0:x0 + CROP]
+    m = m[:, y0:y0 + CROP, x0:x0 + CROP]
+    if train and rng.random() < 0.5:
+        img = img[:, ::-1].copy()
+        m = m[:, :, ::-1].copy()
+    img = (img - _MEAN) / _STD
+    return np.ascontiguousarray(img.transpose(2, 0, 1)), np.ascontiguousarray(m).astype(np.float32)
+
+
+class DaclDataset:
+    """A module-level (Windows-spawn-picklable) map-style dataset. It does NOT inherit torch's
+    Dataset so the module imports without torch (CI-safe); DataLoader accepts any object with
+    __len__/__getitem__, and torch is imported lazily per item."""
+
+    def __init__(self, pairs, train, seed):
+        self.pairs = pairs
+        self.train = train
+        self.seed = seed
+        self.rng = np.random.default_rng(seed)
+
+    def __len__(self):
+        return len(self.pairs)
+
+    def __getitem__(self, i):
+        import torch  # noqa: PLC0415
+
+        x, y = _dacl_item(self.pairs[i][0], self.pairs[i][1], self.train, self.rng)
+        return torch.from_numpy(x), torch.from_numpy(y)
+
+
+def _macro_iou(logits, target, thr: float = 0.5):
+    """Per-class IoU averaged over classes present in the batch (macro mIoU, the dacl10k metric)."""
+    import torch  # noqa: PLC0415
+
+    pred = (torch.sigmoid(logits) > thr).float()
+    inter = (pred * target).sum(dim=(0, 2, 3))
+    union = ((pred + target) > 0).float().sum(dim=(0, 2, 3))
+    iou = inter / union.clamp(min=1)
+    valid = union > 0
+    return iou, valid
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(prog="fisuralab.multiclass.train_dacl10k")
+    ap.add_argument("--arch", default="segformer", choices=["segformer", "effb4", "unet_r34"])
+    ap.add_argument("--epochs", type=int, default=30)
+    ap.add_argument("--batch", type=int, default=4)
+    ap.add_argument("--lr", type=float, default=6e-4)
+    ap.add_argument("--limit-train", type=int, default=None)
+    ap.add_argument("--limit-val", type=int, default=None)
+    ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--seed", type=int, default=42)
+    args = ap.parse_args()
+
+    import torch  # noqa: PLC0415
+    from torch.utils.data import DataLoader  # noqa: PLC0415
+
+    if not torch.cuda.is_available():
+        raise SystemExit("CUDA required for dacl10k training (GPU local lane)")
+    device = "cuda"
+    torch.manual_seed(args.seed)
+
+    train_pairs = list_split("train")
+    val_pairs = list_split("validation")
+    if not train_pairs:
+        raise SystemExit("dacl10k not extracted under the vault; extract dacl10k_v2_devphase.zip first")
+    if args.limit_train:
+        train_pairs = train_pairs[: args.limit_train]
+    if args.limit_val:
+        val_pairs = val_pairs[: args.limit_val]
+
+    tl = DataLoader(DaclDataset(train_pairs, True, args.seed), batch_size=args.batch, shuffle=True,
+                    num_workers=args.workers, drop_last=True, pin_memory=True)
+    vl = DataLoader(DaclDataset(val_pairs, False, args.seed), batch_size=args.batch, shuffle=False,
+                    num_workers=args.workers, pin_memory=True)
+
+    net = _build(args.arch).to(device)
+    opt = torch.optim.AdamW(net.parameters(), lr=args.lr, weight_decay=1e-4)
+    sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=args.epochs * max(1, len(tl)))
+    bce = torch.nn.BCEWithLogitsLoss()
+    scaler = torch.amp.GradScaler("cuda")
+
+    def dice_loss(logits, target, eps=1.0):
+        p = torch.sigmoid(logits)
+        inter = (p * target).sum(dim=(2, 3))
+        denom = p.sum(dim=(2, 3)) + target.sum(dim=(2, 3))
+        return (1 - (2 * inter + eps) / (denom + eps)).mean()
+
+    print(f"dacl10k {args.arch}: train {len(train_pairs)}, val {len(val_pairs)}, {N_CLASSES} classes")
+    t0 = time.perf_counter()
+    for ep in range(args.epochs):
+        net.train()
+        run = 0.0
+        for bi, (x, y) in enumerate(tl):
+            x, y = x.to(device, non_blocking=True), y.to(device, non_blocking=True)
+            opt.zero_grad(set_to_none=True)
+            with torch.amp.autocast("cuda"):
+                out = net(x)
+                loss = bce(out, y) + dice_loss(out, y)
+            scaler.scale(loss).backward()
+            scaler.step(opt)
+            scaler.update()
+            sched.step()
+            run += float(loss.item())
+            if bi % 50 == 0:
+                print(f"  ep{ep} it{bi}/{len(tl)} loss {loss.item():.4f}")
+        # validation macro-IoU
+        net.eval()
+        iou_sum = torch.zeros(N_CLASSES, device=device)
+        iou_cnt = torch.zeros(N_CLASSES, device=device)
+        with torch.no_grad():
+            for x, y in vl:
+                x, y = x.to(device), y.to(device)
+                with torch.amp.autocast("cuda"):
+                    out = net(x)
+                iou, valid = _macro_iou(out, y)
+                iou_sum += iou * valid
+                iou_cnt += valid.float()
+        per_class = (iou_sum / iou_cnt.clamp(min=1)).cpu().numpy()
+        present = iou_cnt.cpu().numpy() > 0
+        miou = float(per_class[present].mean()) if present.any() else 0.0
+        print(f"epoch {ep}: train_loss {run / max(1, len(tl)):.4f}  val_mIoU {miou:.4f}")
+
+    out_dir = data_root() / "derived" / "multiclass"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    ckpt = out_dir / f"{args.arch}.pt"
+    torch.save(net.state_dict(), ckpt)
+    rec = {
+        "arch": args.arch,
+        "dataset": "dacl10k v2 (CC BY-NC 4.0; local, metrics only)",
+        "n_train": len(train_pairs),
+        "n_val": len(val_pairs),
+        "epochs": args.epochs,
+        "val_mIoU": round(miou, 4),
+        "per_class_IoU": {CLASSES[i]: round(float(per_class[i]), 4) for i in range(N_CLASSES) if present[i]},
+        "baseline_mIoU": 0.424,
+        "baseline_source": "Flotzinger et al. WACV 2024 Table 4 (FPN + EfficientNet-B4 + aux loss)",
+        "minutes": round((time.perf_counter() - t0) / 60.0, 1),
+        "checkpoint": str(ckpt),
+    }
+    (out_dir / f"{args.arch}_results.json").write_text(json.dumps(rec, indent=1), encoding="utf-8")
+    print(json.dumps({k: v for k, v in rec.items() if k != "per_class_IoU"}, indent=1))
+    print(f"-> {out_dir / f'{args.arch}_results.json'}")
+
+
+if __name__ == "__main__":
+    main()

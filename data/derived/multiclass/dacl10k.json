@@ -1,0 +1,257 @@
+{
+ "schema": "fisura.multiclass/v1",
+ "dataset": "dacl10k v2 (CC BY-NC 4.0; images local, metrics + low-res overlays only)",
+ "arch": "effb4",
+ "classes": [
+  "Crack",
+  "ACrack",
+  "Wetspot",
+  "Efflorescence",
+  "Rust",
+  "Rockpocket",
+  "Hollowareas",
+  "Cavity",
+  "Spalling",
+  "Graffiti",
+  "Weathering",
+  "Restformwork",
+  "ExposedRebars",
+  "Bearing",
+  "EJoint",
+  "Drainage",
+  "PEquipment",
+  "JTape",
+  "WConccor"
+ ],
+ "damage_classes": [
+  "ACrack",
+  "Cavity",
+  "Crack",
+  "Efflorescence",
+  "ExposedRebars",
+  "Graffiti",
+  "Hollowareas",
+  "Restformwork",
+  "Rockpocket",
+  "Rust",
+  "Spalling",
+  "Weathering",
+  "Wetspot"
+ ],
+ "palette": [
+  [
+   230,
+   57,
+   70
+  ],
+  [
+   244,
+   106,
+   60
+  ],
+  [
+   255,
+   159,
+   28
+  ],
+  [
+   255,
+   200,
+   87
+  ],
+  [
+   214,
+   40,
+   40
+  ],
+  [
+   156,
+   102,
+   68
+  ],
+  [
+   190,
+   120,
+   90
+  ],
+  [
+   138,
+   80,
+   60
+  ],
+  [
+   233,
+   79,
+   55
+  ],
+  [
+   204,
+   51,
+   139
+  ],
+  [
+   150,
+   111,
+   51
+  ],
+  [
+   120,
+   90,
+   70
+  ],
+  [
+   176,
+   48,
+   96
+  ],
+  [
+   46,
+   134,
+   193
+  ],
+  [
+   52,
+   152,
+   219
+  ],
+  [
+   26,
+   188,
+   156
+  ],
+  [
+   72,
+   201,
+   176
+  ],
+  [
+   93,
+   173,
+   226
+  ],
+  [
+   40,
+   116,
+   166
+  ]
+ ],
+ "val_mIoU": 0.1169,
+ "baseline_mIoU": 0.424,
+ "baseline_source": "Flotzinger et al. WACV 2024 Table 4 (FPN + EfficientNet-B4 + aux loss)",
+ "per_class_IoU": {
+  "Crack": 0.0,
+  "ACrack": 0.3105,
+  "Wetspot": 0.0958,
+  "Efflorescence": 0.2157,
+  "Rust": 0.2733,
+  "Rockpocket": 0.0,
+  "Hollowareas": 0.3146,
+  "Cavity": 0.0477,
+  "Spalling": 0.2341,
+  "Graffiti": 0.3803,
+  "Weathering": 0.2323,
+  "Restformwork": 0.0,
+  "ExposedRebars": 0.0,
+  "Bearing": 0.0407,
+  "EJoint": 0.0,
+  "Drainage": 0.0,
+  "PEquipment": 0.0759,
+  "JTape": 0.0,
+  "WConccor": 0.0
+ },
+ "n_train": 2500,
+ "n_val": 400,
+ "epochs": 12,
+ "samples": [
+  {
+   "id": "dacl10k_v2_validation_0607",
+   "overlay": "multiclass/overlays/dacl10k_v2_validation_0607.png",
+   "present_classes": [
+    "Crack",
+    "Rust",
+    "Cavity",
+    "Bearing"
+   ],
+   "per_class_iou": {
+    "Crack": 0.0,
+    "Rust": 0.459,
+    "Cavity": 0.0,
+    "Bearing": 0.303
+   }
+  },
+  {
+   "id": "dacl10k_v2_validation_0665",
+   "overlay": "multiclass/overlays/dacl10k_v2_validation_0665.png",
+   "present_classes": [
+    "Wetspot",
+    "Weathering"
+   ],
+   "per_class_iou": {
+    "Wetspot": 0.0,
+    "Weathering": 0.308
+   }
+  },
+  {
+   "id": "dacl10k_v2_validation_0917",
+   "overlay": "multiclass/overlays/dacl10k_v2_validation_0917.png",
+   "present_classes": [
+    "Rust",
+    "Hollowareas",
+    "Spalling",
+    "Weathering",
+    "PEquipment",
+    "JTape"
+   ],
+   "per_class_iou": {
+    "Rust": 0.0,
+    "Hollowareas": 0.0,
+    "Spalling": 0.0,
+    "Weathering": 0.015,
+    "PEquipment": 0.72,
+    "JTape": 0.0
+   }
+  },
+  {
+   "id": "dacl10k_v2_validation_0563",
+   "overlay": "multiclass/overlays/dacl10k_v2_validation_0563.png",
+   "present_classes": [
+    "Efflorescence",
+    "Rust",
+    "Hollowareas",
+    "Spalling",
+    "Weathering"
+   ],
+   "per_class_iou": {
+    "Efflorescence": 0.0,
+    "Rust": 0.0,
+    "Hollowareas": 0.472,
+    "Spalling": 0.721,
+    "Weathering": 0.0
+   }
+  },
+  {
+   "id": "dacl10k_v2_validation_0873",
+   "overlay": "multiclass/overlays/dacl10k_v2_validation_0873.png",
+   "present_classes": [
+    "Crack",
+    "Wetspot",
+    "Rust",
+    "Rockpocket",
+    "Hollowareas",
+    "Cavity",
+    "Spalling",
+    "Weathering"
+   ],
+   "per_class_iou": {
+    "Crack": 0.0,
+    "Wetspot": 0.022,
+    "Rust": 0.398,
+    "Rockpocket": 0.0,
+    "Hollowareas": 0.317,
+    "Cavity": 0.0,
+    "Spalling": 0.119,
+    "Weathering": 0.621
+   }
+  }
+ ]
+}
