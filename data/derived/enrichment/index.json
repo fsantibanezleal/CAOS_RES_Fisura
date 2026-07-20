@@ -1,0 +1,11 @@
+{
+ "schema": "fisura.enrichment/v1",
+ "samples": [
+  "bcl-nonsteel-c1",
+  "bcl-nonsteel-c10",
+  "bcl-steel-s1",
+  "bcl-noise-f1",
+  "sdnet-cp-001-100",
+  "sdnet-up-001-1"
+ ]
+}
