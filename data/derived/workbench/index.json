@@ -46,6 +46,21 @@
     "300_5": 269,
     "300_10": 281,
     "300_20": 286
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/bcl-nonsteel-c1/ridge_s1.png",
+     "2": "workbench/bcl-nonsteel-c1/ridge_s2.png",
+     "3": "workbench/bcl-nonsteel-c1/ridge_s3.png",
+     "4": "workbench/bcl-nonsteel-c1/ridge_s4.png",
+     "argmax": "workbench/bcl-nonsteel-c1/ridge_argmax.png"
+    }
    }
   },
   "bcl-nonsteel-c10": {
@@ -81,6 +96,21 @@
     "300_5": 251,
     "300_10": 278,
     "300_20": 283
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/bcl-nonsteel-c10/ridge_s1.png",
+     "2": "workbench/bcl-nonsteel-c10/ridge_s2.png",
+     "3": "workbench/bcl-nonsteel-c10/ridge_s3.png",
+     "4": "workbench/bcl-nonsteel-c10/ridge_s4.png",
+     "argmax": "workbench/bcl-nonsteel-c10/ridge_argmax.png"
+    }
    }
   },
   "bcl-steel-s1": {
@@ -116,6 +146,21 @@
     "300_5": 271,
     "300_10": 284,
     "300_20": 288
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/bcl-steel-s1/ridge_s1.png",
+     "2": "workbench/bcl-steel-s1/ridge_s2.png",
+     "3": "workbench/bcl-steel-s1/ridge_s3.png",
+     "4": "workbench/bcl-steel-s1/ridge_s4.png",
+     "argmax": "workbench/bcl-steel-s1/ridge_argmax.png"
+    }
    }
   },
   "bcl-noise-f1": {
@@ -151,6 +196,21 @@
     "300_5": 255,
     "300_10": 283,
     "300_20": 288
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/bcl-noise-f1/ridge_s1.png",
+     "2": "workbench/bcl-noise-f1/ridge_s2.png",
+     "3": "workbench/bcl-noise-f1/ridge_s3.png",
+     "4": "workbench/bcl-noise-f1/ridge_s4.png",
+     "argmax": "workbench/bcl-noise-f1/ridge_argmax.png"
+    }
    }
   },
   "sdnet-cp-001-100": {
@@ -186,6 +246,21 @@
     "300_5": 161,
     "300_10": 241,
     "300_20": 280
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/sdnet-cp-001-100/ridge_s1.png",
+     "2": "workbench/sdnet-cp-001-100/ridge_s2.png",
+     "3": "workbench/sdnet-cp-001-100/ridge_s3.png",
+     "4": "workbench/sdnet-cp-001-100/ridge_s4.png",
+     "argmax": "workbench/sdnet-cp-001-100/ridge_argmax.png"
+    }
    }
   },
   "sdnet-up-001-1": {
@@ -221,6 +296,21 @@
     "300_5": 276,
     "300_10": 281,
     "300_20": 289
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/sdnet-up-001-1/ridge_s1.png",
+     "2": "workbench/sdnet-up-001-1/ridge_s2.png",
+     "3": "workbench/sdnet-up-001-1/ridge_s3.png",
+     "4": "workbench/sdnet-up-001-1/ridge_s4.png",
+     "argmax": "workbench/sdnet-up-001-1/ridge_argmax.png"
+    }
    }
   }
  }

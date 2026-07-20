@@ -98,12 +98,12 @@ const config: ShellConfig = {
   architecture,
   footer: {
     provenance: {
-      en: 'Data: open crack and damage datasets, CC0 and CC BY samples in-repo, non-commercial sets local (metrics only). Engines: scikit-image, OpenCV, PyTorch offline on a local GPU; the classical pipeline and compact ONNX models run live in the browser.',
-      es: 'Datos: datasets abiertos de grietas y daños, muestras CC0 y CC BY en el repo, sets no comerciales locales (solo métricas). Motores: scikit-image, OpenCV, PyTorch offline en una GPU local; el pipeline clásico y modelos ONNX compactos corren en vivo en el navegador.',
+      en: 'Data: open crack datasets (CC0/CC BY in-repo, non-commercial local). Engines: scikit-image, PyTorch offline; ONNX in the browser.',
+      es: 'Datos: datasets abiertos de grietas (CC0/CC BY en el repo, no comerciales locales). Motores: scikit-image, PyTorch offline; ONNX en el navegador.',
     },
     disclaimer: {
-      en: 'A research lab, not a certified inspection tool: outputs are reproducible research artifacts for method comparison. Severity references quote published guidance as context; nothing here is a structural safety verdict. Your images never leave the browser.',
-      es: 'Un laboratorio de investigación, no una herramienta certificada de inspección: las salidas son artefactos reproducibles para comparar métodos. Las referencias de severidad citan guías publicadas como contexto; nada aquí es un veredicto de seguridad estructural. Tus imágenes nunca salen del navegador.',
+      en: 'A research lab, not a certified inspection tool. No structural safety verdict. Your images never leave the browser.',
+      es: 'Un laboratorio de investigación, no una herramienta certificada. Sin veredicto de seguridad estructural. Tus imágenes nunca salen del navegador.',
     },
   },
 };

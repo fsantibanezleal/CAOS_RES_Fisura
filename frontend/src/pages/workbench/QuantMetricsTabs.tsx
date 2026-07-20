@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Callout } from '@fasl-work/caos-app-shell';
 import type uPlot from 'uplot';
 import type { Enrichment } from '../../api/artifacts';
+import { OverlayLegend } from '../../render/OverlayLegend';
 import { RoseDiagram } from '../../render/RoseDiagram';
 import { SkeletonOverlay } from '../../render/SkeletonOverlay';
 import { UPlotChart } from '../../render/UPlotChart';
@@ -32,6 +33,11 @@ export function QuantTab({ enrich, imageUrl, es }: { enrich: Enrichment | null; 
       <div className="fs-wb-two">
         <div className="fs-wb-img">
           <SkeletonOverlay imageUrl={imageUrl} size={enrich.size} skeleton={sk} hovered={hover} onHover={setHover} />
+          <OverlayLegend items={[
+            { color: 'var(--fs-quantify)', label: t('branch segment', 'segmento de rama') },
+            { color: 'rgb(251,133,0)', label: t('junction node', 'nodo de unión') },
+            { color: 'rgb(224,224,224)', label: t('endpoint node', 'nodo extremo') },
+          ]} />
           <p className="fs-panel-sub">{t('The crack skeleton: blue = branch segments, orange dots = junctions, small dots = endpoints. Hover a branch to trace it.', 'El esqueleto de la grieta: azul = segmentos de rama, puntos naranja = uniones, puntos pequenos = extremos. Pasa el cursor sobre una rama para trazarla.')}</p>
         </div>
         <div className="fs-wb-read">

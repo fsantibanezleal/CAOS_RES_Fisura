@@ -1,21 +1,11 @@
-import { Callout, Cite, Refs } from '@fasl-work/caos-app-shell';
+import { Callout, Cite, Refs, Tabs } from '@fasl-work/caos-app-shell';
 import { useT } from '../lib/i18n';
 import { ThemedSvg } from '../render/ThemedSvg';
 
 export default function Implementation() {
   const t = useT();
-  return (
-    <div className="fs-doc">
-      <p className="fs-kicker">{t('Implementation', 'Implementación')}</p>
-      <h1>{t('How the lab is built', 'Cómo está construido el laboratorio')}</h1>
-      <p className="fs-lead">
-        {t(
-          'Fisura follows the CAOS product archetype: an offline staged pipeline is the product, and the web app is a read-only projection of committed, audited artifacts plus a live in-browser lane. Everything is reproducible from the repository; nothing heavy lives in git.',
-          'Fisura sigue el arquetipo de producto CAOS: un pipeline offline por etapas es el producto, y la aplicación web es una proyección de solo lectura de artefactos auditados y versionados, más un carril en vivo en el navegador. Todo es reproducible desde el repositorio; nada pesado vive en git.',
-        )}
-      </p>
-
-      <h2>{t('Three lanes', 'Tres carriles')}</h2>
+  const secLanes = (
+    <>
       <ul>
         <li>
           <b>{t('Offline (precompute).', 'Offline (precómputo).')}</b>{' '}
@@ -49,8 +39,11 @@ export default function Implementation() {
           )}
         </figcaption>
       </figure>
-
-      <h2>{t('Two data contracts', 'Dos contratos de datos')}</h2>
+    </>
+  );
+  const secData = (
+    <>
+      <h3>{t('Two data contracts', 'Dos contratos de datos')}</h3>
       <p>
         {t(
           'An ingestion contract (image, optional mask, optional scale metadata, with declared units, ranges and an explicit outlier policy) is the bring-your-own-data gate: a dataset enters the pipeline only if it satisfies the contract. An artifact contract (a compact standard-format result plus a manifest with parameters, seed, runtime, sizes and the lane verdict) is the only thing the web app reads, and a TypeScript mirror of the manifest schema makes any drift fail the build.',
@@ -58,15 +51,18 @@ export default function Implementation() {
         )}
       </p>
 
-      <h2>{t('Storage and reproducibility', 'Almacenamiento y reproducibilidad')}</h2>
+      <h3>{t('Storage and reproducibility', 'Almacenamiento y reproducibilidad')}</h3>
       <p>
         {t(
           'Full open datasets (tens of gigabytes) live outside git on a local data volume and are fetched by idempotent scripts committed to the repository; the repo itself commits only tiny contract-passing samples from permissively licensed sets, plus the compact derived artifacts whose licenses allow publication. Model weights and training checkpoints live on a local model volume. Two pinned Python environments separate the slim runtime from the heavy pipeline. Every run is a pure function of its parameters and seed.',
           'Los datasets abiertos completos (decenas de gigabytes) viven fuera de git en un volumen local de datos y se descargan con scripts idempotentes versionados en el repositorio; el repo solo versiona muestras diminutas que pasan el contrato, de sets con licencia permisiva, más los artefactos derivados compactos cuya licencia permite publicar. Los pesos de modelos y checkpoints de entrenamiento viven en un volumen local de modelos. Dos entornos Python fijados separan el runtime liviano del pipeline pesado. Cada corrida es una función pura de sus parámetros y semilla.',
         )}
       </p>
-
-      <h2>{t('The license architecture', 'La arquitectura de licencias')}</h2>
+    </>
+  );
+  const secLicense = (
+    <>
+      <h3>{t('The license architecture', 'La arquitectura de licencias')}</h3>
       <ul>
         <li>{t('The lab code is MIT, and the default ladder on every track uses only permissive engines (BSD, Apache, MIT).', 'El código del laboratorio es MIT, y la escalera por defecto de cada pista usa solo motores permisivos (BSD, Apache, MIT).')}</li>
         <li>{t('Non-commercial datasets (the multi-label bridge benchmarks, the industrial anomaly sets) are used locally; only metrics and plots are published.', 'Los datasets no comerciales (los benchmarks multietiqueta de puentes, los sets industriales de anomalías) se usan localmente; solo se publican métricas y gráficos.')}</li>
@@ -74,13 +70,36 @@ export default function Implementation() {
         <li>{t('AGPL detection stacks are an isolated optional extra executed as a subprocess in their own environment, never linked into the MIT core and never redistributed.', 'Los stacks de detección AGPL son un extra opcional aislado ejecutado como subproceso en su propio entorno, nunca enlazados al núcleo MIT y nunca redistribuidos.')}</li>
       </ul>
 
-      <h2>{t('Quality machinery', 'Maquinaria de calidad')}</h2>
+      <h3>{t('Quality machinery', 'Maquinaria de calidad')}</h3>
       <p>
         {t(
           'Continuous integration runs linting, the test suite (contracts, determinism, stages, the lane gate), a pipeline smoke that regenerates one case end to end, and content guards (no tracked secrets or heavy data, no leaked local paths, no template residue, content-standard checks). The evaluation harness prints its protocol next to every number. Every panel of the app is screenshot-verified in both themes before a deploy is called done.',
           'La integración continua corre linting, la suite de tests (contratos, determinismo, etapas, la compuerta de carril), un smoke del pipeline que regenera un caso de punta a punta, y guardias de contenido (sin secretos ni datos pesados versionados, sin rutas locales filtradas, sin residuo de plantilla, chequeos del estándar de contenido). El arnés de evaluación imprime su protocolo junto a cada número. Cada panel de la app se verifica con capturas en ambos temas antes de declarar listo un despliegue.',
         )}
       </p>
+    </>
+  );
+
+  return (
+    <div className="fs-doc">
+      <p className="fs-kicker">{t('Implementation', 'Implementación')}</p>
+      <h1>{t('How the lab is built', 'Cómo está construido el laboratorio')}</h1>
+      <p className="fs-lead">
+        {t(
+          'Fisura follows the CAOS product archetype: an offline staged pipeline is the product, and the web app is a read-only projection of committed, audited artifacts plus a live in-browser lane. Everything is reproducible from the repository; nothing heavy lives in git.',
+          'Fisura sigue el arquetipo de producto CAOS: un pipeline offline por etapas es el producto, y la aplicación web es una proyección de solo lectura de artefactos auditados y versionados, más un carril en vivo en el navegador. Todo es reproducible desde el repositorio; nada pesado vive en git.',
+        )}
+      </p>
+
+      <Tabs
+        ariaLabel={t('implementation sections', 'secciones de implementación')}
+        initial="lanes"
+        tabs={[
+          { id: 'lanes', label: t('Three lanes', 'Tres carriles'), content: secLanes },
+          { id: 'data', label: t('Data & storage', 'Datos y almacenamiento'), content: secData },
+          { id: 'license', label: t('License & quality', 'Licencia y calidad'), content: secLicense },
+        ]}
+      />
 
       <Callout variant="note" title={t('Current state, stated plainly', 'Estado actual, dicho claramente')}>
         {t(

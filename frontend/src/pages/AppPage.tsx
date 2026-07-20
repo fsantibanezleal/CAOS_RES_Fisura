@@ -7,6 +7,7 @@ import {
 import type { ArtifactSample, CaseArtifact, LevelRecord } from '../lib/contract.types';
 import { useT } from '../lib/i18n';
 import { MethodTile } from '../render/MethodTile';
+import { OverlayLegend, predictionLegend } from '../render/OverlayLegend';
 import { PanelBoundary } from '../render/PanelBoundary';
 import { UPlotChart } from '../render/UPlotChart';
 import { MetricsTab, QuantTab } from './workbench/QuantMetricsTabs';
@@ -48,6 +49,7 @@ const ANOMALY_METHODS: MethodDef[] = [
 
 const FAMILY_TONE: Record<Family, string> = { classical: 'var(--fs-classical)', learned: 'var(--fs-learned)', anomaly: 'var(--fs-anomaly)' };
 const FAMILY_RGB: Record<Family, [number, number, number]> = { classical: [47, 129, 247], learned: [163, 113, 247], anomaly: [219, 109, 40] };
+const rgbStr = (c: [number, number, number]) => `rgb(${c[0]},${c[1]},${c[2]})`;
 const FAMILY_LABEL: Record<Family, [string, string]> = {
   classical: ['Classical ladder', 'Escalera clásica'],
   learned: ['SOTA learned', 'Aprendido SOTA'],
@@ -263,6 +265,41 @@ function PrepTab({ wb, es }: { wb: WorkbenchSample | null; es: boolean }) {
           </figure>
         ))}
       </div>
+      {wb.scale_space ? <ScaleSpace ss={wb.scale_space} es={es} /> : null}
+    </div>
+  );
+}
+
+// The Hessian ridge scale-space: sweep the per-sigma response + the argmax-sigma map (which scale wins
+// per pixel), so the reader sees WHY the ridge filter is multi-scale (fine texture vs the wide crack).
+function ScaleSpace({ ss, es }: { ss: NonNullable<WorkbenchSample['scale_space']>; es: boolean }) {
+  const t = (en: string, esx: string) => (es ? esx : en);
+  const [sig, setSig] = useState<string>(String(ss.sigmas[Math.floor(ss.sigmas.length / 2)]));
+  const showArgmax = sig === 'argmax';
+  return (
+    <div className="fs-panel" style={{ marginTop: '1.1rem' }}>
+      <div className="fs-panel-t">{t('Hessian ridge scale-space (why multi-scale matters)', 'Espacio de escalas de la cresta Hessiana (por qué importa multiescala)')}</div>
+      <div className="fs-wb-two">
+        <div className="fs-wb-img">
+          <img className="fs-wb-photo" src={workbenchUrl(showArgmax ? ss.maps.argmax : ss.maps[sig])} alt="scale-space" />
+          <p className="fs-panel-sub">
+            {showArgmax
+              ? t('Winning-scale map: red = a wide ridge (large sigma) fires strongest here, blue = fine texture (small sigma). The crack is red; the noise is blue.', 'Mapa de escala ganadora: rojo = una cresta ancha (sigma grande) responde más fuerte aquí, azul = textura fina (sigma pequeño). La grieta es roja; el ruido es azul.')
+              : t('The ridge response at a single scale. Small sigma catches thin cracks and noise alike; large sigma only the wide ridge.', 'La respuesta de cresta a una sola escala. Sigma pequeño atrapa grietas finas y ruido por igual; sigma grande solo la cresta ancha.')}
+          </p>
+        </div>
+        <div className="fs-wb-read">
+          <div className="fs-chips">
+            {ss.sigmas.map((s) => (
+              <button key={s} className={`chip ${sig === String(s) ? 'on' : ''}`} onClick={() => setSig(String(s))}>{`σ=${s}`}</button>
+            ))}
+            <button className={`chip ${showArgmax ? 'on' : ''}`} onClick={() => setSig('argmax')}>{t('winning scale', 'escala ganadora')}</button>
+          </div>
+          <p className="fs-detail-desc">
+            {t('A single Gaussian scale only responds to ridges near its own half-width. The pipeline runs several sigmas and keeps the max, so it catches both hairline and wide cracks. Sweep the scales, then look at the winning-scale map: the crack occupies the large scales, the texture the small ones. That separation is exactly what a single-scale filter cannot do.', 'Una sola escala gaussiana solo responde a crestas cercanas a su medio-ancho. El pipeline corre varios sigmas y guarda el máximo, así atrapa grietas capilares y anchas. Barre las escalas, luego mira el mapa de escala ganadora: la grieta ocupa las escalas grandes, la textura las pequeñas. Esa separación es justo lo que un filtro de una sola escala no puede hacer.')}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -281,6 +318,7 @@ function SemanticTab({ cSample, lSample, imageUrl, showGt, opacity, es }: { cSam
     <div className="fs-wb-two">
       <div className="fs-wb-img">
         <MethodTile imageUrl={imageUrl} size={cSample.size} mask={lev?.mask_rle ?? null} gt={cSample.gt_rle} showGt={showGt} opacity={opacity} color={FAMILY_RGB.learned} />
+        <OverlayLegend items={predictionLegend(rgbStr(FAMILY_RGB.learned), t('semantic segmentation', 'segmentación semántica'), t('ground truth', 'ground truth'), t('overlap', 'solape'), showGt)} />
         <p className="fs-panel-sub">{t('The learned semantic segmentation of the crack, in purple, over the image (green = ground truth).', 'La segmentación semántica aprendida de la grieta, en púrpura, sobre la imagen (verde = ground truth).')}</p>
       </div>
       <div className="fs-wb-read">
@@ -350,6 +388,9 @@ function FamilyTab({ methods, sample, base, imageUrl, showGt, opacity, detail, s
       <div className="fs-wb-two">
         <div className="fs-wb-img">
           <MethodTile imageUrl={imageUrl} size={(fam === 'anomaly' ? sample : base).size} mask={lev?.mask_rle ?? null} gt={base.gt_rle} showGt={showGt} opacity={opacity} color={FAMILY_RGB[fam]} heatUrl={fam === 'anomaly' ? anomalyHeat ?? null : null} />
+          <OverlayLegend items={fam === 'anomaly'
+            ? [{ color: 'linear-gradient(90deg,rgb(40,90,220),rgb(235,60,40))', label: t('anomaly heat (low to high)', 'calor de anomalía (bajo a alto)'), kind: 'gradient' }, { color: 'rgb(255,255,255)', label: t('flagged region outline', 'contorno de región marcada'), kind: 'outline' }, ...(showGt ? [{ color: 'rgb(46,204,113)', label: t('ground truth crack', 'grieta ground truth') }] : [])]
+            : predictionLegend(rgbStr(FAMILY_RGB[fam]), t('prediction', 'predicción'), t('ground truth', 'ground truth'), t('overlap', 'solape'), showGt)} />
           <p className="fs-panel-sub">{t('The method prediction over the image. Pick a method to compare.', 'La predicción del método sobre la imagen. Elige un método para comparar.')}</p>
         </div>
         <div className="fs-wb-read">
@@ -403,7 +444,13 @@ function SummaryTab({ cSample, lSample, aSample, imageUrl, showGt, opacity, es }
 
   return (
     <div>
-      <p className="fs-hint" style={{ marginBottom: '0.8rem' }}>{t('Every method applied to this image at once. The winner (highest F1@2px) is starred; click nothing, just compare.', 'Cada método aplicado a esta imagen a la vez. El ganador (mayor F1@2px) lleva estrella; no hagas clic, solo compara.')}</p>
+      <p className="fs-hint" style={{ marginBottom: '0.5rem' }}>{t('Every method applied to this image at once. The winner (highest F1@2px) is starred; click nothing, just compare.', 'Cada método aplicado a esta imagen a la vez. El ganador (mayor F1@2px) lleva estrella; no hagas clic, solo compara.')}</p>
+      <OverlayLegend items={[
+        { color: rgbStr(FAMILY_RGB.classical), label: t('classical prediction', 'predicción clásica') },
+        { color: rgbStr(FAMILY_RGB.learned), label: t('learned prediction', 'predicción aprendida') },
+        { color: 'linear-gradient(90deg,rgb(40,90,220),rgb(235,60,40))', label: t('anomaly heat', 'calor de anomalía'), kind: 'gradient' },
+        ...(showGt ? [{ color: 'rgb(46,204,113)', label: t('ground truth', 'ground truth') }, { color: 'rgb(240,210,70)', label: t('overlap', 'solape') }] : []),
+      ]} />
       {(['classical', 'learned', 'anomaly'] as Family[]).map((fam) => {
         const famCells = cells.filter((c) => c.method.family === fam);
         return (

@@ -3,6 +3,34 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.13.000], 2026-07-20
+
+### Changed (ADR-0016 section 6 compliance: the five content pages now use Tabs/SubTabs)
+- The content pages were flat single-scroll walls. They now honor the shell structure: **Methodology**
+  is a top-level Tabs (The seven tracks / Evaluation protocol) with a **vertical SubTabs rail** of the
+  seven method tracks (1 Classical through 7 Monitoring), each carrying its own prose + KaTeX + Refs.
+  **Benchmark** is a SubTabs of the four published records (Classical / Protocol trap / Learned / Anomaly).
+  **Introduction** is four Tabs (What Fisura is / The whole ladder / Masks become numbers / Honesty as
+  method). **Implementation** is three Tabs (Three lanes / Data & storage / License & quality). All prose,
+  equations, citations and SVG figures are preserved verbatim, only reorganized.
+- **Footer compacted** to the ADR-0016 section 2 bar: provenance and disclaimer are now single crisp
+  clauses (was two long paragraphs).
+
+### Fixed
+- **Orientation rose was vertically flipped** relative to the image: the wedge math used a y-up convention
+  while the tangent angle is `arctan2(row, col)` (row-down, image coordinates). The rose now grows y
+  downward so a crack running down in the image reads down in the rose; the 90 degree label moved to the bottom.
+
+### Added
+- **Overlay legends** under every coloured image overlay (accessibility, dataviz rule: identity is never
+  colour-alone): the prediction/segmentation tabs, the Summary matrix, and the skeleton graph each carry a
+  colour to label key (prediction / ground truth / overlap; anomaly heat gradient + flagged-region outline;
+  branch / junction / endpoint). New `render/OverlayLegend.tsx`.
+- **Hessian ridge scale-space viewer** in the Preprocessing tab (research shortlist #7): sweep the per-sigma
+  ridge response and the argmax-sigma map (which scale fires strongest per pixel, red = wide crack, blue =
+  fine texture), so the reader sees why the ridge filter is multi-scale. Baked by `bake_workbench` (per-sigma
+  PNGs + the argmax map).
+
 ## [0.12.000], 2026-07-20
 
 ### Added (workbench enrichment: Quantification + Metrics tabs, from the enrichment research shortlist)
