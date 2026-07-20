@@ -1,251 +1,198 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Callout, Tabs } from '@fasl-work/caos-app-shell';
-import { heatUrl, loadCaseArtifact, overlayUrl } from '../api/artifacts';
+import {
+  heatUrl, loadCaseArtifact, loadWorkbench, overlayUrl, workbenchUrl,
+  type WorkbenchIndex, type WorkbenchSample,
+} from '../api/artifacts';
 import type { ArtifactSample, CaseArtifact, LevelRecord } from '../lib/contract.types';
 import { useT } from '../lib/i18n';
-import { MaskCanvas } from '../render/MaskCanvas';
-import { HeatCanvas } from '../render/HeatCanvas';
+import { MethodTile } from '../render/MethodTile';
 import { PanelBoundary } from '../render/PanelBoundary';
 import { UPlotChart } from '../render/UPlotChart';
 
-// The App workbench (ADR-0017 section 3). The LEFT COLUMN is parametrization: pick the data source
-// (synthetic knobs / real cases / your own image), pick the sample, set the controls that drive every
-// method, and read a live diagnosis. The TOP TABS are the METHODS, in ladder order: Classical, SOTA
-// (learned), Beyond SOTA (anomaly), Quantification, Context. Every method tab shows its prediction ON
-// THE IMAGE with a value read-out. No method is a table (tables live on Benchmark).
+// The App is a per-case interactive WORKBENCH (Felipe's spec, 2026-07-20):
+//   LEFT COLUMN: pick the case source (prebaked / pretrained / upload your own), pick the image,
+//     and set the PARAMETERS that drive the tabs (e.g. the SLIC superpixel count + compactness).
+//   TABS: navigate rich, interactive views of the methods ON the selected image, in order:
+//     Overview -> Preprocessing -> Semantic segmentation -> SLIC (param-driven) -> Classical ->
+//     SOTA -> Beyond SOTA -> Summary. Every method is VISIBLE ON THE IMAGE; nothing is a bare table.
 
-type Source = 'real' | 'synthetic' | 'byoi';
+type Source = 'prebaked' | 'pretrained' | 'upload';
+const CLASSICAL_SLUG = 'bcl_examples';
+const SYNTH_SLUG = 'synthetic_battery';
+const LEARNED_SLUG = 'learned_on_examples';
+const ANOMALY_SLUG = 'anomaly_examples';
 
-// Each real/synthetic case pulls three artifacts that share sample_ids, one per method family.
-const CLASSICAL: Record<Source, string> = { real: 'bcl_examples', synthetic: 'synthetic_battery', byoi: 'bcl_examples' };
-const LEARNED_SLUG = 'learned_on_examples'; // SOTA masks, only for the real example set
-const ANOMALY_SLUG = 'anomaly_examples';    // Beyond-SOTA heat, only for the real example set
+type Family = 'classical' | 'learned' | 'anomaly';
+interface MethodDef { id: string; family: Family; label: string; en: string; es: string; }
 
-const CLASSICAL_LEVELS = ['L0', 'L1', 'L2', 'L3', 'L4', 'L5'];
-const CLASSICAL_LABEL: Record<string, [string, string]> = {
-  L0: ['L0 Otsu floor', 'L0 piso Otsu'],
-  L1: ['L1 Sauvola', 'L1 Sauvola'],
-  L2: ['L2 oriented top-hat', 'L2 top-hat orientado'],
-  L3: ['L3 Hessian ridge', 'L3 cresta Hessiana'],
-  L4: ['L4 path bridging', 'L4 puente de caminos'],
-  L5: ['L5 RF fusion', 'L5 fusión RF'],
-};
-const ARCH_LABEL: Record<string, [string, string]> = {
-  unet_r18: ['U-Net (R18)', 'U-Net (R18)'],
-  deeplabv3p_r18: ['DeepLabV3+ (R18)', 'DeepLabV3+ (R18)'],
-  segformer_b2: ['SegFormer-B2', 'SegFormer-B2'],
-  hrsegnet_b16: ['HrSegNet-B16', 'HrSegNet-B16'],
-  dinov2s14_linear: ['DINOv2 linear probe', 'sonda lineal DINOv2'],
+const CLASSICAL_METHODS: MethodDef[] = [
+  { id: 'L0', family: 'classical', label: 'L0', en: 'Otsu global floor', es: 'Piso global de Otsu' },
+  { id: 'L1', family: 'classical', label: 'L1', en: 'Sauvola local threshold', es: 'Umbral local Sauvola' },
+  { id: 'L2', family: 'classical', label: 'L2', en: 'Oriented top-hat + hysteresis', es: 'Top-hat orientado + histéresis' },
+  { id: 'L3', family: 'classical', label: 'L3', en: 'Hessian ridge (sato)', es: 'Cresta Hessiana (sato)' },
+  { id: 'L4', family: 'classical', label: 'L4', en: 'Minimal-path bridging', es: 'Puente de caminos mínimos' },
+  { id: 'L5', family: 'classical', label: 'L5', en: 'Random-forest fusion', es: 'Fusión random-forest' },
+];
+const LEARNED_METHODS: MethodDef[] = [
+  { id: 'segformer_b2', family: 'learned', label: 'SegFormer-B2', en: 'Transformer segmenter (CrackSeg9k)', es: 'Segmentador transformer (CrackSeg9k)' },
+  { id: 'deeplabv3p_r18', family: 'learned', label: 'DeepLabV3+', en: 'ASPP encoder-decoder (R18)', es: 'Encoder-decoder ASPP (R18)' },
+  { id: 'unet_r18', family: 'learned', label: 'U-Net', en: 'Classic encoder-decoder (R18)', es: 'Encoder-decoder clásico (R18)' },
+  { id: 'hrsegnet_b16', family: 'learned', label: 'HrSegNet', en: 'Real-time crack net (in-repo)', es: 'Red de grietas en tiempo real (en repo)' },
+  { id: 'dinov2s14_linear', family: 'learned', label: 'DINOv2', en: 'Frozen ViT-S/14 + linear head', es: 'ViT-S/14 congelado + cabeza lineal' },
+];
+const ANOMALY_METHODS: MethodDef[] = [
+  { id: 'patchcore', family: 'anomaly', label: 'PatchCore', en: 'Memory bank on uncracked concrete', es: 'Banco de memoria en hormigón sano' },
+];
+
+const FAMILY_TONE: Record<Family, string> = { classical: 'var(--fs-classical)', learned: 'var(--fs-learned)', anomaly: 'var(--fs-anomaly)' };
+const FAMILY_RGB: Record<Family, [number, number, number]> = { classical: [47, 129, 247], learned: [163, 113, 247], anomaly: [219, 109, 40] };
+const FAMILY_LABEL: Record<Family, [string, string]> = {
+  classical: ['Classical ladder', 'Escalera clásica'],
+  learned: ['SOTA learned', 'Aprendido SOTA'],
+  anomaly: ['Beyond SOTA (anomaly)', 'Más allá de SOTA (anomalía)'],
 };
 
 export default function AppPage() {
   const t = useT();
   const es = t('x', 'y') === 'y';
 
-  const [source, setSource] = useState<Source>('real');
+  const [source, setSource] = useState<Source>('prebaked');
   const [classical, setClassical] = useState<CaseArtifact | null>(null);
   const [learned, setLearned] = useState<CaseArtifact | null>(null);
   const [anomaly, setAnomaly] = useState<CaseArtifact | null>(null);
+  const [wb, setWb] = useState<WorkbenchIndex | null>(null);
   const [sampleId, setSampleId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // shared controls that drive every method view
+  // shared + per-tab parameters (the left column drives the tabs)
   const [showGt, setShowGt] = useState(true);
   const [opacity, setOpacity] = useState(0.6);
-  // per-method parameters (the left column controls the tabs)
-  const [level, setLevel] = useState('L3');
-  const [arch, setArch] = useState('segformer_b2');
-  const [heatOpacity, setHeatOpacity] = useState(0.7);
+  const [slicN, setSlicN] = useState(150);
+  const [slicC, setSlicC] = useState(10);
+  const [detail, setDetail] = useState('segformer_b2'); // the method enlarged in Summary
+
+  // all three source modes use the committed real example set today; the synthetic battery and the
+  // in-browser upload lane (BL-013) are wired as their units land.
+  void SYNTH_SLUG;
+  const classicalSlug = CLASSICAL_SLUG;
 
   useEffect(() => {
     setError(null);
-    setClassical(null);
-    setLearned(null);
-    setAnomaly(null);
-    loadCaseArtifact(CLASSICAL[source])
-      .then((c) => {
-        setClassical(c);
-        setSampleId(c.samples[0]?.sample_id ?? null);
-      })
-      .catch((e) => setError(String(e)));
-    // SOTA + Beyond-SOTA masks exist for the real example set; synthetic has classical only
-    if (source === 'real' || source === 'byoi') {
-      loadCaseArtifact(LEARNED_SLUG).then(setLearned).catch(() => setLearned(null));
-      loadCaseArtifact(ANOMALY_SLUG).then(setAnomaly).catch(() => setAnomaly(null));
-    }
-  }, [source]);
+    loadCaseArtifact(classicalSlug).then((c) => { setClassical(c); setSampleId(c.samples[0]?.sample_id ?? null); }).catch((e) => setError(String(e)));
+    loadCaseArtifact(LEARNED_SLUG).then(setLearned).catch(() => setLearned(null));
+    loadCaseArtifact(ANOMALY_SLUG).then(setAnomaly).catch(() => setAnomaly(null));
+    loadWorkbench().then(setWb).catch(() => setWb(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const cSample: ArtifactSample | null = useMemo(
-    () => classical?.samples.find((s) => s.sample_id === sampleId) ?? null,
-    [classical, sampleId],
-  );
+  const cSample = useMemo(() => classical?.samples.find((s) => s.sample_id === sampleId) ?? null, [classical, sampleId]);
   const lSample = useMemo(() => learned?.samples.find((s) => s.sample_id === sampleId) ?? null, [learned, sampleId]);
   const aSample = useMemo(() => anomaly?.samples.find((s) => s.sample_id === sampleId) ?? null, [anomaly, sampleId]);
-
+  const wbSample: WorkbenchSample | null = sampleId ? wb?.samples[sampleId] ?? null : null;
   const imageUrl = cSample?.overlays_rel ? overlayUrl(cSample.overlays_rel, '_image.png') : null;
-
-  // live diagnosis: the best classical F1 vs the best SOTA F1 vs the anomaly verdict, for the readout
-  const diag = useMemo(() => {
-    const cF1 = cSample ? bestF1(cSample.levels, CLASSICAL_LEVELS) : null;
-    const lF1 = lSample ? bestF1(lSample.levels, Object.keys(ARCH_LABEL)) : null;
-    const aScore = aSample?.levels.patchcore?.anomaly_score_norm ?? null;
-    return { cF1, lF1, aScore };
-  }, [cSample, lSample, aSample]);
 
   if (error) {
     return (
       <div className="page-body">
         <Callout variant="honest" title={t('Artifacts unavailable', 'Artefactos no disponibles')}>
-          {t('The committed artifacts could not be loaded: ', 'No se pudieron cargar los artefactos versionados: ')}
-          <code>{error}</code>
+          {t('The committed artifacts could not be loaded: ', 'No se pudieron cargar los artefactos versionados: ')}<code>{error}</code>
         </Callout>
       </div>
     );
   }
 
-  const activeLevel = cSample && cSample.levels[level] ? level : 'L3';
-  const activeArch = lSample && lSample.levels[arch] ? arch : 'segformer_b2';
+  // snap the SLIC sliders to the nearest baked grid variant
+  const gridN = wb?.slic_grid.n_segments ?? [150];
+  const gridC = wb?.slic_grid.compactness ?? [10];
+  const snapN = gridN.reduce((a, b) => (Math.abs(b - slicN) < Math.abs(a - slicN) ? b : a), gridN[0]);
+  const snapC = gridC.reduce((a, b) => (Math.abs(b - slicC) < Math.abs(a - slicC) ? b : a), gridC[0]);
 
   return (
     <div className="page-body fs-app-layout">
       <aside className="fs-side">
-        <div className="fs-side-h">{t('Data and controls', 'Datos y controles')}</div>
-
-        <div className="fs-ctl">
-          <span>{t('Data source', 'Fuente de datos')}</span>
-          <div className="fs-seg">
-            <button className={`fs-seg-b ${source === 'synthetic' ? 'on' : ''}`} onClick={() => setSource('synthetic')}>
-              {t('Synthetic', 'Sintético')}
-            </button>
-            <button className={`fs-seg-b ${source === 'real' ? 'on' : ''}`} onClick={() => setSource('real')}>
-              {t('Real cases', 'Casos reales')}
-            </button>
-            <button className={`fs-seg-b ${source === 'byoi' ? 'on' : ''}`} onClick={() => setSource('byoi')}>
-              {t('Your image', 'Tu imagen')}
-            </button>
-          </div>
-          <p className="fs-hint">
-            {source === 'synthetic'
-              ? t('Generated cracks with EXACT ground truth (width and centerline known by construction).', 'Grietas generadas con ground truth EXACTO (ancho y línea central conocidos por construcción).')
-              : source === 'real'
-                ? t('Open-licensed concrete and steel patches (BCL CC0, SDNET2018 CC BY).', 'Parches de hormigón y acero con licencia abierta (BCL CC0, SDNET2018 CC BY).')
-                : t('Bring your own photo: the in-browser lane arrives with BL-013; for now this loads the real example set so every method is visible.', 'Trae tu propia foto: el carril en el navegador llega con BL-013; por ahora carga el set real de ejemplos para que cada método sea visible.')}
-          </p>
+        <div className="fs-side-h">{t('1 · Case source', '1 · Fuente del caso')}</div>
+        <div className="fs-seg">
+          <button className={`fs-seg-b ${source === 'prebaked' ? 'on' : ''}`} onClick={() => setSource('prebaked')}>{t('Prebaked', 'Prehorneado')}</button>
+          <button className={`fs-seg-b ${source === 'pretrained' ? 'on' : ''}`} onClick={() => setSource('pretrained')}>{t('Pretrained', 'Preentrenado')}</button>
+          <button className={`fs-seg-b ${source === 'upload' ? 'on' : ''}`} onClick={() => setSource('upload')}>{t('Upload', 'Subir')}</button>
         </div>
+        <p className="fs-hint">
+          {source === 'prebaked'
+            ? t('Committed replay cases: open-licensed concrete and steel patches with audited artifacts.', 'Casos replay versionados: parches de hormigón y acero con licencia abierta y artefactos auditados.')
+            : source === 'pretrained'
+              ? t('The trained learned and anomaly models applied to the committed images (same set, model outputs highlighted).', 'Los modelos aprendidos y de anomalía entrenados, aplicados a las imágenes versionadas (mismo set, salidas de modelos resaltadas).')
+              : t('Bring your own image: the in-browser lane (Pyodide classical + ONNX) arrives with BL-013. For now this loads the example set so every tab is usable.', 'Trae tu propia imagen: el carril en el navegador (clásico Pyodide + ONNX) llega con BL-013. Por ahora carga el set de ejemplos para que cada pestaña sea usable.')}
+        </p>
+        {source === 'upload' ? (
+          <label className="fs-upload">
+            <input type="file" accept="image/*" disabled />
+            <span>{t('Drop an image (BL-013)', 'Suelta una imagen (BL-013)')}</span>
+          </label>
+        ) : null}
 
-        <div className="fs-ctl">
-          <span>{t('Sample', 'Muestra')}</span>
-          <select className="fs-sel" value={sampleId ?? ''} onChange={(e) => setSampleId(e.target.value)}>
-            {classical?.samples.map((s) => (
-              <option key={s.sample_id} value={s.sample_id}>
-                {s.sample_id} ({s.material})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="fs-ctl">
-          <span title={t('The classical ladder rung shown in the Classical tab', 'El peldaño clásico mostrado en la pestaña Clásico')}>
-            {t('Classical rung', 'Peldaño clásico')}
-          </span>
-          <div className="fs-chips">
-            {(cSample ? Object.keys(cSample.levels).filter((l) => CLASSICAL_LEVELS.includes(l)) : CLASSICAL_LEVELS).map((l) => (
-              <button key={l} className={`chip ${l === activeLevel ? 'on' : ''}`} onClick={() => setLevel(l)} title={t(...(CLASSICAL_LABEL[l] ?? [l, l]))}>
-                {l}
+        <div className="fs-side-h">{t('2 · Image', '2 · Imagen')}</div>
+        <div className="fs-thumbs">
+          {classical?.samples.map((s) => {
+            const url = s.overlays_rel ? overlayUrl(s.overlays_rel, '_image.png') : null;
+            return (
+              <button key={s.sample_id} className={`fs-thumb ${s.sample_id === sampleId ? 'on' : ''}`} onClick={() => setSampleId(s.sample_id)} title={`${s.sample_id} (${s.material})`}>
+                {url ? <img src={url} alt={s.sample_id} loading="lazy" /> : <span className="fs-thumb-ph" />}
+                <span className="fs-thumb-l">{s.material}</span>
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
-        {(source === 'real' || source === 'byoi') && (
-          <div className="fs-ctl">
-            <span title={t('The learned architecture shown in the SOTA tab', 'La arquitectura aprendida mostrada en la pestaña SOTA')}>
-              {t('SOTA model', 'Modelo SOTA')}
-            </span>
-            <select className="fs-sel" value={activeArch} onChange={(e) => setArch(e.target.value)}>
-              {Object.keys(ARCH_LABEL).map((a) => (
-                <option key={a} value={a}>{t(...ARCH_LABEL[a])}</option>
-              ))}
-            </select>
-          </div>
-        )}
-
+        <div className="fs-side-h">{t('3 · Parameters', '3 · Parámetros')}</div>
         <div className="fs-ctl">
           <label className="fs-ctl-row">
-            <span>{t('Show ground truth', 'Mostrar ground truth')}</span>
+            <span>{t('Show ground truth (green)', 'Mostrar ground truth (verde)')}</span>
             <input type="checkbox" checked={showGt} onChange={(e) => setShowGt(e.target.checked)} />
           </label>
           <label>
-            <span className="fs-ctl-row">
-              <span>{t('Overlay opacity', 'Opacidad del overlay')}</span>
-              <b>{opacity.toFixed(2)}</b>
-            </span>
-            <input className="range" type="range" min={0.1} max={1} step={0.05} value={opacity} onChange={(e) => setOpacity(Number(e.target.value))} />
-          </label>
-          <label>
-            <span className="fs-ctl-row">
-              <span>{t('Anomaly heat opacity', 'Opacidad de calor de anomalía')}</span>
-              <b>{heatOpacity.toFixed(2)}</b>
-            </span>
-            <input className="range" type="range" min={0.1} max={1} step={0.05} value={heatOpacity} onChange={(e) => setHeatOpacity(Number(e.target.value))} />
+            <span className="fs-ctl-row"><span>{t('Prediction opacity', 'Opacidad de predicción')}</span><b>{opacity.toFixed(2)}</b></span>
+            <input className="range" type="range" min={0.2} max={1} step={0.05} value={opacity} onChange={(e) => setOpacity(Number(e.target.value))} />
           </label>
         </div>
-
-        <div className="fs-readout">
-          <div className="fs-readout-h">{t('Live diagnosis', 'Diagnóstico en vivo')}</div>
-          <ReadoutRow label={t('Classical best F1 @ 2px', 'Clásico mejor F1 @ 2px')} value={diag.cF1} tone="classical" />
-          <ReadoutRow label={t('SOTA best F1 @ 2px', 'SOTA mejor F1 @ 2px')} value={diag.lF1} tone="learned" />
-          <ReadoutRow label={t('Anomaly score (0..1)', 'Puntaje de anomalía (0..1)')} value={diag.aScore} tone="anomaly" />
-          <p className="fs-hint">
-            {diag.cF1 != null && diag.lF1 != null
-              ? diag.lF1 > diag.cF1
-                ? t('On this sample the learned model beats the classical ladder by ', 'En esta muestra el modelo aprendido supera a la escalera clásica por ') + (diag.lF1 - diag.cF1).toFixed(2) + t(' F1.', ' de F1.')
-                : t('On this sample the classical ladder holds up: learned gains only ', 'En esta muestra la escalera clásica aguanta: lo aprendido gana solo ') + (diag.lF1 - diag.cF1).toFixed(2) + t(' F1.', ' de F1.')
-              : t('Select a sample with a pixel mask to compare methods.', 'Selecciona una muestra con máscara de píxeles para comparar métodos.')}
-          </p>
+        <div className="fs-ctl">
+          <div className="fs-ctl-cap">{t('SLIC superpixels (drives the SLIC tab)', 'Superpíxeles SLIC (controla la pestaña SLIC)')}</div>
+          <label>
+            <span className="fs-ctl-row"><span>{t('Target superpixels', 'Superpíxeles objetivo')}</span><b>{snapN}</b></span>
+            <input className="range" type="range" min={Math.min(...gridN)} max={Math.max(...gridN)} step={1} value={slicN} onChange={(e) => setSlicN(Number(e.target.value))} />
+          </label>
+          <label>
+            <span className="fs-ctl-row"><span>{t('Compactness', 'Compacidad')}</span><b>{snapC}</b></span>
+            <input className="range" type="range" min={Math.min(...gridC)} max={Math.max(...gridC)} step={1} value={slicC} onChange={(e) => setSlicC(Number(e.target.value))} />
+          </label>
+          <p className="fs-hint">{t('Higher compactness = squarer, more regular superpixels; lower = they hug edges (and the crack).', 'Mayor compacidad = superpíxeles más cuadrados y regulares; menor = se pegan a los bordes (y a la grieta).')}</p>
         </div>
       </aside>
 
       <main className="fs-main">
+        <p className="fs-kicker">{t('The workbench', 'El banco de trabajo')}</p>
+        <h1 style={{ fontSize: '1.4rem', margin: '0.15rem 0 0.7rem' }}>
+          {t('Every stage and method, on the image you pick', 'Cada etapa y método, sobre la imagen que elijas')}
+        </h1>
+
         <PanelBoundary label={t('Workbench', 'Banco de trabajo')} es={es}>
-          {cSample ? (
+          {!cSample ? (
+            <div className="fs-panel"><div className="fs-panel-t">{t('Loading artifacts...', 'Cargando artefactos...')}</div></div>
+          ) : (
             <Tabs
-              ariaLabel="methods"
-              initial="classical"
+              ariaLabel="workbench stages"
+              initial="overview"
               tabs={[
-                {
-                  id: 'classical',
-                  label: t('Classical', 'Clásico'),
-                  content: <MethodView title={t(...(CLASSICAL_LABEL[activeLevel] ?? [activeLevel, activeLevel]))} image={imageUrl} sample={cSample} level={cSample.levels[activeLevel]} showGt={showGt} opacity={opacity} es={es} kind="classical" />,
-                },
-                {
-                  id: 'sota',
-                  label: t('SOTA (learned)', 'SOTA (aprendido)'),
-                  content: lSample && lSample.levels[activeArch]
-                    ? <MethodView title={t(...(ARCH_LABEL[activeArch] ?? [activeArch, activeArch]))} image={imageUrl} sample={lSample} level={lSample.levels[activeArch]} showGt={showGt} opacity={opacity} es={es} kind="sota" />
-                    : <NoData es={es} what={t('learned masks', 'máscaras aprendidas')} />,
-                },
-                {
-                  id: 'beyond',
-                  label: t('Beyond SOTA (anomaly)', 'Más allá de SOTA (anomalía)'),
-                  content: aSample && aSample.levels.patchcore
-                    ? <AnomalyView image={imageUrl} sample={aSample} showGt={showGt} heatOpacity={heatOpacity} es={es} />
-                    : <NoData es={es} what={t('anomaly maps', 'mapas de anomalía')} />,
-                },
-                {
-                  id: 'quant',
-                  label: t('Quantification', 'Cuantificación'),
-                  content: <QuantView sample={cSample} es={es} />,
-                },
-                {
-                  id: 'context',
-                  label: t('Context', 'Contexto'),
-                  content: <ContextView source={source} sample={cSample} es={es} />,
-                },
+                { id: 'overview', label: t('Overview', 'Vista general'), content: <OverviewTab sample={cSample} imageUrl={imageUrl} es={es} /> },
+                { id: 'prep', label: t('Preprocessing', 'Preprocesamiento'), content: <PrepTab wb={wbSample} es={es} /> },
+                { id: 'semantic', label: t('Semantic seg', 'Segm. semántica'), content: <SemanticTab cSample={cSample} lSample={lSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} es={es} /> },
+                { id: 'slic', label: t('SLIC', 'SLIC'), content: <SlicTab wb={wbSample} n={snapN} c={snapC} es={es} /> },
+                { id: 'classical', label: t('Classical', 'Clásico'), content: <FamilyTab methods={CLASSICAL_METHODS} sample={cSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} /> },
+                { id: 'sota', label: t('SOTA', 'SOTA'), content: <FamilyTab methods={LEARNED_METHODS} sample={lSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} /> },
+                { id: 'beyond', label: t('Beyond SOTA', 'Más allá SOTA'), content: <FamilyTab methods={ANOMALY_METHODS} sample={aSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} anomalyHeat={aSample?.heat_rel ? heatUrl(aSample.heat_rel) : null} /> },
+                { id: 'summary', label: t('Summary', 'Resumen'), content: <SummaryTab cSample={cSample} lSample={lSample} aSample={aSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} es={es} /> },
               ]}
             />
-          ) : (
-            <div className="fs-panel"><div className="fs-panel-t">{t('Loading artifacts...', 'Cargando artefactos...')}</div></div>
           )}
         </PanelBoundary>
       </main>
@@ -253,195 +200,232 @@ export default function AppPage() {
   );
 }
 
-function bestF1(levels: Record<string, LevelRecord>, keys: string[]): number | null {
-  let best: number | null = null;
-  for (const k of keys) {
-    const f = levels[k]?.segmentation?.tol2px.f1;
-    if (typeof f === 'number' && (best === null || f > best)) best = f;
-  }
-  return best;
-}
+// ---- Overview ----------------------------------------------------------------------------------
 
-function ReadoutRow({ label, value, tone }: { label: string; value: number | null; tone: string }) {
-  return (
-    <div className="fs-readout-row">
-      <span className={`fs-dot ${tone}`} />
-      <span className="fs-readout-l">{label}</span>
-      <span className="fs-readout-v">{value != null ? value.toFixed(3) : '--'}</span>
-    </div>
-  );
-}
-
-function NoData({ es, what }: { es: boolean; what: string }) {
+function OverviewTab({ sample, imageUrl, es }: { sample: ArtifactSample; imageUrl: string | null; es: boolean }) {
   const t = (en: string, esx: string) => (es ? esx : en);
+  const g = sample.geometry;
   return (
-    <Callout variant="note" title={t('Not available for this source', 'No disponible para esta fuente')}>
-      {t('This sample has no ', 'Esta muestra no tiene ')}{what}{t('. The synthetic battery runs the classical ladder and quantification only; the learned and anomaly methods run on the real example set (switch the data source to Real cases).', '. La batería sintética corre solo la escalera clásica y la cuantificación; los métodos aprendidos y de anomalía corren sobre el set real (cambia la fuente a Casos reales).')}
-    </Callout>
-  );
-}
-
-// A single method's PREDICTION on the image + its value read-out. Classical and SOTA share this shape.
-function MethodView({ title, image, sample, level, showGt, opacity, es, kind }: {
-  title: string; image: string | null; sample: ArtifactSample; level: LevelRecord;
-  showGt: boolean; opacity: number; es: boolean; kind: 'classical' | 'sota';
-}) {
-  const t = (en: string, esx: string) => (es ? esx : en);
-  const seg = level.segmentation;
-  return (
-    <div className="fs-method">
-      <div className="fs-method-view">
-        <div className="fs-panel-t">{title} · {sample.sample_id}</div>
-        <MaskCanvas imageUrl={image} size={sample.size} mask={level.mask_rle} gt={sample.gt_rle} showGt={showGt} opacity={opacity} />
-        <p className="fs-panel-sub">
-          {t('Prediction in red; ground truth in green (overlap reads yellow). Decoded client-side from the committed RLE.', 'Predicción en rojo; ground truth en verde (el solape se lee amarillo). Decodificado en el cliente desde el RLE versionado.')}
+    <div className="fs-wb-two">
+      <div className="fs-wb-img">
+        {imageUrl ? <img src={imageUrl} alt={sample.sample_id} className="fs-wb-photo" /> : <div className="fs-thumb-ph" />}
+        <p className="fs-panel-sub">{sample.sample_id} · {sample.source} · {sample.license_tag}</p>
+      </div>
+      <div className="fs-wb-read">
+        <h3>{t('What you are looking at', 'Qué estás mirando')}</h3>
+        <p className="fs-detail-desc">
+          {t('The raw image before any method touches it. The workbench applies each stage and method to THIS picture; walk the tabs left to right to see the pipeline unfold.', 'La imagen cruda antes de que ningún método la toque. El banco aplica cada etapa y método a ESTA imagen; recorre las pestañas de izquierda a derecha para ver el pipeline desplegarse.')}
         </p>
-        {level.notes.map((n, i) => <p key={i} className="fs-note">{n}</p>)}
-      </div>
-      <div className="fs-method-read">
-        {seg ? (
-          <>
-            <div className="fs-kpis fs-kpis-2">
-              <div className="fs-kpi"><div className="fs-kpi-v">{seg.tol2px.f1.toFixed(3)}</div><div className="fs-kpi-l">F1 @ 2 px</div></div>
-              <div className="fs-kpi"><div className="fs-kpi-v">{seg.tol5px.f1.toFixed(3)}</div><div className="fs-kpi-l">F1 @ 5 px</div></div>
-              <div className="fs-kpi"><div className="fs-kpi-v">{seg.tol2px.precision.toFixed(3)}</div><div className="fs-kpi-l">{t('precision @ 2px', 'precisión @ 2px')}</div></div>
-              <div className="fs-kpi"><div className="fs-kpi-v">{seg.tol2px.recall.toFixed(3)}</div><div className="fs-kpi-l">{t('recall @ 2px', 'recall @ 2px')}</div></div>
-            </div>
-            <p className="fs-hint">{t('Protocol travels with the number: ', 'El protocolo viaja con el número: ')}{seg.protocol}</p>
-          </>
-        ) : (
-          <Callout variant="note" title={t('No pixel ground truth', 'Sin ground truth de píxeles')}>
-            {t('This is a classification-style sample; segmentation F1 is not defined. The prediction is still shown on the image.', 'Esta es una muestra estilo clasificación; el F1 de segmentación no está definido. La predicción se muestra igual sobre la imagen.')}
-          </Callout>
-        )}
-        {kind === 'sota' && (
-          <p className="fs-hint">{t('This mask is the trained model run offline on this exact image and baked to an artifact; the same ONNX runs in the browser in the live lane.', 'Esta máscara es el modelo entrenado corrido offline sobre esta imagen exacta y horneado a un artefacto; el mismo ONNX corre en el navegador en el carril en vivo.')}</p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Beyond-SOTA: the anomaly heatmap ON the image, plus the honest anomaly score.
-function AnomalyView({ image, sample, showGt, heatOpacity, es }: {
-  image: string | null; sample: ArtifactSample; showGt: boolean; heatOpacity: number; es: boolean;
-}) {
-  const t = (en: string, esx: string) => (es ? esx : en);
-  const lv = sample.levels.patchcore;
-  return (
-    <div className="fs-method">
-      <div className="fs-method-view">
-        <div className="fs-panel-t">{t('PatchCore anomaly heat', 'Calor de anomalía PatchCore')} · {sample.sample_id}</div>
-        <HeatCanvas imageUrl={image} heatUrl={sample.heat_rel ? heatUrl(sample.heat_rel) : null} size={sample.size} mask={lv.mask_rle} gt={sample.gt_rle} showGt={showGt} showHeat heatOpacity={heatOpacity} />
-        <p className="fs-panel-sub">
-          {t('Warm = far from the uncracked memory bank (more anomalous). White outline = region above 0.6 of the shared scale. Green = ground truth crack.', 'Cálido = lejos del banco de memoria sin grietas (más anómalo). Contorno blanco = región sobre 0.6 de la escala compartida. Verde = grieta ground truth.')}
-        </p>
-        {lv.notes.map((n, i) => <p key={i} className="fs-note">{n}</p>)}
-      </div>
-      <div className="fs-method-read">
         <div className="fs-kpis fs-kpis-2">
-          <div className="fs-kpi"><div className="fs-kpi-v">{lv.anomaly_score_norm?.toFixed(2) ?? '--'}</div><div className="fs-kpi-l">{t('anomaly score (0..1)', 'puntaje anomalía (0..1)')}</div></div>
-          <div className="fs-kpi"><div className="fs-kpi-v">{lv.anomaly_score?.toFixed(2) ?? '--'}</div><div className="fs-kpi-l">{t('raw kNN distance', 'distancia kNN cruda')}</div></div>
+          <div className="fs-kpi"><div className="fs-kpi-v">{sample.size[1]}x{sample.size[0]}</div><div className="fs-kpi-l">{t('pixels', 'píxeles')}</div></div>
+          <div className="fs-kpi"><div className="fs-kpi-v">{sample.material}</div><div className="fs-kpi-l">{t('material', 'material')}</div></div>
+          <div className="fs-kpi"><div className="fs-kpi-v">{sample.gt_rle ? t('yes', 'sí') : t('no', 'no')}</div><div className="fs-kpi-l">{t('pixel ground truth', 'ground truth de píxeles')}</div></div>
+          <div className="fs-kpi"><div className="fs-kpi-v">{g.length_px.toFixed(0)}</div><div className="fs-kpi-l">{t('GT skeleton length (px)', 'largo esqueleto GT (px)')}</div></div>
         </div>
-        <Callout variant="honest" title={t('What this method is, honestly', 'Qué es este método, con honestidad')}>
-          {t('The memory bank saw only UNCRACKED concrete. A high score means the surface looks unlike healthy concrete, not necessarily a crack. Across the concrete-transfer study this reaches image AUROC 0.72, far below the 0.996 the same method reaches on industrial MVTec AD. It is a screen, not a detector.', 'El banco de memoria vio solo hormigón SIN grietas. Un puntaje alto significa que la superficie no se parece al hormigón sano, no necesariamente una grieta. En el estudio de transferencia esto alcanza AUROC por imagen de 0.72, muy por debajo del 0.996 que el mismo método alcanza en el industrial MVTec AD. Es un tamiz, no un detector.')}
+      </div>
+    </div>
+  );
+}
+
+// ---- Preprocessing (the real classical stage outputs) ------------------------------------------
+
+function PrepTab({ wb, es }: { wb: WorkbenchSample | null; es: boolean }) {
+  const t = (en: string, esx: string) => (es ? esx : en);
+  if (!wb) return <Callout variant="note" title={t('No preprocessing for this image', 'Sin preprocesamiento para esta imagen')}>{t('The preprocessing intermediates are baked for the committed example set.', 'Los intermedios de preprocesamiento están baked para el set de ejemplos versionado.')}</Callout>;
+  const steps: { key: keyof WorkbenchSample['prep']; en: string; es: string; desc_en: string; desc_es: string }[] = [
+    { key: 'gray', en: 'Grayscale', es: 'Escala de grises', desc_en: 'The starting point: intensity only.', desc_es: 'El punto de partida: solo intensidad.' },
+    { key: 'flatten', en: 'Illumination flattened', es: 'Iluminación aplanada', desc_en: 'Median-subtract removes uneven lighting so a global threshold can work.', desc_es: 'La resta de mediana quita la iluminación despareja para que un umbral global funcione.' },
+    { key: 'denoise', en: 'NLM denoised', es: 'Denoise NLM', desc_en: 'Non-local means suppresses texture noise while preserving thin edges.', desc_es: 'Non-local means suprime el ruido de textura preservando bordes finos.' },
+    { key: 'ridge', en: 'Hessian ridge response', es: 'Respuesta cresta Hessiana', desc_en: 'The multiscale sato filter lights up dark curvilinear ridges (the crack).', desc_es: 'El filtro sato multiescala enciende crestas curvilíneas oscuras (la grieta).' },
+  ];
+  return (
+    <div>
+      <p className="fs-hint" style={{ marginBottom: '0.8rem' }}>{t('The real classical preprocessing stages, each applied to the selected image. This is how the pipeline turns a photo into something a threshold can segment.', 'Las etapas reales de preprocesamiento clásico, cada una aplicada a la imagen seleccionada. Así el pipeline convierte una foto en algo que un umbral puede segmentar.')}</p>
+      <div className="fs-prep-grid">
+        {steps.map((s, i) => (
+          <figure key={s.key} className="fs-prep-cell">
+            <div className="fs-prep-n">{i}</div>
+            <img src={workbenchUrl(wb.prep[s.key])} alt={t(s.en, s.es)} />
+            <figcaption>
+              <b>{t(s.en, s.es)}</b>
+              <span>{t(s.desc_en, s.desc_es)}</span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---- Semantic segmentation (the learned masks) -------------------------------------------------
+
+function SemanticTab({ cSample, lSample, imageUrl, showGt, opacity, es }: { cSample: ArtifactSample; lSample: ArtifactSample | null; imageUrl: string | null; showGt: boolean; opacity: number; es: boolean }) {
+  const t = (en: string, esx: string) => (es ? esx : en);
+  const [pick, setPick] = useState('segformer_b2');
+  if (!lSample) return <Callout variant="note" title={t('No learned segmentation for this image', 'Sin segmentación aprendida para esta imagen')}>{t('The learned models are baked on the committed example set.', 'Los modelos aprendidos están baked sobre el set de ejemplos versionado.')}</Callout>;
+  const methods = LEARNED_METHODS.filter((m) => lSample.levels[m.id]);
+  const active = methods.find((m) => m.id === pick) ? pick : methods[0].id;
+  const lev = lSample.levels[active];
+  const seg = lev?.segmentation;
+  return (
+    <div className="fs-wb-two">
+      <div className="fs-wb-img">
+        <MethodTile imageUrl={imageUrl} size={cSample.size} mask={lev?.mask_rle ?? null} gt={cSample.gt_rle} showGt={showGt} opacity={opacity} color={FAMILY_RGB.learned} />
+        <p className="fs-panel-sub">{t('The learned semantic segmentation of the crack, in purple, over the image (green = ground truth).', 'La segmentación semántica aprendida de la grieta, en púrpura, sobre la imagen (verde = ground truth).')}</p>
+      </div>
+      <div className="fs-wb-read">
+        <div className="fs-chips">
+          {methods.map((m) => <button key={m.id} className={`chip ${m.id === active ? 'on' : ''}`} onClick={() => setPick(m.id)}>{m.label}</button>)}
+        </div>
+        {seg ? (
+          <div className="fs-kpis fs-kpis-2">
+            <div className="fs-kpi"><div className="fs-kpi-v">{seg.tol2px.f1.toFixed(3)}</div><div className="fs-kpi-l">F1 @ 2 px</div></div>
+            <div className="fs-kpi"><div className="fs-kpi-v">{seg.tol5px.f1.toFixed(3)}</div><div className="fs-kpi-l">F1 @ 5 px</div></div>
+            <div className="fs-kpi"><div className="fs-kpi-v">{seg.tol2px.precision.toFixed(3)}</div><div className="fs-kpi-l">{t('precision @ 2px', 'precisión @ 2px')}</div></div>
+            <div className="fs-kpi"><div className="fs-kpi-v">{seg.tol2px.recall.toFixed(3)}</div><div className="fs-kpi-l">{t('recall @ 2px', 'recall @ 2px')}</div></div>
+          </div>
+        ) : null}
+        {(lev?.notes ?? []).map((n, i) => <p key={i} className="fs-note">{n}</p>)}
+      </div>
+    </div>
+  );
+}
+
+// ---- SLIC (param-driven superpixels) -----------------------------------------------------------
+
+function SlicTab({ wb, n, c, es }: { wb: WorkbenchSample | null; n: number; c: number; es: boolean }) {
+  const t = (en: string, esx: string) => (es ? esx : en);
+  if (!wb) return <Callout variant="note" title={t('No SLIC for this image', 'Sin SLIC para esta imagen')}>{t('The SLIC grid is baked for the committed example set.', 'La grilla SLIC está baked para el set de ejemplos versionado.')}</Callout>;
+  const key = `${n}_${c}`;
+  const rel = wb.slic[key];
+  const real = wb.slic_real_counts[key];
+  return (
+    <div className="fs-wb-two">
+      <div className="fs-wb-img">
+        {rel ? <img src={workbenchUrl(rel)} alt="SLIC" className="fs-wb-photo" /> : <div className="fs-thumb-ph" />}
+        <p className="fs-panel-sub">{t('SLIC superpixel boundaries (yellow) over the image. Change the superpixel count and compactness in the left column.', 'Fronteras de superpíxeles SLIC (amarillo) sobre la imagen. Cambia el número de superpíxeles y la compacidad en la columna izquierda.')}</p>
+      </div>
+      <div className="fs-wb-read">
+        <h3>{t('SLIC superpixels', 'Superpíxeles SLIC')}</h3>
+        <p className="fs-detail-desc">{t('SLIC groups pixels into perceptually uniform regions (superpixels) by clustering in colour + space. It is the standard pre-segmentation for region-based crack methods and for cutting annotation cost: label superpixels, not pixels.', 'SLIC agrupa píxeles en regiones perceptualmente uniformes (superpíxeles) agrupando en color + espacio. Es la pre-segmentación estándar para métodos de grietas por regiones y para reducir el costo de anotación: etiqueta superpíxeles, no píxeles.')}</p>
+        <div className="fs-kpis fs-kpis-2">
+          <div className="fs-kpi"><div className="fs-kpi-v">{real ?? '--'}</div><div className="fs-kpi-l">{t('actual superpixels', 'superpíxeles reales')}</div></div>
+          <div className="fs-kpi"><div className="fs-kpi-v">{c}</div><div className="fs-kpi-l">{t('compactness', 'compacidad')}</div></div>
+        </div>
+        <Callout variant="note" title={t('Reacts to the left column', 'Reacciona a la columna izquierda')}>
+          {t('The superpixel-count and compactness sliders drive this view. Low compactness lets the superpixels bend around the crack; high compactness keeps them square and ignores it.', 'Los deslizadores de número de superpíxeles y compacidad controlan esta vista. Baja compacidad deja que los superpíxeles se doblen alrededor de la grieta; alta los mantiene cuadrados y la ignora.')}
         </Callout>
       </div>
     </div>
   );
 }
 
-function QuantView({ sample, es }: { sample: ArtifactSample; es: boolean }) {
+// ---- a method family applied to the image (Classical / SOTA / Beyond) --------------------------
+
+function FamilyTab({ methods, sample, base, imageUrl, showGt, opacity, detail, setDetail, es, anomalyHeat }: {
+  methods: MethodDef[]; sample: ArtifactSample | null; base: ArtifactSample; imageUrl: string | null;
+  showGt: boolean; opacity: number; detail: string; setDetail: (s: string) => void; es: boolean; anomalyHeat?: string | null;
+}) {
   const t = (en: string, esx: string) => (es ? esx : en);
-  const g = sample.geometry;
-  const w = g.width;
+  if (!sample) return <Callout variant="note" title={t('Not available for this image', 'No disponible para esta imagen')}>{t('This method family is baked on the committed example set.', 'Esta familia de métodos está baked sobre el set de ejemplos versionado.')}</Callout>;
+  const avail = methods.filter((m) => sample.levels[m.id]);
+  const active = avail.find((m) => m.id === detail) ? detail : avail[0].id;
+  const fam = methods[0].family;
+  const lev = sample.levels[active];
+  const seg = lev?.segmentation;
+  const anom = (lev as (LevelRecord & { anomaly_score_norm?: number }) | undefined)?.anomaly_score_norm;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-      <div className="fs-kpis">
-        <div className="fs-kpi"><div className="fs-kpi-v">{w.edt_median?.toFixed(2) ?? 'n/a'}</div><div className="fs-kpi-l">{t('width median, inscribed circle (px)', 'ancho mediano, círculo inscrito (px)')}</div></div>
-        <div className="fs-kpi"><div className="fs-kpi-v">{w.profile_median?.toFixed(2) ?? 'n/a'}</div><div className="fs-kpi-l">{t('width median, orthogonal profile (px)', 'ancho mediano, perfil ortogonal (px)')}</div></div>
-        <div className="fs-kpi"><div className="fs-kpi-v">{g.length_px.toFixed(0)}</div><div className="fs-kpi-l">{t('skeleton length (px)', 'largo del esqueleto (px)')}</div></div>
-        <div className="fs-kpi"><div className="fs-kpi-v">{g.n_branches}</div><div className="fs-kpi-l">{t('branch points', 'puntos de rama')}</div></div>
-      </div>
-      <div className="fs-panel">
-        <div className="fs-panel-t">{t('Orientation histogram (10-degree bins over 0..180)', 'Histograma de orientación (bins de 10 grados sobre 0..180)')}</div>
-        <UPlotChart
-          data={[g.orientation_hist.map((_, i) => i * 10 + 5), g.orientation_hist]}
-          series={[{}, { label: t('skeleton px', 'px de esqueleto'), stroke: '#8250df', width: 2, points: { show: true, size: 5 } }]}
-          axes={[{ label: t('angle (deg)', 'ángulo (grados)') }, {}]}
-          scales={{ x: { time: false } }}
-          height={180}
-        />
-      </div>
-      {sample.width_mm ? (
-        <div className="fs-kpis">
-          <div className="fs-kpi"><div className="fs-kpi-v">{sample.width_mm.median.toFixed(2)}</div><div className="fs-kpi-l">{t('width median (mm)', 'ancho mediano (mm)')}</div></div>
-          <div className="fs-kpi"><div className="fs-kpi-v">{sample.width_mm.p95.toFixed(2)}</div><div className="fs-kpi-l">{t('width p95 (mm)', 'ancho p95 (mm)')}</div></div>
-          <div className="fs-kpi"><div className="fs-kpi-v">{sample.width_mm.mm_per_px.toFixed(3)}</div><div className="fs-kpi-l">mm/px</div></div>
-          <div className="fs-kpi"><div className="fs-kpi-v">{(g.length_px * sample.width_mm.mm_per_px).toFixed(0)}</div><div className="fs-kpi-l">{t('length (mm)', 'largo (mm)')}</div></div>
+    <div>
+      <div className="fs-matrix-h"><span className="fs-dot" style={{ background: FAMILY_TONE[fam] }} />{t(...FAMILY_LABEL[fam])}</div>
+      <div className="fs-wb-two">
+        <div className="fs-wb-img">
+          <MethodTile imageUrl={imageUrl} size={(fam === 'anomaly' ? sample : base).size} mask={lev?.mask_rle ?? null} gt={base.gt_rle} showGt={showGt} opacity={opacity} color={FAMILY_RGB[fam]} heatUrl={fam === 'anomaly' ? anomalyHeat ?? null : null} />
+          <p className="fs-panel-sub">{t('The method prediction over the image. Pick a method to compare.', 'La predicción del método sobre la imagen. Elige un método para comparar.')}</p>
         </div>
-      ) : null}
-      {sample.width_validation ? (
-        <div className="fs-panel">
-          <div className="fs-panel-t">{t('Width validation against exact synthetic truth', 'Validación de ancho contra verdad sintética exacta')}</div>
-          <div className="fs-tablewrap">
-            <table className="fs-table">
-              <tbody>
-                <tr><td>{t('true mask width (median)', 'ancho verdadero (mediana)')}</td><td className="mono">{sample.width_validation.true_width_px.toFixed(2)} px</td></tr>
-                <tr><td>{t('inscribed-circle on GT', 'círculo inscrito sobre GT')}</td><td className="mono">{sample.width_validation.edt_on_gt_median?.toFixed(2) ?? 'n/a'} px</td></tr>
-                <tr><td>{t('absolute error', 'error absoluto')}</td><td className="mono">{sample.width_validation.edt_abs_error?.toFixed(3) ?? 'n/a'} px</td></tr>
-              </tbody>
-            </table>
+        <div className="fs-wb-read">
+          <div className="fs-chips">
+            {avail.map((m) => <button key={m.id} className={`chip ${m.id === active ? 'on' : ''}`} onClick={() => setDetail(m.id)} title={t(m.en, m.es)}>{m.label}</button>)}
           </div>
+          <p className="fs-detail-desc">{t(avail.find((m) => m.id === active)!.en, avail.find((m) => m.id === active)!.es)}</p>
+          {seg ? (
+            <div className="fs-kpis fs-kpis-2">
+              <div className="fs-kpi"><div className="fs-kpi-v">{seg.tol2px.f1.toFixed(3)}</div><div className="fs-kpi-l">F1 @ 2 px</div></div>
+              <div className="fs-kpi"><div className="fs-kpi-v">{seg.tol5px.f1.toFixed(3)}</div><div className="fs-kpi-l">F1 @ 5 px</div></div>
+              <div className="fs-kpi"><div className="fs-kpi-v">{seg.tol2px.precision.toFixed(3)}</div><div className="fs-kpi-l">{t('precision @ 2px', 'precisión @ 2px')}</div></div>
+              <div className="fs-kpi"><div className="fs-kpi-v">{seg.tol2px.recall.toFixed(3)}</div><div className="fs-kpi-l">{t('recall @ 2px', 'recall @ 2px')}</div></div>
+            </div>
+          ) : anom != null ? (
+            <div className="fs-kpis fs-kpis-2"><div className="fs-kpi"><div className="fs-kpi-v">{(anom * 100).toFixed(0)}%</div><div className="fs-kpi-l">{t('anomaly score', 'puntaje anomalía')}</div></div></div>
+          ) : null}
+          {(lev?.notes ?? []).map((n, i) => <p key={i} className="fs-note">{n}</p>)}
+          {fam === 'anomaly' ? (
+            <Callout variant="honest" title={t('Read honestly', 'Léelo con honestidad')}>
+              {t('The memory bank saw only UNCRACKED concrete. High = unlike healthy concrete, not necessarily a crack. Transfer AUROC is 0.72, far below the 0.996 the same method reaches on industrial MVTec AD.', 'El banco de memoria vio solo hormigón SIN grietas. Alto = distinto del hormigón sano, no necesariamente una grieta. El AUROC de transferencia es 0.72, muy por debajo del 0.996 del mismo método en el industrial MVTec AD.')}
+            </Callout>
+          ) : null}
         </div>
-      ) : null}
-      {sample.severity ? (
-        <div className="fs-panel">
-          <div className="fs-panel-t">{t('Severity CONTEXT: measured width vs published guidance', 'CONTEXTO de severidad: ancho medido vs guías publicadas')}</div>
-          <div className="fs-tablewrap">
-            <table className="fs-table">
-              <thead><tr><th>{t('Source', 'Fuente')}</th><th>{t('Exposure', 'Exposición')}</th><th className="mono">{t('limit (mm)', 'límite (mm)')}</th><th>{t('median', 'mediana')}</th></tr></thead>
-              <tbody>
-                {sample.severity.bands.map((b, i) => (
-                  <tr key={i}><td>{b.source}</td><td>{b.exposure}</td><td className="mono">{b.limit_mm.toFixed(2)}</td>
-                    <td><span className={`fs-badge ${b.median_within ? 'real' : 'tr-monitor'}`}>{b.median_within ? t('within', 'dentro') : t('exceeds', 'excede')}</span></td></tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="fs-panel-sub"><b>{sample.severity.framing}</b></p>
-        </div>
-      ) : null}
+      </div>
     </div>
   );
 }
 
-function ContextView({ source, sample, es }: { source: Source; sample: ArtifactSample; es: boolean }) {
+// ---- Summary (the full comparison matrix + ranking) --------------------------------------------
+
+interface Cell { method: MethodDef; level: LevelRecord | null; f1_2: number | null; anom: number | null; }
+
+function SummaryTab({ cSample, lSample, aSample, imageUrl, showGt, opacity, es }: {
+  cSample: ArtifactSample; lSample: ArtifactSample | null; aSample: ArtifactSample | null;
+  imageUrl: string | null; showGt: boolean; opacity: number; es: boolean;
+}) {
   const t = (en: string, esx: string) => (es ? esx : en);
-  const steel = sample.material === 'steel';
+  const cells: Cell[] = [
+    ...CLASSICAL_METHODS.map((m) => ({ method: m, level: cSample.levels[m.id] ?? null })),
+    ...LEARNED_METHODS.map((m) => ({ method: m, level: lSample?.levels[m.id] ?? null })),
+    ...ANOMALY_METHODS.map((m) => ({ method: m, level: (aSample?.levels[m.id] as LevelRecord) ?? null })),
+  ].map(({ method, level }) => ({
+    method, level,
+    f1_2: level?.segmentation?.tol2px.f1 ?? null,
+    anom: (level as (LevelRecord & { anomaly_score_norm?: number }) | null)?.anomaly_score_norm ?? null,
+  }));
+  const bestId = cells.reduce<{ id: string; f1: number } | null>((b, c) => (c.f1_2 != null && (!b || c.f1_2 > b.f1) ? { id: c.method.id, f1: c.f1_2 } : b), null)?.id ?? null;
+  const scored = cells.filter((c) => c.f1_2 != null);
+  const xs = scored.map((_, i) => i);
+
   return (
-    <div className="fs-doc" style={{ maxWidth: '46rem', margin: 0 }}>
-      <h3>{t('What you are comparing', 'Qué estás comparando')}</h3>
-      <p>
-        {t('Every tab runs a different method on the SAME image, so the difference you see is the method, not the picture. Classical is the transparent L0-L5 ladder (a global Otsu threshold up to a Hessian-ridge plus path-bridging fusion). SOTA is a trained network (U-Net, DeepLabV3+, SegFormer-B2, HrSegNet, or a DINOv2 linear probe) run offline and baked. Beyond SOTA is unsupervised anomaly detection: a memory bank fit on uncracked concrete only, which never saw a crack.',
-          'Cada pestaña corre un método distinto sobre la MISMA imagen, así que la diferencia que ves es el método, no la foto. Clásico es la escalera transparente L0-L5 (desde un umbral global de Otsu hasta una fusión de cresta Hessiana con puente de caminos). SOTA es una red entrenada (U-Net, DeepLabV3+, SegFormer-B2, HrSegNet, o una sonda lineal DINOv2) corrida offline y horneada. Más allá de SOTA es detección de anomalías no supervisada: un banco de memoria ajustado solo sobre hormigón sin grietas, que nunca vio una grieta.')}
-      </p>
-      <h3>{t('This sample', 'Esta muestra')}</h3>
-      <p>
-        {source === 'synthetic'
-          ? t('A generated crack with exact ground truth: the centerline, mask and width are known by construction, so this is the regression gate of the classical stack and the reference for the width estimators (inscribed-circle lands within about 0.2 px of the true width here).',
-              'Una grieta generada con ground truth exacto: la línea central, la máscara y el ancho se conocen por construcción, así que esta es la compuerta de regresión del stack clásico y la referencia de los estimadores de ancho (el círculo inscrito cae a unos 0.2 px del ancho verdadero aquí).')
-          : steel
-            ? t('A steel surface full of scratches: the hardest case for every method, because scratch texture mimics cracks. Watch precision fall here even for the learned models.',
-                'Una superficie de acero llena de rayas: el caso más difícil para todo método, porque la textura de rayas imita grietas. Observa cómo cae la precisión aquí incluso para los modelos aprendidos.')
-            : t('A real concrete or pavement patch with weak contrast and genuine texture. The thin clean crack reaches high F1 mid-ladder; the wide diffuse crack and the uncracked controls show where each method false-fires.',
-                'Un parche real de hormigón o pavimento con contraste débil y textura genuina. La grieta fina y limpia alcanza F1 alto a mitad de escalera; la grieta ancha y difusa y los controles sin grieta muestran dónde cada método dispara en falso.')}
-      </p>
-      <h3>{t('How to read it', 'Cómo leerlo')}</h3>
-      <p>
-        {t('Toggle ground truth to see where each method agrees (yellow) and misses. Sweep the classical rung and the SOTA model in the left column and watch the prediction change on the image and the F1 change in the read-out. The live diagnosis in the sidebar tells you, per sample, whether the learned model actually earns its complexity over the classical ladder.',
-          'Activa el ground truth para ver dónde cada método acierta (amarillo) y falla. Barre el peldaño clásico y el modelo SOTA en la columna izquierda y observa cómo cambia la predicción sobre la imagen y el F1 en la lectura. El diagnóstico en vivo de la barra lateral te dice, por muestra, si el modelo aprendido realmente justifica su complejidad frente a la escalera clásica.')}
-      </p>
+    <div>
+      <p className="fs-hint" style={{ marginBottom: '0.8rem' }}>{t('Every method applied to this image at once. The winner (highest F1@2px) is starred; click nothing, just compare.', 'Cada método aplicado a esta imagen a la vez. El ganador (mayor F1@2px) lleva estrella; no hagas clic, solo compara.')}</p>
+      {(['classical', 'learned', 'anomaly'] as Family[]).map((fam) => {
+        const famCells = cells.filter((c) => c.method.family === fam);
+        return (
+          <section key={fam} className="fs-matrix-sec">
+            <div className="fs-matrix-h"><span className="fs-dot" style={{ background: FAMILY_TONE[fam] }} />{t(...FAMILY_LABEL[fam])}</div>
+            <div className="fs-grid">
+              {famCells.map((c) => (
+                <div key={c.method.id} className="fs-cell" style={{ ['--tone' as string]: FAMILY_TONE[fam] }}>
+                  <MethodTile imageUrl={imageUrl} size={(fam === 'anomaly' ? aSample : cSample)?.size ?? cSample.size} mask={c.level?.mask_rle ?? null} gt={cSample.gt_rle} showGt={showGt} opacity={opacity} color={FAMILY_RGB[fam]} heatUrl={fam === 'anomaly' && aSample?.heat_rel ? heatUrl(aSample.heat_rel) : null} />
+                  <div className="fs-cell-b">
+                    <span className="fs-cell-l">{c.method.id === bestId ? '★ ' : ''}{c.method.label}</span>
+                    <span className="fs-cell-v">{c.f1_2 != null ? c.f1_2.toFixed(2) : c.anom != null ? `${(c.anom * 100).toFixed(0)}%` : '--'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        );
+      })}
+      {scored.length > 1 ? (
+        <div className="fs-panel" style={{ marginTop: '1rem' }}>
+          <div className="fs-panel-t">{t('Every method ranked on THIS image (both tolerance protocols)', 'Cada método rankeado en ESTA imagen (ambos protocolos)')}</div>
+          <UPlotChart
+            data={[xs, scored.map((c) => c.f1_2), scored.map((c) => c.level?.segmentation?.tol5px.f1 ?? null)]}
+            series={[{}, { label: 'F1 @ 2 px', stroke: '#cf222e', width: 2, points: { show: true, size: 6 } }, { label: 'F1 @ 5 px', stroke: '#2da44e', width: 2, points: { show: true, size: 6 } }]}
+            axes={[{ values: (_u, ticks) => ticks.map((v) => (Number.isInteger(v) ? scored[v]?.method.label ?? '' : '')), splits: () => xs, rotate: -35 }, { label: 'F1' }]}
+            scales={{ x: { time: false }, y: { range: [0, 1] } }}
+            height={230}
+          />
+          <p className="fs-panel-sub">{t('The same masks score differently at 2 px and 5 px; the protocol always travels with the number.', 'Las mismas máscaras puntúan distinto a 2 px y 5 px; el protocolo siempre viaja con el número.')}</p>
+        </div>
+      ) : null}
     </div>
   );
 }

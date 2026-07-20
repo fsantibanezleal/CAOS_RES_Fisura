@@ -70,6 +70,55 @@
 .fs-kpis-2 { grid-template-columns: repeat(2, 1fr); }
 .fs-note { font-size: 0.74rem; color: var(--color-fg-subtle); line-height: 1.5; background: color-mix(in oklab, var(--color-fg-subtle) 8%, transparent); border-radius: 6px; padding: 0.4rem 0.55rem; margin: 0; }
 
+/* ---- App redesign: the comparison MATRIX (every method applied to one image) ---- */
+/* image thumbnail strip in the sidebar */
+.fs-thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+.fs-thumb { position: relative; border: 2px solid var(--color-border); border-radius: 8px; overflow: hidden; padding: 0; background: var(--color-surface); cursor: pointer; aspect-ratio: 1; transition: border-color 0.12s; }
+.fs-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fs-thumb-ph { display: block; width: 100%; height: 100%; background: var(--color-border); }
+.fs-thumb.on { border-color: var(--color-accent); }
+.fs-thumb-l { position: absolute; left: 0; right: 0; bottom: 0; font-size: 0.6rem; padding: 0.1rem 0.25rem; background: color-mix(in oklab, var(--color-surface) 80%, transparent); color: var(--color-fg-subtle); text-align: center; }
+
+/* the selected-method detail (large prediction on the image + read-out) */
+.fs-detail { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 1rem; align-items: start; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 0.9rem; margin-bottom: 1.1rem; }
+@media (max-width: 820px) { .fs-detail { grid-template-columns: 1fr; } }
+.fs-detail-view { display: flex; }
+.fs-detail-view .fs-tile-canvas { width: 100%; border-radius: 8px; }
+.fs-detail-read { display: flex; flex-direction: column; gap: 0.6rem; }
+.fs-detail-h { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; }
+.fs-detail-h h3 { margin: 0; font-size: 1.05rem; }
+.fs-detail-desc { font-size: 0.82rem; color: var(--color-fg-subtle); margin: 0; line-height: 1.5; }
+
+/* the matrix: family band + grid of prediction tiles */
+.fs-matrix-sec { margin-top: 1rem; }
+.fs-matrix-h { display: flex; align-items: center; gap: 0.45rem; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-fg-subtle); margin-bottom: 0.5rem; }
+.fs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.6rem; }
+.fs-cell { position: relative; border: 2px solid var(--color-border); border-radius: 10px; overflow: hidden; padding: 0; background: var(--color-surface); cursor: pointer; transition: border-color 0.12s, transform 0.12s; }
+.fs-cell:hover { transform: translateY(-2px); border-color: color-mix(in oklab, var(--tone) 55%, var(--color-border)); }
+.fs-cell.on { border-color: var(--tone); box-shadow: 0 0 0 1px var(--tone); }
+.fs-tile-canvas { width: 100%; display: block; aspect-ratio: 1; object-fit: cover; background: var(--color-border); }
+.fs-cell-b { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; padding: 0.35rem 0.5rem; border-top: 1px solid var(--color-border); }
+.fs-cell-l { font-size: 0.72rem; font-weight: 600; color: var(--color-fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fs-cell-v { font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; color: var(--tone); flex: none; }
+
+/* ---- workbench tabs: two-column view (image + read-out), prep grid, upload, SLIC ---- */
+.fs-ctl-cap { font-size: 0.72rem; font-weight: 700; color: var(--color-fg-subtle); margin-bottom: 0.2rem; }
+.fs-upload { display: flex; align-items: center; justify-content: center; border: 1.5px dashed var(--color-border); border-radius: 10px; padding: 1rem; font-size: 0.78rem; color: var(--color-fg-subtle); cursor: not-allowed; text-align: center; }
+.fs-upload input { display: none; }
+.fs-wb-two { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 1.1rem; align-items: start; }
+@media (max-width: 820px) { .fs-wb-two { grid-template-columns: 1fr; } }
+.fs-wb-img { display: flex; flex-direction: column; gap: 0.4rem; }
+.fs-wb-img .fs-tile-canvas, .fs-wb-photo { width: 100%; border-radius: 10px; border: 1px solid var(--color-border); display: block; }
+.fs-wb-read { display: flex; flex-direction: column; gap: 0.7rem; }
+.fs-wb-read h3 { margin: 0; font-size: 1.02rem; }
+.fs-prep-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.8rem; }
+.fs-prep-cell { position: relative; margin: 0; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden; }
+.fs-prep-cell img { width: 100%; display: block; aspect-ratio: 1; object-fit: cover; }
+.fs-prep-n { position: absolute; top: 0.4rem; left: 0.4rem; width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--color-accent); color: var(--color-accent-fg); font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.fs-prep-cell figcaption { padding: 0.5rem 0.6rem; display: flex; flex-direction: column; gap: 0.2rem; }
+.fs-prep-cell figcaption b { font-size: 0.8rem; }
+.fs-prep-cell figcaption span { font-size: 0.72rem; color: var(--color-fg-subtle); line-height: 1.45; }
+
 /* ---- Experiments: coverage rows + inlined themed SVG ---- */
 .fs-cov-row { border: 1px solid var(--color-border); border-radius: 10px; padding: 0.6rem 0.75rem; margin: 0.5rem 0; background: var(--color-surface); }
 .fs-cov-head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
