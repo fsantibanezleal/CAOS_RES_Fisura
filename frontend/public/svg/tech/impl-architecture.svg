@@ -1,0 +1,77 @@
+<svg viewBox="0 0 880 340" width="880" class="arch-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Offline pipeline, committed artifact, browser lane">
+  <style>
+    .bx { fill: var(--color-surface-2); stroke: var(--color-border); stroke-width: 1; }
+    .bx-off { fill: var(--color-surface-2); stroke: var(--fs-monitor); stroke-width: 1.5; }
+    .bx-art { fill: var(--color-surface-2); stroke: var(--color-accent); stroke-width: 1.8; }
+    .bx-web { fill: var(--color-surface-2); stroke: var(--fs-learned); stroke-width: 1.5; }
+    .ttl { fill: var(--color-fg); font: 600 12.5px var(--font-sans, sans-serif); }
+    .it { fill: var(--color-fg-subtle); font: 10.5px var(--font-sans, sans-serif); }
+    .mono { fill: var(--color-accent); font: 9.5px var(--font-mono, monospace); }
+    .mu { fill: var(--color-fg-faint); font: 9.5px var(--font-sans, sans-serif); }
+    .flow { fill: none; stroke: var(--color-fg-subtle); stroke-width: 1.5; }
+    .lbl { fill: var(--color-fg-faint); font: 9.5px var(--font-sans, sans-serif); }
+    .lane { fill: var(--color-fg); font: 600 11px var(--font-sans, sans-serif); }
+    .laneband { fill: var(--color-surface); stroke: var(--color-border); stroke-width: 1; stroke-dasharray: 3 3; }
+  </style>
+  <defs>
+    <marker id="am" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto-start-reverse">
+      <path d="M0,0 L6,3 L0,6 Z" fill="var(--color-fg-subtle)" />
+    </marker>
+  </defs>
+
+  <rect x="12" y="30" width="300" height="298" class="laneband" rx="10" />
+  <text x="26" y="22" class="lane">Offline lane (local GPU, heavy)</text>
+
+  <rect x="28" y="44" width="268" height="64" class="bx bx-off" rx="8" />
+  <text x="42" y="66" class="ttl">Dataset shards</text>
+  <text x="42" y="83" class="it">512-crop tiling, positive-pixel index</text>
+  <text x="42" y="101" class="mono">learned/shards.py</text>
+
+  <rect x="28" y="120" width="268" height="64" class="bx bx-off" rx="8" />
+  <text x="42" y="142" class="ttl">Train + fit</text>
+  <text x="42" y="159" class="it">SMP, HrSegNet, DINOv2, PatchCore</text>
+  <text x="42" y="177" class="mono">learned/training.py, anomaly/</text>
+
+  <rect x="28" y="196" width="268" height="64" class="bx bx-off" rx="8" />
+  <text x="42" y="218" class="ttl">Evaluate + export</text>
+  <text x="42" y="235" class="it">dual-tolerance harness, ONNX + parity</text>
+  <text x="42" y="253" class="mono">eval/harness.py, export/onnx.py</text>
+
+  <rect x="28" y="272" width="268" height="44" class="bx bx-off" rx="8" />
+  <text x="42" y="294" class="ttl">Bake artifacts</text>
+  <text x="42" y="310" class="mono">core/artifact.py + manifest.py</text>
+
+  <path class="flow" d="M296,294 C330,294 330,180 350,180" marker-end="url(#am)" />
+  <text x="306" y="210" class="lbl">commit</text>
+
+  <rect x="350" y="140" width="180" height="80" class="bx bx-art" rx="8" />
+  <text x="364" y="162" class="ttl">Committed artifacts</text>
+  <text x="364" y="180" class="it">compact RLE + manifest JSON</text>
+  <text x="364" y="197" class="it">+ redistributable overlays</text>
+  <text x="364" y="215" class="mono">data/derived/ (git-as-data)</text>
+
+  <rect x="566" y="30" width="302" height="298" class="laneband" rx="10" />
+  <text x="580" y="22" class="lane">Web lane (the browser)</text>
+
+  <path class="flow" d="M530,180 L586,180" marker-end="url(#am)" />
+  <text x="536" y="172" class="lbl">reads only</text>
+
+  <rect x="582" y="44" width="270" height="64" class="bx bx-web" rx="8" />
+  <text x="596" y="66" class="ttl">Replay (first paint)</text>
+  <text x="596" y="83" class="it">decode RLE, render overlays + charts</text>
+  <text x="596" y="101" class="mono">render/MaskCanvas, HeatCanvas</text>
+
+  <rect x="582" y="120" width="270" height="64" class="bx bx-web" rx="8" />
+  <text x="596" y="142" class="ttl">Contract mirror (build gate)</text>
+  <text x="596" y="159" class="it">TS types mirror the Python schema</text>
+  <text x="596" y="177" class="mono">lib/contract.types.ts, tsc fails on drift</text>
+
+  <rect x="582" y="196" width="270" height="64" class="bx bx-web" rx="8" />
+  <text x="596" y="218" class="ttl">Live (your image, BL-013)</text>
+  <text x="596" y="235" class="it">classical via Pyodide + ONNX runtime web</text>
+  <text x="596" y="253" class="mu">images never leave the browser</text>
+
+  <rect x="582" y="272" width="270" height="44" class="bx" rx="8" />
+  <text x="596" y="294" class="ttl">Deploy</text>
+  <text x="596" y="310" class="mono">GitHub Pages, cname, 404 SPA fallback</text>
+</svg>
