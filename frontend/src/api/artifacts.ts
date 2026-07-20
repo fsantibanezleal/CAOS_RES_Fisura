@@ -16,6 +16,13 @@ export const loadManifest = (caseId: string): Promise<CaseManifest> =>
 export const loadArtifact = (artifactPath: string): Promise<CaseArtifact> =>
   getJSON<CaseArtifact>(artifactPath);
 
+/** Load a derived example artifact by case slug (classical/learned/anomaly all share sample_ids). */
+export const loadCaseArtifact = (caseSlug: string): Promise<CaseArtifact> =>
+  getJSON<CaseArtifact>(`${caseSlug}/artifact.json`);
+
+/** URL of the committed anomaly heat PNG (Beyond-SOTA overlay). */
+export const heatUrl = (heatRel: string): string => `${base}data/${heatRel}`;
+
 /** URL of a committed overlay PNG (redistributable imagery only). */
 export const overlayUrl = (overlaysRel: string, suffix: string): string =>
   `${base}data/${overlaysRel}${suffix}`;
