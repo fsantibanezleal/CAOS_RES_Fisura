@@ -42,6 +42,34 @@
 .chip.on { background: var(--color-accent); color: var(--color-accent-fg); border-color: transparent; font-weight: 600; }
 .chip:disabled { opacity: 0.45; cursor: not-allowed; }
 
+/* ---- App page (ADR-0017 section 3): parametrization sidebar + method tabs main ---- */
+.fs-app-layout { display: grid; grid-template-columns: 320px 1fr; gap: 1.5rem; align-items: start; }
+@media (max-width: 940px) { .fs-app-layout { grid-template-columns: 1fr; } }
+.fs-side { display: flex; flex-direction: column; gap: 0.9rem; position: sticky; top: 0.5rem; }
+.fs-side-h { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-fg-subtle); font-weight: 700; }
+.fs-seg { display: flex; gap: 0.25rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 0.2rem; }
+.fs-seg-b { flex: 1; border: 0; background: transparent; color: var(--color-fg-subtle); font-size: 0.76rem; padding: 0.35rem 0.2rem; border-radius: 6px; cursor: pointer; transition: background 0.12s, color 0.12s; }
+.fs-seg-b:hover { color: var(--color-fg); }
+.fs-seg-b.on { background: var(--color-accent); color: var(--color-accent-fg); font-weight: 600; }
+.fs-hint { font-size: 0.72rem; color: var(--color-fg-faint); line-height: 1.5; margin: 0.1rem 0 0; }
+.fs-readout { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; padding: 0.7rem 0.75rem; }
+.fs-readout-h { font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-fg-subtle); font-weight: 700; margin-bottom: 0.5rem; }
+.fs-readout-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.2rem 0; }
+.fs-readout-l { flex: 1; font-size: 0.76rem; color: var(--color-fg-subtle); }
+.fs-readout-v { font-family: var(--font-mono); font-size: 0.9rem; font-weight: 700; color: var(--color-fg); }
+.fs-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.fs-dot.classical { background: var(--fs-classical); }
+.fs-dot.learned { background: var(--fs-learned); }
+.fs-dot.anomaly { background: var(--fs-anomaly); }
+
+/* a method tab: the prediction ON the image (left) + its value read-out (right) */
+.fs-method { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+@media (max-width: 760px) { .fs-method { grid-template-columns: 1fr; } }
+.fs-method-view { display: flex; flex-direction: column; gap: 0.4rem; }
+.fs-method-read { display: flex; flex-direction: column; gap: 0.7rem; }
+.fs-kpis-2 { grid-template-columns: repeat(2, 1fr); }
+.fs-note { font-size: 0.74rem; color: var(--color-fg-subtle); line-height: 1.5; background: color-mix(in oklab, var(--color-fg-subtle) 8%, transparent); border-radius: 6px; padding: 0.4rem 0.55rem; margin: 0; }
+
 /* ---- workbench layout: sticky control sidebar + reactive main (the App page) ---- */
 .fs-layout { display: grid; grid-template-columns: 320px 1fr; gap: 1.5rem; align-items: start; }
 @media (max-width: 920px) { .fs-layout { grid-template-columns: 1fr; } }
