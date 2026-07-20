@@ -1,20 +1,10 @@
-import { Callout, Equation, Cite, Refs } from '@fasl-work/caos-app-shell';
+import { Callout, Equation, Cite, Refs, Tabs, SubTabs } from '@fasl-work/caos-app-shell';
 import { useT } from '../lib/i18n';
 
 export default function Methodology() {
   const t = useT();
-  return (
-    <div className="fs-doc">
-      <p className="fs-kicker">{t('Methodology', 'Metodología')}</p>
-      <h1>{t('Seven tracks, one instrument', 'Siete pistas, un instrumento')}</h1>
-      <p className="fs-lead">
-        {t(
-          'Every method family in Fisura is implemented against the same staged pipeline, the same data contracts and the same evaluation harness, so differences in results reflect the methods, not the plumbing. This page explains each track at the level the lab implements it; the docs wiki in the repository carries the full derivations.',
-          'Cada familia de métodos en Fisura se implementa contra el mismo pipeline por etapas, los mismos contratos de datos y el mismo arnés de evaluación, de modo que las diferencias en resultados reflejen los métodos, no la fontanería. Esta página explica cada pista al nivel en que el laboratorio la implementa; la wiki de docs del repositorio lleva las derivaciones completas.',
-        )}
-      </p>
-
-      <h2>{t('1. Classical pipelines: the staged ladder', '1. Pipelines clásicos: la escalera por etapas')}</h2>
+  const track1 = (
+    <>
       <p>
         {t(
           'The classical engine is a graph of nine pure, seeded stages: ingest (with calibration metadata), illumination flattening, denoising, curvilinear enhancement, binarization, structure filtering, fragment linking, skeleton topology, and quantification. Each stage has switchable implementations, and six named ladder levels compose them from a deliberately weak floor (a global Otsu threshold on the raw image) through oriented morphology with hysteresis, up to multiscale Hessian ridge filters combined with morphological path openings, endpoint linking and full geometry extraction.',
@@ -33,8 +23,10 @@ export default function Methodology() {
         )}
       </p>
       <Refs label={t('Refs','Refs')} ids={['zou2012cracktree', 'amhaz2016mps', 'shi2016crackforest']} />
-
-      <h2>{t('2. Learned segmentation', '2. Segmentación aprendida')}</h2>
+    </>
+  );
+  const track2 = (
+    <>
       <p>
         {t(
           'The learned track trains its own models, in-repo, on open datasets: a U-Net family baseline, the strong generic segmenters DeepLabV3+ and SegFormer-B2, and a faithful reimplementation of the real-time crack specialist HrSegNet with its published recipe ',
@@ -58,8 +50,10 @@ export default function Methodology() {
         (<Cite id="cha2018damage" />).
       </p>
       <Refs label={t('Refs','Refs')} ids={['li2023hrsegnet', 'liu2021crackformer', 'liu2023crackformer2', 'shit2021cldice', 'cha2018damage']} />
-
-      <h2>{t('3. Foundation models, without the hype', '3. Modelos fundacionales, sin humo')}</h2>
+    </>
+  );
+  const track3 = (
+    <>
       <p>
         {t(
           'The lab evaluates three honest uses of foundation vision models. As promptable annotators and mask refiners, SAM and SAM 2.1 accelerate ground-truth work. As adaptation targets, a frozen SAM encoder with LoRA adapters or normalization-only tuning is fine-tuned on crack data, following the published adapter literature. And as frozen feature extractors, DINOv2 backbones with a linear head give the cheapest credible foundation baseline, a configuration whose crack-specific numbers the literature has not established, which makes it a result the lab can contribute.',
@@ -68,8 +62,10 @@ export default function Methodology() {
         (<Cite id="kirillov2023sam" />, <Cite id="ravi2024sam2" />, <Cite id="ge2024cracksam" />, <Cite id="sac2025" />, <Cite id="oquab2023dinov2" />)
       </p>
       <Refs label={t('Refs','Refs')} ids={['kirillov2023sam', 'ravi2024sam2', 'ge2024cracksam', 'sac2025', 'oquab2023dinov2']} />
-
-      <h2>{t('4. Unsupervised anomaly detection', '4. Detección de anomalías no supervisada')}</h2>
+    </>
+  );
+  const track4 = (
+    <>
       <p>
         {t(
           'Industrial anomaly detection trains only on defect-free surfaces and flags deviations, which matches the economics of inspection (good surface is abundant, labeled damage is scarce). Fisura implements the memory-bank method PatchCore directly in the repository (torchvision WideResNet50 layer features, a greedy k-center coreset with a Johnson-Lindenstrauss projection run on the GPU, kNN scoring) rather than through the anomalib framework, because anomalib pins an older torch and conflicts with the learned track. PaDiM, FastFlow and the millisecond-latency EfficientAD are the remaining rungs of this ladder. The lab reports the region-overlap metric AU-PRO rather than inflated image-level scores, and adds the study the literature is missing: how well these methods transfer from industrial textures to concrete surfaces, trained on uncracked patches from open crack datasets. The first measured result is modest but real: a PatchCore fit on uncracked SDNET2018 concrete reaches image AUROC 0.72 separating cracked from uncracked, far below the 0.996 the same method reaches on industrial MVTec AD. The honest counterweight is stated up front: on the hardest current industrial benchmark, state of the art remains below 60 percent AU-PRO.',
@@ -78,8 +74,10 @@ export default function Methodology() {
         (<Cite id="roth2022patchcore" />, <Cite id="batzner2024efficientad" />, <Cite id="akcay2022anomalib" />, <Cite id="bergmann2019mvtec" />, <Cite id="heckler2026mvtec2" />)
       </p>
       <Refs label={t('Refs','Refs')} ids={['roth2022patchcore', 'batzner2024efficientad', 'akcay2022anomalib', 'bergmann2019mvtec', 'heckler2026mvtec2']} />
-
-      <h2>{t('5. Multi-class structural damage', '5. Daño estructural multiclase')}</h2>
+    </>
+  );
+  const track5 = (
+    <>
       <p>
         {t(
           'Real inspections grade more than cracks. The multi-class track works the two verified benchmarks: dacl10k, nearly ten thousand bridge-inspection images with nineteen overlapping damage and component classes, and CODEBRIM, multi-label defect boxes over thirty bridges (crack, spallation, efflorescence, exposed bars, corrosion). Both carry non-commercial licenses, so they are used locally and only metrics are published; the detectors themselves come from permissive stacks.',
@@ -88,16 +86,20 @@ export default function Methodology() {
         (<Cite id="flotzinger2024dacl10k" />, <Cite id="mundt2019codebrim" />)
       </p>
       <Refs label={t('Refs','Refs')} ids={['flotzinger2024dacl10k', 'mundt2019codebrim']} />
-
-      <h2>{t('6. Quantification: the measurement bench', '6. Cuantificación: el banco de medición')}</h2>
+    </>
+  );
+  const track6 = (
+    <>
       <p>
         {t(
           'Two independent width estimators run on every detected crack: the inscribed-circle width from the skeleton and distance transform, and orthogonal profile sampling with sub-pixel boundary interpolation. Their disagreement is a per-point quality flag, and junction neighbourhoods are excluded from width statistics. Length is calibrated arc length along the pruned skeleton; the skeleton graph yields orientation histograms, branch counts and crack density. Calibration uses a known reference object or a checkerboard homography; published validation studies with in-image metric references report absolute width errors around 0.05 to 0.2 mm at close range, which the lab treats as the realistic accuracy envelope.',
           'Dos estimadores de ancho independientes corren sobre cada grieta detectada: el ancho de círculo inscrito desde el esqueleto y la transformada de distancia, y el muestreo de perfiles ortogonales con interpolación subpíxel del borde. Su desacuerdo es una bandera de calidad por punto, y los vecindarios de uniones se excluyen de las estadísticas de ancho. El largo es la longitud de arco calibrada sobre el esqueleto podado; el grafo del esqueleto entrega histogramas de orientación, conteo de ramas y densidad de grietas. La calibración usa un objeto de referencia conocido o una homografía de tablero; los estudios publicados de validación con referencias métricas en imagen reportan errores absolutos de ancho de 0.05 a 0.2 mm a corta distancia, lo que el laboratorio trata como la envolvente realista de exactitud.',
         )}
       </p>
-
-      <h2>{t('7. Monitoring and deformation', '7. Monitoreo y deformación')}</h2>
+    </>
+  );
+  const track7 = (
+    <>
       <p>
         {t(
           'Change between inspection epochs is measured after metric registration: crack maps from two visits are aligned by homography on planar surfaces, and the honest output is per-branch width change and new-branch events, not a pixel difference heat map. On the bench, crack growth is tracked frame by frame; the published discontinuity-tracking network CrackPropNet and DIC-based crack-tip detection define the reproducible reference points ',
@@ -137,8 +139,10 @@ export default function Methodology() {
         (<Cite id="pan2009dic" />, <Cite id="olufsen2020mudic" />, <Cite id="jiang2023opencorr" />).
       </p>
       <Refs label={t('Refs','Refs')} ids={['zhu2023crackpropnet', 'melching2022', 'paris1963', 'pan2009dic', 'olufsen2020mudic', 'jiang2023opencorr']} />
-
-      <h2>{t('The evaluation protocol (read this before any table)', 'El protocolo de evaluación (lee esto antes de cualquier tabla)')}</h2>
+    </>
+  );
+  const protocol = (
+    <>
       <p>
         {t(
           'Crack segmentation is evaluated with tolerance-based precision and recall: a predicted crack pixel counts as correct if ground truth lies within d pixels, which forgives sub-pixel boundary ambiguity on structures often one to five pixels wide. The field never standardized d. The classical literature reports at five pixels; the deep era popularized two; and one influential benchmark evaluates with a tolerance proportional to the image diagonal after non-maximum suppression, which is not comparable to either ',
@@ -152,6 +156,40 @@ export default function Methodology() {
         (<Cite id="zhang2025review" />).
       </p>
       <Refs label={t('Refs','Refs')} ids={['yang2019fphbn', 'zhang2025review']} />
+    </>
+  );
+
+  const trackTabs = [
+    { id: 'classical', label: t('1 · Classical', '1 · Clásico'), content: track1 },
+    { id: 'learned', label: t('2 · Learned', '2 · Aprendido'), content: track2 },
+    { id: 'foundation', label: t('3 · Foundation', '3 · Fundacional'), content: track3 },
+    { id: 'anomaly', label: t('4 · Anomaly', '4 · Anomalía'), content: track4 },
+    { id: 'multiclass', label: t('5 · Multi-class', '5 · Multiclase'), content: track5 },
+    { id: 'quantify', label: t('6 · Quantification', '6 · Cuantificación'), content: track6 },
+    { id: 'monitor', label: t('7 · Monitoring', '7 · Monitoreo'), content: track7 },
+  ];
+
+  return (
+    <div className="fs-doc">
+      <p className="fs-kicker">{t('Methodology', 'Metodología')}</p>
+      <h1>{t('Seven tracks, one instrument', 'Siete pistas, un instrumento')}</h1>
+      <p className="fs-lead">
+        {t(
+          'Every method family in Fisura is implemented against the same staged pipeline, the same data contracts and the same evaluation harness, so differences in results reflect the methods, not the plumbing. This page explains each track at the level the lab implements it; the docs wiki in the repository carries the full derivations.',
+          'Cada familia de métodos en Fisura se implementa contra el mismo pipeline por etapas, los mismos contratos de datos y el mismo arnés de evaluación, de modo que las diferencias en resultados reflejen los métodos, no la fontanería. Esta página explica cada pista al nivel en que el laboratorio la implementa; la wiki de docs del repositorio lleva las derivaciones completas.',
+        )}
+      </p>
+
+      <Tabs
+        ariaLabel={t('methodology sections', 'secciones de metodología')}
+        initial="tracks"
+        tabs={[
+          { id: 'tracks', label: t('The seven tracks', 'Las siete pistas'), content: (
+            <SubTabs ariaLabel={t('method tracks', 'pistas de métodos')} orientation="vertical" initial="classical" tabs={trackTabs} />
+          ) },
+          { id: 'protocol', label: t('Evaluation protocol', 'Protocolo de evaluación'), content: protocol },
+        ]}
+      />
 
       <Callout variant="honest" title={t('What this lab does not claim', 'Lo que este laboratorio no afirma')}>
         {t(

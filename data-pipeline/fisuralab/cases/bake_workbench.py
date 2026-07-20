@@ -34,6 +34,10 @@ OUT = REPO_ROOT / "data" / "derived" / "workbench"
 SLIC_N = [80, 150, 300]          # number of superpixels
 SLIC_C = [5, 10, 20]             # compactness (colour-vs-space balance)
 
+# Hessian ridge scale-space: the individual sigmas whose per-scale response the viewer sweeps, plus an
+# argmax-sigma map (which scale fires strongest per pixel) that shows WHY multi-scale matters.
+RIDGE_SIGMAS = [1.0, 2.0, 3.0, 4.0]
+
 
 def _to_u8(img01: np.ndarray) -> np.ndarray:
     return np.clip(img01 * 255.0, 0, 255).astype(np.uint8)
@@ -94,6 +98,27 @@ def main() -> None:
                 slic_files[f"{n}_{cc}"] = f"workbench/{sid}/{fn}"
                 real_counts[f"{n}_{cc}"] = real_n
 
+        # ridge scale-space: per-sigma response + the argmax-sigma map (which scale wins per pixel)
+        scale_files = {}
+        stack = []
+        for sig in RIDGE_SIGMAS:
+            r = ridge_response(den, method="sato", sigmas=(sig,))
+            stack.append(r)
+            fn = f"ridge_s{sig:g}.png"
+            _write_png(d / fn, _to_u8(r))
+            scale_files[f"{sig:g}"] = f"workbench/{sid}/{fn}"
+        arr = np.stack(stack, axis=0)              # (S, H, W)
+        argmax = arr.argmax(axis=0).astype(np.float32) / max(1, len(RIDGE_SIGMAS) - 1)
+        # tint the winning-scale index blue->red only where a ridge actually responds, else transparent
+        strength = arr.max(axis=0)
+        h, w = argmax.shape
+        rgba = np.zeros((h, w, 4), np.uint8)
+        rgba[..., 0] = (argmax * 235).astype(np.uint8)
+        rgba[..., 2] = ((1 - argmax) * 220).astype(np.uint8)
+        rgba[..., 3] = (np.clip(strength * 1.6, 0, 1) * 220).astype(np.uint8)
+        _write_png(d / "ridge_argmax.png", rgba)
+        scale_files["argmax"] = f"workbench/{sid}/ridge_argmax.png"
+
         index["samples"][sid] = {
             "material": s["material"],
             "size": s["size"],
@@ -105,8 +130,9 @@ def main() -> None:
             },
             "slic": slic_files,
             "slic_real_counts": real_counts,
+            "scale_space": {"sigmas": RIDGE_SIGMAS, "maps": scale_files},
         }
-        print(f"  {sid}: 4 prep + {len(slic_files)} SLIC variants")
+        print(f"  {sid}: 4 prep + {len(slic_files)} SLIC + {len(RIDGE_SIGMAS)} scales")
 
     with open(OUT / "index.json", "w", encoding="utf-8", newline="\n") as f:
         json.dump(index, f, ensure_ascii=False, indent=1)

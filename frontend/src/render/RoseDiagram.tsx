@@ -15,8 +15,10 @@ export function RoseDiagram({ rose, size = 220 }: { rose: Rose; size?: number })
     // orientation angle -> screen angle (0 deg = horizontal East); mirror adds 180
     const a0 = ((rose.bins_deg[i] - 90 / n * 0 - (180 / n) / 2) + (mirror ? 180 : 0)) * Math.PI / 180;
     const a1 = ((rose.bins_deg[i] + (180 / n) / 2) + (mirror ? 180 : 0)) * Math.PI / 180;
-    const p = (ang: number, rad: number) => `${(cx + rad * Math.cos(ang)).toFixed(1)},${(cy - rad * Math.sin(ang)).toFixed(1)}`;
-    return `M ${cx},${cy} L ${p(a0, r)} A ${r},${r} 0 0 0 ${p(a1, r)} Z`;
+    // y grows DOWNWARD to match image coordinates (the tangent angle is arctan2(row, col), row-down),
+    // so a crack running down-right in the image reads down-right in the rose, not flipped.
+    const p = (ang: number, rad: number) => `${(cx + rad * Math.cos(ang)).toFixed(1)},${(cy + rad * Math.sin(ang)).toFixed(1)}`;
+    return `M ${cx},${cy} L ${p(a0, r)} A ${r},${r} 0 0 1 ${p(a1, r)} Z`;
   };
   return (
     <svg viewBox={`0 0 ${size} ${size}`} className="fs-rose" width={size} height={size} role="img" aria-label="orientation rose">
@@ -26,7 +28,7 @@ export function RoseDiagram({ rose, size = 220 }: { rose: Rose; size?: number })
       {rose.bins_deg.map((_, i) => <path key={`a${i}`} d={wedge(i, false)} className="fs-rose-wedge" />)}
       {rose.bins_deg.map((_, i) => <path key={`b${i}`} d={wedge(i, true)} className="fs-rose-wedge" />)}
       <text x={cx + R - 2} y={cy - 4} className="fs-rose-lbl" textAnchor="end">0&#176;</text>
-      <text x={cx + 3} y={cy - R + 10} className="fs-rose-lbl">90&#176;</text>
+      <text x={cx + 3} y={cy + R - 2} className="fs-rose-lbl">90&#176;</text>
     </svg>
   );
 }

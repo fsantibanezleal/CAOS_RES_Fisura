@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Callout, Cite, Refs } from '@fasl-work/caos-app-shell';
+import { Callout, Cite, Refs, SubTabs } from '@fasl-work/caos-app-shell';
 import { useT } from '../lib/i18n';
 import { UPlotChart } from '../render/UPlotChart';
 
@@ -65,18 +65,8 @@ function AnomalyTransfer({ es }: { es: boolean }) {
 // join these tables per engine unit, always at both tolerance protocols. No number without source.
 export default function Benchmark() {
   const t = useT();
-  return (
-    <div className="fs-doc">
-      <p className="fs-kicker">Benchmark</p>
-      <h1>{t('Published anchors, and the protocol problem', 'Anclas publicadas, y el problema del protocolo')}</h1>
-      <p className="fs-lead">
-        {t(
-          'Before this lab reports a single number of its own, this page fixes the published record it will be measured against, and the incompatibility that makes naive comparisons meaningless. Every value below was verified against its primary source during the research pass; every future Fisura value will appear next to these, with its protocol printed.',
-          'Antes de que este laboratorio reporte un solo número propio, esta página fija el registro publicado contra el que será medido, y la incompatibilidad que vuelve sin sentido las comparaciones ingenuas. Cada valor de abajo fue verificado contra su fuente primaria durante la investigación; cada valor futuro de Fisura aparecerá junto a estos, con su protocolo impreso.',
-        )}
-      </p>
-
-      <h2>{t('The classical record (5 px tolerance, F1)', 'El registro clásico (tolerancia 5 px, F1)')}</h2>
+  const recClassical = (
+    <>
       <p>
         {t(
           'The pre-deep-learning ladder on the two classic benchmarks, as published in the structured-forest paper ',
@@ -110,8 +100,10 @@ export default function Benchmark() {
           'Estas son las marcas que la escalera clásica de Fisura reproduce primero: el piso de Canny es el ancla de honestidad, el bosque estructurado es el techo clásico.',
         )}
       </p>
-
-      <h2>{t('The protocol trap, quantified', 'La trampa del protocolo, cuantificada')}</h2>
+    </>
+  );
+  const recProtocol = (
+    <>
       <p>
         {t(
           'The FPHBN benchmark re-evaluated classical and deep methods under a different protocol (non-maximum suppression, thinning, and a tolerance proportional to the image diagonal) and reported, for example, ODS values of 0.604 on CRACK500, 0.683 on CFD, 0.517 on Cracktree200, 0.492 on AEL and 0.220 on GAPs384 for its own deep network ',
@@ -123,8 +115,10 @@ export default function Benchmark() {
           ' Bajo ese protocolo el mismo bosque estructurado que arriba marca 85.71 colapsa a fracciones de su valor a 5 px. Ninguna tabla está mal; miden cosas distintas. Por eso cada tabla de Fisura lleva su protocolo en línea y por eso el laboratorio calcula ambas convenciones para cada método.',
         )}
       </p>
-
-      <h2>{t('The learned record (as published, protocols vary)', 'El registro aprendido (como se publicó, protocolos varían)')}</h2>
+    </>
+  );
+  const recLearned = (
+    <>
       <div className="fs-tablewrap">
         <table className="fs-table">
           <thead>
@@ -159,8 +153,10 @@ export default function Benchmark() {
           ' Segundo, los modelos fundacionales son competitivos pero no dominantes en estructuras finas; su techo honesto actual en el benchmark más amplio está diez puntos bajo el especialista.',
         )}
       </p>
-
-      <h2>{t('The anomaly record', 'El registro de anomalías')}</h2>
+    </>
+  );
+  const recAnomaly = (
+    <>
       <p>
         {t(
           'On the standard industrial benchmark, memory-bank methods essentially saturated image-level detection (PatchCore reports 99.6 percent AUROC on MVTec AD ',
@@ -179,6 +175,30 @@ export default function Benchmark() {
       </p>
 
       <AnomalyTransfer es={t('x', 'y') === 'y'} />
+    </>
+  );
+
+  return (
+    <div className="fs-doc">
+      <p className="fs-kicker">Benchmark</p>
+      <h1>{t('Published anchors, and the protocol problem', 'Anclas publicadas, y el problema del protocolo')}</h1>
+      <p className="fs-lead">
+        {t(
+          'Before this lab reports a single number of its own, this page fixes the published record it will be measured against, and the incompatibility that makes naive comparisons meaningless. Every value below was verified against its primary source during the research pass; every future Fisura value will appear next to these, with its protocol printed.',
+          'Antes de que este laboratorio reporte un solo número propio, esta página fija el registro publicado contra el que será medido, y la incompatibilidad que vuelve sin sentido las comparaciones ingenuas. Cada valor de abajo fue verificado contra su fuente primaria durante la investigación; cada valor futuro de Fisura aparecerá junto a estos, con su protocolo impreso.',
+        )}
+      </p>
+
+      <SubTabs
+        ariaLabel={t('benchmark records', 'registros de benchmark')}
+        initial="classical"
+        tabs={[
+          { id: 'classical', label: t('Classical record', 'Registro clásico'), content: recClassical },
+          { id: 'protocol', label: t('The protocol trap', 'La trampa del protocolo'), content: recProtocol },
+          { id: 'learned', label: t('Learned record', 'Registro aprendido'), content: recLearned },
+          { id: 'anomaly', label: t('Anomaly record', 'Registro de anomalías'), content: recAnomaly },
+        ]}
+      />
 
       <Callout variant="note" title={t('Where the Fisura numbers will appear', 'Dónde aparecerán los números de Fisura')}>
         {t(
