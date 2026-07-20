@@ -1,0 +1,70 @@
+<svg viewBox="0 0 880 300" width="880" class="arch-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="From a photo to an engineering number">
+  <style>
+    .bx { fill: var(--color-surface-2); stroke: var(--color-border); stroke-width: 1; }
+    .bx-cl { fill: var(--color-surface-2); stroke: var(--fs-classical); stroke-width: 1.6; }
+    .bx-le { fill: var(--color-surface-2); stroke: var(--fs-learned); stroke-width: 1.6; }
+    .bx-an { fill: var(--color-surface-2); stroke: var(--fs-anomaly); stroke-width: 1.6; }
+    .bx-q { fill: var(--color-surface-2); stroke: var(--fs-quantify); stroke-width: 1.8; }
+    .ttl { fill: var(--color-fg); font: 600 12.5px var(--font-sans, sans-serif); }
+    .it { fill: var(--color-fg-subtle); font: 10.5px var(--font-sans, sans-serif); }
+    .mono { fill: var(--color-accent); font: 9.5px var(--font-mono, monospace); }
+    .mu { fill: var(--color-fg-faint); font: 9.5px var(--font-sans, sans-serif); }
+    .flow { fill: none; stroke: var(--color-fg-subtle); stroke-width: 1.5; }
+    .lbl { fill: var(--color-fg-faint); font: 9.5px var(--font-sans, sans-serif); }
+    .band { fill: var(--color-fg); font: 600 11.5px var(--font-sans, sans-serif); }
+    .qtxt { fill: var(--fs-quantify); font: 600 11px var(--font-sans, sans-serif); }
+  </style>
+  <defs>
+    <marker id="ap" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto-start-reverse">
+      <path d="M0,0 L6,3 L0,6 Z" fill="var(--color-fg-subtle)" />
+    </marker>
+  </defs>
+
+  <text x="20" y="22" class="band">One image, three method families, converging on the same engineering numbers</text>
+
+  <rect x="20" y="40" width="150" height="86" class="bx" rx="8" />
+  <text x="34" y="63" class="ttl">Surface photo</text>
+  <text x="34" y="81" class="it">concrete, asphalt,</text>
+  <text x="34" y="96" class="it">masonry, steel</text>
+  <text x="34" y="116" class="mu">optional mm/px scale</text>
+
+  <path class="flow" d="M170,83 L206,83" marker-end="url(#ap)" />
+
+  <rect x="206" y="20" width="176" height="70" class="bx bx-cl" rx="8" />
+  <text x="220" y="42" class="ttl">Classical ladder</text>
+  <text x="220" y="59" class="it">L0 Otsu to L5 fusion</text>
+  <text x="220" y="79" class="mono">stages/ + core/ladder.py</text>
+
+  <rect x="206" y="98" width="176" height="70" class="bx bx-le" rx="8" />
+  <text x="220" y="120" class="ttl">Learned + foundation</text>
+  <text x="220" y="137" class="it">U-Net to SegFormer, DINOv2</text>
+  <text x="220" y="157" class="mono">learned/ + *.onnx</text>
+
+  <rect x="206" y="176" width="176" height="70" class="bx bx-an" rx="8" />
+  <text x="220" y="198" class="ttl">Anomaly (beyond SOTA)</text>
+  <text x="220" y="215" class="it">PatchCore on healthy only</text>
+  <text x="220" y="235" class="mono">anomaly/patchcore.py</text>
+
+  <path class="flow" d="M382,55 C418,55 420,120 452,120" marker-end="url(#ap)" />
+  <path class="flow" d="M382,133 L452,127" marker-end="url(#ap)" />
+  <path class="flow" d="M382,211 C418,211 420,140 452,133" marker-end="url(#ap)" />
+  <text x="392" y="112" class="lbl">a crack mask</text>
+
+  <rect x="452" y="92" width="176" height="86" class="bx bx-q" rx="8" />
+  <text x="466" y="115" class="qtxt">Quantification</text>
+  <text x="466" y="133" class="it">skeleton + distance transform</text>
+  <text x="466" y="149" class="it">dual width, orientation, length</text>
+  <text x="466" y="168" class="mono">core/quantify.py</text>
+
+  <path class="flow" d="M628,135 L664,135" marker-end="url(#ap)" />
+  <text x="628" y="127" class="lbl">calibrate</text>
+
+  <rect x="664" y="92" width="196" height="86" class="bx bx-q" rx="8" />
+  <text x="678" y="115" class="ttl">Engineering numbers</text>
+  <text x="678" y="133" class="it">width in mm, length, density</text>
+  <text x="678" y="149" class="it">severity vs ACI / EC2 bands</text>
+  <text x="678" y="168" class="mu">percentiles, never a verdict</text>
+
+  <text x="452" y="210" class="mu">The mask is never the end: every family feeds the same measurement bench.</text>
+  <text x="452" y="228" class="mu">Two width estimators disagree where the estimate is unreliable (a quality flag).</text>
+</svg>

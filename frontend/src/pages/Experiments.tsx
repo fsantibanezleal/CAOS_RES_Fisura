@@ -4,6 +4,7 @@ import { loadCaseArtifact } from '../api/artifacts';
 import type { CaseArtifact } from '../lib/contract.types';
 import { useT } from '../lib/i18n';
 import { PLANNED_CASES, TRACKS } from '../lib/tracks';
+import { ThemedSvg } from '../render/ThemedSvg';
 
 // Experiments (ADR-0017 section 2): prose + tabs, NOT info-box cards. The distinct experimental
 // questions are separated into tabs, each with the exact metric equations, the leakage-safe protocol
@@ -274,19 +275,4 @@ function summariseArch(art: CaseArtifact) {
   return Object.entries(acc)
     .map(([arch, v]) => ({ arch, f1_2: v.s2 / v.n, f1_5: v.s5 / v.n, n: v.n }))
     .sort((a, b) => b.f1_2 - a.f1_2);
-}
-
-// Fetch + inline a themed SVG (dangerouslySetInnerHTML) so it inherits the CSS-var palette.
-function ThemedSvg({ src, title }: { src: string; title: string }) {
-  const [svg, setSvg] = useState<string | null>(null);
-  useEffect(() => {
-    let alive = true;
-    fetch(`${import.meta.env.BASE_URL}${src.replace(/^\//, '')}`)
-      .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
-      .then((txt) => { if (alive) setSvg(txt); })
-      .catch(() => { if (alive) setSvg(null); });
-    return () => { alive = false; };
-  }, [src]);
-  if (!svg) return <div className="fs-svg-fallback" role="img" aria-label={title} />;
-  return <div className="fs-svg-inline" role="img" aria-label={title} dangerouslySetInnerHTML={{ __html: svg }} />;
 }

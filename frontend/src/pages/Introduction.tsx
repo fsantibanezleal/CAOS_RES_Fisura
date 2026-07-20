@@ -1,6 +1,7 @@
 import { Callout, Equation, InlineMath, Cite, Refs } from '@fasl-work/caos-app-shell';
 import { useT } from '../lib/i18n';
 import { TRACKS } from '../lib/tracks';
+import { ThemedSvg } from '../render/ThemedSvg';
 
 export default function Introduction() {
   const t = useT();
@@ -62,6 +63,16 @@ export default function Introduction() {
         (<Cite id="kirillov2023sam" />, <Cite id="sac2025" />, <Cite id="benz2024omnicrack" />).
       </p>
       <Refs label={t('Refs','Refs')} ids={['shi2016crackforest', 'amhaz2016mps', 'zou2019deepcrack', 'liu2019deepcrack', 'kirillov2023sam', 'sac2025', 'benz2024omnicrack']} />
+
+      <figure className="fig-svg wide">
+        <ThemedSvg src="svg/tech/intro-pipeline.svg" title={t('From a photo to an engineering number', 'De una foto a un número de ingeniería')} />
+        <figcaption>
+          {t(
+            'The lab as one instrument: a single surface photo is read by the classical ladder, the learned and foundation models, and the unsupervised anomaly detector, and all of them converge on the same quantification bench, where a crack mask becomes width in millimetres, length, orientation and a severity context. The mask is never the end result.',
+            'El laboratorio como un instrumento: una sola foto de superficie la leen la escalera clásica, los modelos aprendidos y fundacionales, y el detector de anomalías no supervisado, y todos convergen en el mismo banco de cuantificación, donde una máscara de grieta se vuelve ancho en milímetros, largo, orientación y un contexto de severidad. La máscara nunca es el resultado final.',
+          )}
+        </figcaption>
+      </figure>
 
       <h2>{t('Masks become numbers', 'Las máscaras se vuelven números')}</h2>
       <p>
