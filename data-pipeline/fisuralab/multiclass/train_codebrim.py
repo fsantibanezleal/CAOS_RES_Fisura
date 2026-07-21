@@ -5,7 +5,8 @@ Dossier section 6.2: the clean permissive baseline is torchvision Faster R-CNN R
 mAP@0.5 and mAP@0.5:0.95 on the published test split; the honest bar is the ertis-research YOLOv5x
 number (mAP@0.5 = 0.357). CODEBRIM is a bespoke NC license: images + weights stay local, metrics ship.
 
-Images are 4608x3456; we read them from the zip and downscale to a fixed short side for 8 GB VRAM.
+Images are 4608x3456; read from the 7-Zip-extracted vault tree and downscaled to a fixed long
+side for 8 GB VRAM. (The published zips have a Zip64 offset defect Python's zipfile cannot read.)
 Torch imported lazily; the module skips without CUDA (CI never trains).
 
     python -m fisuralab.multiclass.train_codebrim --epochs 12
@@ -14,40 +15,34 @@ Torch imported lazily; the module skips without CUDA (CI never trains).
 from __future__ import annotations
 
 import argparse
-import io
 import json
 import time
-import zipfile
 
 import numpy as np
 
 from ..learned.shards import data_root
-from .codebrim import DEFECT_INDEX, DEFECTS, codebrim_zip, parse_annotations, split_records
+from .codebrim import DEFECT_INDEX, DEFECTS, parse_annotations, split_records
 
 LONG_SIDE = 1024  # downscale target (keeps aspect; 4608 -> 1024 fits 8 GB with FPN)
 
 
-def _read_image_from_zip(zip_path: str, member: str) -> np.ndarray:
+def _read_image(path: str) -> np.ndarray:
     import imageio.v3 as iio  # noqa: PLC0415
 
-    # Open + close a fresh handle per read. The 8 GB CODEBRIM zip corrupts on any reused/shared
-    # handle across reads or worker processes ("Overlapped entries" / "Bad magic number"); a
-    # short-lived handle per image is the only reliable path. imread from the raw bytes.
-    with zipfile.ZipFile(zip_path) as zf:
-        data = zf.read(member)
-    arr = iio.imread(io.BytesIO(data))
+    # Plain file read from the 7-Zip-extracted tree. (The published CODEBRIM zips carry a Zip64
+    # offset defect that makes Python's zipfile fail every image read; see codebrim.py.)
+    arr = iio.imread(path)
     if arr.ndim == 2:
         arr = np.stack([arr, arr, arr], -1)
     return arr[..., :3]
 
 
 class CodebrimDetDataset:
-    """Module-level picklable detection dataset: reads a downscaled image + scaled boxes from the zip.
-    Does not inherit torch Dataset (CI-safe import); torch imported lazily per item."""
+    """Module-level picklable detection dataset: reads a downscaled image + scaled boxes from the
+    extracted tree. Does not inherit torch Dataset (CI-safe import); torch imported lazily per item."""
 
-    def __init__(self, records, zip_path):
+    def __init__(self, records):
         self.records = records
-        self.zip_path = str(zip_path)
 
     def __len__(self):
         return len(self.records)
@@ -57,7 +52,7 @@ class CodebrimDetDataset:
         from skimage.transform import resize as rz  # noqa: PLC0415
 
         r = self.records[i]
-        img = _read_image_from_zip(self.zip_path, r["image_member"]).astype(np.float32) / 255.0
+        img = _read_image(r["image_path"]).astype(np.float32) / 255.0
         H, W = img.shape[:2]
         scale = LONG_SIDE / max(H, W)
         nh, nw = int(round(H * scale)), int(round(W * scale))
@@ -158,13 +153,12 @@ def main() -> None:
 
     recs = parse_annotations()
     if not recs:
-        raise SystemExit("CODEBRIM zip not found under the vault")
+        raise SystemExit("CODEBRIM not found: extract the archives into the vault with 7-Zip first")
     sp = split_records(recs, seed=args.seed)
     train, test = sp["train"], sp["test"]
     if args.limit_train:
         train = train[: args.limit_train]
-    zp = codebrim_zip()
-    tl = DataLoader(CodebrimDetDataset(train, zp), batch_size=args.batch, shuffle=True,
+    tl = DataLoader(CodebrimDetDataset(train), batch_size=args.batch, shuffle=True,
                     num_workers=args.workers, collate_fn=_collate, pin_memory=True)
 
     net = _build_model().to(device)
@@ -193,7 +187,7 @@ def main() -> None:
     # evaluate mAP on the test split
     net.eval()
     preds = []
-    dl_test = DataLoader(CodebrimDetDataset(test, zp), batch_size=1, num_workers=args.workers, collate_fn=_collate)
+    dl_test = DataLoader(CodebrimDetDataset(test), batch_size=1, num_workers=args.workers, collate_fn=_collate)
     with torch.no_grad():
         for imgs, targets in dl_test:
             out = net([imgs[0].to(device)])[0]

@@ -81,3 +81,11 @@ export interface DinoPca {
   samples: DinoPcaSample[]; framing: string;
 }
 export const loadDinoPca = (): Promise<DinoPca> => getJSON<DinoPca>('dinov2/pca.json');
+
+// Grad-CAM: what evidence drove each learned model's decision (not just where it fired).
+export interface CamSample { id: string; arch: string; cam: string; cam_mass_on_crack: number | null; note: string | null; }
+export interface GradCam {
+  method: string; explained_scalar: string; archs: string[];
+  excluded: Record<string, string>; samples: CamSample[]; limitation: string; framing: string;
+}
+export const loadGradCam = (): Promise<GradCam> => getJSON<GradCam>('gradcam/cam.json');
