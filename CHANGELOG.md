@@ -3,6 +3,27 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.16.000], 2026-07-20
+
+### Added (BL-012 DIC: 2D digital image correlation, deformation + crack-opening)
+- New `fisuralab.dic` module (dossier 04 section 5), CPU-only (numpy + scipy):
+  - `correlation.py`: the real subset-based 2D DIC. Each reference subset is located in the deformed
+    image by maximizing the zero-normalized cross-correlation (ZNCC, invariant to affine intensity
+    changes), integer search then sub-pixel quadratic-peak refinement; strain from LOCAL polynomial
+    fits of the displacement field, never raw pointwise differentiation. Implemented in-repo (muDIC is
+    global-FE, py2DIC is GPL) so the real algorithm stays MIT-clean.
+  - `bake_dic.py`: a virtual experiment. A synthetic speckle image is deformed by a KNOWN field (1 percent
+    uniform stretch + a crack-opening jump of 2.5 px), so the engine validates against exact ground truth:
+    it recovers the crack opening as 2.52 px, the strain as 1.00 percent, mean displacement error 0.026 px.
+    The crack reads as the displacement discontinuity. The same field on natural concrete-like texture is
+    3.9x less accurate, matching the DIC literature (natural texture costs ~3x painted speckle).
+- The temporal/deformation track now lives under one **Monitoring** nav item with two tabs (Growth
+  monitoring + Deformation DIC), keeping the header compact (ADR-0016 section 6). The DIC tab shows the
+  ZNCC equation, the u-displacement + strain fields (crack as a discontinuity), and the honest
+  speckle-vs-texture + planar-specimen scope.
+- `tests/test_dic.py`: the engine recovers a known translation and a known strain, plus committed-artifact
+  coherence (CI-safe).
+
 ## [0.15.000], 2026-07-20
 
 ### Added (BL-011 monitoring: two-epoch registration + differential crack mapping)

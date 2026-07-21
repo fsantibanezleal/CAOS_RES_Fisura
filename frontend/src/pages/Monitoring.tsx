@@ -38,7 +38,7 @@ export default function Monitoring() {
   }, []);
 
   return (
-    <div className="fs-doc">
+    <>
       <p className="fs-kicker">{t('Monitoring', 'Monitoreo')}</p>
       <h1>{t('Two epochs, one crack: measuring growth', 'Dos épocas, una grieta: medir el crecimiento')}</h1>
       <p className="fs-lead">
@@ -60,7 +60,7 @@ export default function Monitoring() {
       )}
 
       <Refs label={t('Refs', 'Refs')} ids={['spencer2019', 'zhu2023crackpropnet', 'melching2022', 'paris1963']} />
-    </div>
+    </>
   );
 }
 

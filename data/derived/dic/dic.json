@@ -1,0 +1,25 @@
+{
+ "schema": "fisura.dic/v1",
+ "method": "in-repo 2D subset DIC (ZNCC, sub-pixel quadratic peak, local-polynomial strain)",
+ "known_field": {
+  "uniform_strain_exx": 0.01,
+  "crack_opening_px": 2.5,
+  "crack_x": 130
+ },
+ "speckle": {
+  "u_mae_px": 0.0264,
+  "measured_mean_exx": 0.00996,
+  "measured_cod_px": 2.52
+ },
+ "natural_texture": {
+  "u_mae_px": 0.1025
+ },
+ "texture_vs_speckle_error_ratio": 3.89,
+ "overlays": {
+  "ref_speckle": "dic/overlays/ref_speckle.png",
+  "u_field": "dic/overlays/u_field.png",
+  "exx_field": "dic/overlays/exx_field.png",
+  "ref_texture": "dic/overlays/ref_texture.png"
+ },
+ "framing": "A synthetic speckle image deformed by a KNOWN field (1 percent stretch + a crack-opening jump) validates the DIC engine against exact ground truth. The crack reads as the displacement discontinuity. Natural concrete texture is measured on the same field to show the accuracy cost (the literature reports ~3x worse than painted speckle). 2D DIC assumes a planar specimen, perpendicular camera axis, negligible out-of-plane motion."
+}
