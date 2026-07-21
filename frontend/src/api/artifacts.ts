@@ -72,3 +72,12 @@ export interface Enrichment {
   models: Record<string, ModelMetrics>;
 }
 export const loadEnrichment = (sampleId: string): Promise<Enrichment> => getJSON<Enrichment>(`enrichment/${sampleId}.json`);
+
+// DINOv2 dense-feature PCA-to-RGB overlays (what the frozen foundation features encode, unsupervised).
+export interface DinoPcaSample { id: string; pca: string; explained_variance_top3: number[]; }
+export interface DinoPca {
+  backbone: string; patch_grid: number; feature_dim: number;
+  explained_variance_top3: number[]; pca_scope: string;
+  samples: DinoPcaSample[]; framing: string;
+}
+export const loadDinoPca = (): Promise<DinoPca> => getJSON<DinoPca>('dinov2/pca.json');

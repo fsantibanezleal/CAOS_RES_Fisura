@@ -3,6 +3,27 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.18.000], 2026-07-20
+
+### Added (enrichment #8: the DINOv2 dense-feature PCA-to-RGB view)
+- A "DINOv2 features" toggle in the SOTA tab renders what the FROZEN foundation model encodes, with no
+  crack supervision at all: each 14 px patch becomes a 384-dim descriptor and its first three principal
+  components map to RGB. The crack separates as its own hue against the concrete texture, which is the
+  visual argument for why a 385-parameter linear head on these features is already competitive with
+  fully trained segmenters.
+- `fisuralab.learned.bake_dinov2_pca` extracts the patch descriptors and bakes the overlays.
+  PCA is fit PER IMAGE: a basis shared across the example set encodes which image a patch came from
+  (steel vs concrete vs the noise control dominate the variance) and washed the within-image structure
+  out entirely; per-image fitting roughly doubles the explained variance (PC1 0.11 to 0.20) and is what
+  makes the crack visible. Component signs are pinned so the colours are reproducible run to run.
+
+### Fixed (dacl10k full-data training stability)
+- The first full-data run diverged: `train_loss` went NaN at epoch 6 and every later epoch scored 0.000
+  mIoU. Cause: AMP fp16 reductions over the 19x512x512 Dice term underflow. The losses are now computed
+  in fp32 outside `autocast`, gradients are clipped at norm 1.0, non-finite steps are skipped rather than
+  poisoning the weights, and the best-checkpoint guard rejects non-finite/zero scores. Verified stable on
+  a smoke run (zero skipped steps, mIoU climbing); the full 6,935-image run was relaunched.
+
 ## [0.17.000], 2026-07-20
 
 ### Added (BL-013 live lane: bring-your-own-image, in-browser inference)

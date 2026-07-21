@@ -142,9 +142,12 @@ def main() -> None:
     scaler = torch.amp.GradScaler("cuda")
 
     def dice_loss(logits, target, eps=1.0):
-        p = torch.sigmoid(logits)
-        inter = (p * target).sum(dim=(2, 3))
-        denom = p.sum(dim=(2, 3)) + target.sum(dim=(2, 3))
+        # computed in fp32: under AMP the fp16 sums over 512x512x19 underflow/overflow and the loss
+        # goes NaN a few epochs in (observed: NaN from epoch 6 of the first full-data run).
+        p = torch.sigmoid(logits.float())
+        t = target.float()
+        inter = (p * t).sum(dim=(2, 3))
+        denom = p.sum(dim=(2, 3)) + t.sum(dim=(2, 3))
         return (1 - (2 * inter + eps) / (denom + eps)).mean()
 
     print(f"dacl10k {args.arch}: train {len(train_pairs)}, val {len(val_pairs)}, {N_CLASSES} classes")
@@ -155,6 +158,7 @@ def main() -> None:
     best_per_class = None
     best_present = None
     t0 = time.perf_counter()
+    n_skipped = 0
     for ep in range(args.epochs):
         net.train()
         run = 0.0
@@ -163,13 +167,19 @@ def main() -> None:
             opt.zero_grad(set_to_none=True)
             with torch.amp.autocast("cuda"):
                 out = net(x)
-                loss = bce(out, y) + dice_loss(out, y)
+            # losses in fp32 outside autocast (AMP fp16 reductions over 19x512x512 go NaN)
+            loss = bce(out.float(), y.float()) + dice_loss(out, y)
+            if not torch.isfinite(loss):
+                n_skipped += 1
+                continue  # skip a bad step rather than poison every weight with NaN
             scaler.scale(loss).backward()
+            scaler.unscale_(opt)
+            torch.nn.utils.clip_grad_norm_(net.parameters(), 1.0)  # the other half of the fix
             scaler.step(opt)
             scaler.update()
             sched.step()
             run += float(loss.item())
-            if bi % 50 == 0:
+            if bi % 100 == 0:
                 print(f"  ep{ep} it{bi}/{len(tl)} loss {loss.item():.4f}")
         # validation macro-IoU
         net.eval()
@@ -187,7 +197,7 @@ def main() -> None:
         present = iou_cnt.cpu().numpy() > 0
         miou = float(per_class[present].mean()) if present.any() else 0.0
         star = ""
-        if miou > best_miou:
+        if miou > best_miou and np.isfinite(miou) and miou > 0:
             best_miou = miou
             best_per_class = per_class
             best_present = present
@@ -210,6 +220,7 @@ def main() -> None:
         "baseline_mIoU": 0.424,
         "baseline_source": "Flotzinger et al. WACV 2024 Table 4 (FPN + EfficientNet-B4 + aux loss)",
         "minutes": round((time.perf_counter() - t0) / 60.0, 1),
+        "nonfinite_steps_skipped": n_skipped,
         "checkpoint": str(ckpt),
     }
     (out_dir / f"{args.arch}_results.json").write_text(json.dumps(rec, indent=1), encoding="utf-8")
