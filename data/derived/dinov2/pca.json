@@ -1,0 +1,70 @@
+{
+ "schema": "fisura.dinov2pca/v1",
+ "backbone": "DINOv2 ViT-S/14 (frozen, ImageNet-free self-supervised)",
+ "input": 518,
+ "patch_grid": 37,
+ "feature_dim": 384,
+ "explained_variance_top3": [
+  0.1996,
+  0.1438,
+  0.0991
+ ],
+ "pca_scope": "per image (a shared basis encodes which image a patch came from, not its content)",
+ "samples": [
+  {
+   "id": "bcl-nonsteel-c1",
+   "pca": "dinov2/overlays/bcl-nonsteel-c1_pca.png",
+   "explained_variance_top3": [
+    0.2079,
+    0.1416,
+    0.0988
+   ]
+  },
+  {
+   "id": "bcl-nonsteel-c10",
+   "pca": "dinov2/overlays/bcl-nonsteel-c10_pca.png",
+   "explained_variance_top3": [
+    0.1867,
+    0.1297,
+    0.0965
+   ]
+  },
+  {
+   "id": "bcl-steel-s1",
+   "pca": "dinov2/overlays/bcl-steel-s1_pca.png",
+   "explained_variance_top3": [
+    0.1785,
+    0.1451,
+    0.1123
+   ]
+  },
+  {
+   "id": "bcl-noise-f1",
+   "pca": "dinov2/overlays/bcl-noise-f1_pca.png",
+   "explained_variance_top3": [
+    0.207,
+    0.1736,
+    0.1002
+   ]
+  },
+  {
+   "id": "sdnet-cp-001-100",
+   "pca": "dinov2/overlays/sdnet-cp-001-100_pca.png",
+   "explained_variance_top3": [
+    0.1919,
+    0.1263,
+    0.1014
+   ]
+  },
+  {
+   "id": "sdnet-up-001-1",
+   "pca": "dinov2/overlays/sdnet-up-001-1_pca.png",
+   "explained_variance_top3": [
+    0.2254,
+    0.1466,
+    0.0852
+   ]
+  }
+ ],
+ "framing": "Each 14x14 patch gets a 384-dim DINOv2 descriptor; the first three principal components of those descriptors, fit per image, map to RGB. Similar material reads as a similar colour with NO crack supervision, which is why a 385-parameter linear head on these frozen features is already competitive. The grid is 37x37, so the view is coarse by construction: it shows the semantic structure the probe reads out, not a mask."
+}
