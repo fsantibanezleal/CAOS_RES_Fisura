@@ -16,13 +16,12 @@ from __future__ import annotations
 import argparse
 import io
 import json
-import zipfile
 from pathlib import Path
 
 import numpy as np
 
 from ..learned.shards import data_root
-from .codebrim import DEFECTS, codebrim_zip, parse_annotations, split_records
+from .codebrim import DEFECTS, parse_annotations, split_records
 from .train_codebrim import LONG_SIDE, _build_model
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -96,14 +95,11 @@ def main() -> None:
 
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "overlays").mkdir(parents=True, exist_ok=True)
-    zpath = str(codebrim_zip())
     samples = []
     for r in pick:
         import imageio.v3 as iio  # noqa: PLC0415
 
-        with zipfile.ZipFile(zpath) as zf:  # fresh handle per read (the 8 GB zip corrupts on reuse)
-            data = zf.read(r["image_member"])
-        raw = iio.imread(io.BytesIO(data))
+        raw = iio.imread(r["image_path"])  # plain file read from the extracted tree
         if raw.ndim == 2:
             raw = np.stack([raw, raw, raw], -1)
         raw = raw[..., :3]
@@ -118,7 +114,7 @@ def main() -> None:
         vh, vw = view.shape[:2]
         box_scale = (vh / (H * scale_in) + vw / (W * scale_in)) / 2
         png = _draw_boxes(view, out["boxes"].cpu().numpy(), out["labels"].cpu().numpy(), out["scores"].cpu().numpy(), box_scale)
-        sid = Path(r["image_member"]).stem
+        sid = Path(r["image_path"]).stem
         (OUT / "overlays" / f"cb_{sid}.png").write_bytes(png)
         n_keep = int((out["scores"].cpu().numpy() >= 0.3).sum())
         samples.append({

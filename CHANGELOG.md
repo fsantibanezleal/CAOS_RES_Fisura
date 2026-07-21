@@ -3,6 +3,32 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.19.000], 2026-07-21
+
+### Added (enrichment #9: Grad-CAM, the evidence behind the mask)
+- The SOTA tab gains a three-way view switch (mask / DINOv2 features / Grad-CAM). A mask says WHERE a
+  model fired; Grad-CAM (Selvaraju et al., ICCV 2017) says what evidence drove it: gradients of the
+  summed crack logit weight the encoder feature channels, and the ReLU'd weighted sum is the map.
+- `fisuralab.learned.bake_gradcam` bakes CAMs for the two ResNet-18-encoder segmenters (U-Net,
+  DeepLabV3+) and records `cam_mass_on_crack`, the fraction of CAM mass landing on the true crack, so
+  the view carries a number and not just a picture (U-Net 0.256, DeepLabV3+ 0.239 on the clearest
+  concrete crack; 0.0 on the uncracked noise control, which is the right answer).
+- Honest limits, recorded per sample rather than hidden: the CAM site is `encoder.layer3`, because
+  `layer4` is a 12x12 grid at this input size and upsamples to a meaningless blob; Grad-CAM was built
+  for whole-image classification, so on a 1-5 px crack these maps localise evidence to a region, not to
+  an outline; samples with no pixel ground truth carry an "undefined" note, and the one degenerate
+  all-zero CAM is labelled as such. SegFormer, HrSegNet and the DINOv2 probe are excluded with a stated
+  reason each (no single conv site / custom architecture / frozen features) rather than faked.
+
+### Changed (CODEBRIM unblocked)
+- The published CODEBRIM archives were NOT a truncated download. They carry a **Zip64 local-header
+  offset defect**: every offset in the central directory points past the real 4 GB boundary, so Python's
+  `zipfile` fails every image read with "Bad magic number" while 7-Zip verifies the same archive as
+  "Everything is Ok". All four archives failing identically is what ruled out four bad downloads.
+  The data layer now reads the 7-Zip-extracted tree from disk (`codebrim_root()`, records carry
+  `image_path`). Verified: 1,022 annotated images, 5,181 boxes across the 5 defect classes,
+  deterministic 70/20/10 split. Detector training is queued behind the dacl10k run (one 8 GB GPU).
+
 ## [0.18.000], 2026-07-20
 
 ### Added (enrichment #8: the DINOv2 dense-feature PCA-to-RGB view)

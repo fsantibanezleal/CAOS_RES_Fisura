@@ -1,0 +1,102 @@
+{
+ "schema": "fisura.gradcam/v1",
+ "method": "Grad-CAM (Selvaraju et al., ICCV 2017) on encoder layer3 (layer4 is a 12x12 grid at this input size, too coarse for thin cracks)",
+ "explained_scalar": "summed positive crack logit over the predicted region",
+ "archs": [
+  "unet_r18",
+  "deeplabv3p_r18"
+ ],
+ "excluded": {
+  "segformer_b2": "transformer stages have no single conv site; excluded rather than faked",
+  "hrsegnet_b16": "custom architecture, no resnet layer4",
+  "dinov2s14_linear": "frozen features; see the DINOv2 feature-PCA view instead"
+ },
+ "samples": [
+  {
+   "id": "bcl-nonsteel-c1",
+   "arch": "unet_r18",
+   "cam": "gradcam/overlays/bcl-nonsteel-c1_unet_r18.png",
+   "cam_mass_on_crack": 0.2557,
+   "note": null
+  },
+  {
+   "id": "bcl-nonsteel-c10",
+   "arch": "unet_r18",
+   "cam": "gradcam/overlays/bcl-nonsteel-c10_unet_r18.png",
+   "cam_mass_on_crack": 0.2189,
+   "note": null
+  },
+  {
+   "id": "bcl-steel-s1",
+   "arch": "unet_r18",
+   "cam": "gradcam/overlays/bcl-steel-s1_unet_r18.png",
+   "cam_mass_on_crack": 0.018,
+   "note": null
+  },
+  {
+   "id": "bcl-noise-f1",
+   "arch": "unet_r18",
+   "cam": "gradcam/overlays/bcl-noise-f1_unet_r18.png",
+   "cam_mass_on_crack": 0.0,
+   "note": null
+  },
+  {
+   "id": "sdnet-cp-001-100",
+   "arch": "unet_r18",
+   "cam": "gradcam/overlays/sdnet-cp-001-100_unet_r18.png",
+   "cam_mass_on_crack": null,
+   "note": "no pixel ground truth for this sample: the on-crack fraction is undefined"
+  },
+  {
+   "id": "sdnet-up-001-1",
+   "arch": "unet_r18",
+   "cam": "gradcam/overlays/sdnet-up-001-1_unet_r18.png",
+   "cam_mass_on_crack": null,
+   "note": "no pixel ground truth for this sample: the on-crack fraction is undefined"
+  },
+  {
+   "id": "bcl-nonsteel-c1",
+   "arch": "deeplabv3p_r18",
+   "cam": "gradcam/overlays/bcl-nonsteel-c1_deeplabv3p_r18.png",
+   "cam_mass_on_crack": null,
+   "note": "degenerate CAM (all-zero after ReLU): the gradient gave no positive evidence here"
+  },
+  {
+   "id": "bcl-nonsteel-c10",
+   "arch": "deeplabv3p_r18",
+   "cam": "gradcam/overlays/bcl-nonsteel-c10_deeplabv3p_r18.png",
+   "cam_mass_on_crack": 0.2385,
+   "note": null
+  },
+  {
+   "id": "bcl-steel-s1",
+   "arch": "deeplabv3p_r18",
+   "cam": "gradcam/overlays/bcl-steel-s1_deeplabv3p_r18.png",
+   "cam_mass_on_crack": 0.0,
+   "note": null
+  },
+  {
+   "id": "bcl-noise-f1",
+   "arch": "deeplabv3p_r18",
+   "cam": "gradcam/overlays/bcl-noise-f1_deeplabv3p_r18.png",
+   "cam_mass_on_crack": 0.0,
+   "note": null
+  },
+  {
+   "id": "sdnet-cp-001-100",
+   "arch": "deeplabv3p_r18",
+   "cam": "gradcam/overlays/sdnet-cp-001-100_deeplabv3p_r18.png",
+   "cam_mass_on_crack": null,
+   "note": "no pixel ground truth for this sample: the on-crack fraction is undefined"
+  },
+  {
+   "id": "sdnet-up-001-1",
+   "arch": "deeplabv3p_r18",
+   "cam": "gradcam/overlays/sdnet-up-001-1_deeplabv3p_r18.png",
+   "cam_mass_on_crack": null,
+   "note": "no pixel ground truth for this sample: the on-crack fraction is undefined"
+  }
+ ],
+ "limitation": "Grad-CAM was designed for whole-image classification. On a 1-5 px wide crack the encoder grid is coarse (24x24 at layer3 for a 384 px input), so these maps are genuinely sparse: they localise the evidence to a region, not to the crack outline. Occasional inputs yield a degenerate all-zero CAM, which is recorded per sample rather than hidden.",
+ "framing": "A mask says WHERE the model fired; Grad-CAM says what evidence drove it. CAM mass concentrated on the crack means the decision rests on the crack; CAM smeared over background texture means the model leans on context and will transfer badly. The cam_mass_on_crack fraction quantifies exactly that, per image and per architecture."
+}
