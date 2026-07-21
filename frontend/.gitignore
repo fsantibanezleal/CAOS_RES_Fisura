@@ -1,0 +1,9 @@
+# public/ is a build-time overlay populated by copy-data.mjs (data artifacts, pyodide sources,
+# onnxruntime-web wasm/mjs, committed ONNX models). The canonical sources live in ../data and
+# node_modules; nothing here is hand-authored, so it is regenerated on every build (incl. CI).
+public/data/
+public/pyodide/
+public/models/
+public/ort*.mjs
+public/ort*.wasm
+public/ort*.js

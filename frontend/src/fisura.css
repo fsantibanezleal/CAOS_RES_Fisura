@@ -105,6 +105,11 @@
 .fs-ctl-cap { font-size: 0.72rem; font-weight: 700; color: var(--color-fg-subtle); margin-bottom: 0.2rem; }
 .fs-upload { display: flex; align-items: center; justify-content: center; border: 1.5px dashed var(--color-border); border-radius: 10px; padding: 1rem; font-size: 0.78rem; color: var(--color-fg-subtle); cursor: not-allowed; text-align: center; }
 .fs-upload input { display: none; }
+.fs-drop { display: flex; align-items: center; justify-content: center; min-height: 260px; border: 2px dashed var(--color-border); border-radius: 12px; padding: 1.5rem; font-size: 0.9rem; color: var(--color-fg-subtle); cursor: pointer; text-align: center; transition: border-color 0.12s, color 0.12s; }
+.fs-drop:hover { border-color: var(--color-accent); color: var(--color-fg); }
+.fs-drop input { display: none; }
+.fs-drop-mini { font-size: 0.72rem; color: var(--color-accent); cursor: pointer; padding: 0.3rem 0.62rem; border: 1px solid var(--color-border); border-radius: 7px; }
+.fs-drop-mini input { display: none; }
 .fs-wb-two { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 1.1rem; align-items: start; }
 @media (max-width: 820px) { .fs-wb-two { grid-template-columns: 1fr; } }
 .fs-wb-img { display: flex; flex-direction: column; gap: 0.4rem; }
