@@ -16,7 +16,7 @@ import Methodology from './pages/Methodology';
 import Implementation from './pages/Implementation';
 import Experiments from './pages/Experiments';
 import MultiClass from './pages/MultiClass';
-import Monitoring from './pages/Monitoring';
+import MonitoringDIC from './pages/MonitoringDIC';
 import Benchmark from './pages/Benchmark';
 
 // Display version X.XX.XXX derived from the semver manifest (single source, no drift).
@@ -123,7 +123,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/methodology" element={<Methodology />} />
             <Route path="/implementation" element={<Implementation />} />
             <Route path="/multiclass" element={<MultiClass />} />
-            <Route path="/monitoring" element={<Monitoring />} />
+            <Route path="/monitoring" element={<MonitoringDIC />} />
             <Route path="/experiments" element={<Experiments />} />
             <Route path="/benchmark" element={<Benchmark />} />
             <Route path="*" element={<AppPage />} />
