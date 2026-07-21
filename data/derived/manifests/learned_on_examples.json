@@ -11,7 +11,7 @@
  },
  "engine": {
   "package": "fisuralab",
-  "version": "0.17.000",
+  "version": "0.18.000",
   "model": "learned track (deeplabv3p_r18, dinov2s14_linear, hrsegnet_b16, segformer_b2, unet_r18), replayed from the local GPU runs"
  },
  "params": {

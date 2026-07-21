@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Callout, Tabs } from '@fasl-work/caos-app-shell';
 import {
-  heatUrl, loadCaseArtifact, loadEnrichment, loadWorkbench, overlayUrl, workbenchUrl,
-  type Enrichment, type WorkbenchIndex, type WorkbenchSample,
+  heatUrl, loadCaseArtifact, loadDinoPca, loadEnrichment, loadWorkbench, overlayUrl, workbenchUrl,
+  type DinoPca, type Enrichment, type WorkbenchIndex, type WorkbenchSample,
 } from '../api/artifacts';
 import type { ArtifactSample, CaseArtifact, LevelRecord } from '../lib/contract.types';
 import { useT } from '../lib/i18n';
@@ -67,6 +67,8 @@ export default function AppPage() {
   const [anomaly, setAnomaly] = useState<CaseArtifact | null>(null);
   const [wb, setWb] = useState<WorkbenchIndex | null>(null);
   const [enrich, setEnrich] = useState<Enrichment | null>(null);
+  const [dinoPca, setDinoPca] = useState<DinoPca | null>(null);
+  const [showFeatures, setShowFeatures] = useState(false);
   const [sampleId, setSampleId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -88,6 +90,7 @@ export default function AppPage() {
     loadCaseArtifact(LEARNED_SLUG).then(setLearned).catch(() => setLearned(null));
     loadCaseArtifact(ANOMALY_SLUG).then(setAnomaly).catch(() => setAnomaly(null));
     loadWorkbench().then(setWb).catch(() => setWb(null));
+    loadDinoPca().then(setDinoPca).catch(() => setDinoPca(null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -196,7 +199,7 @@ export default function AppPage() {
                 { id: 'slic', label: t('SLIC', 'SLIC'), content: <SlicTab wb={wbSample} n={snapN} c={snapC} es={es} /> },
                 { id: 'quant', label: t('Quantification', 'Cuantificación'), content: <QuantTab enrich={enrich} imageUrl={imageUrl} es={es} /> },
                 { id: 'classical', label: t('Classical', 'Clásico'), content: <FamilyTab methods={CLASSICAL_METHODS} sample={cSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} /> },
-                { id: 'sota', label: t('SOTA', 'SOTA'), content: <FamilyTab methods={LEARNED_METHODS} sample={lSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} /> },
+                { id: 'sota', label: t('SOTA', 'SOTA'), content: <FamilyTab methods={LEARNED_METHODS} sample={lSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} dinoPca={dinoPca} showFeatures={showFeatures} setShowFeatures={setShowFeatures} /> },
                 { id: 'beyond', label: t('Beyond SOTA', 'Más allá SOTA'), content: <FamilyTab methods={ANOMALY_METHODS} sample={aSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} anomalyHeat={aSample?.heat_rel ? heatUrl(aSample.heat_rel) : null} /> },
                 { id: 'metrics', label: t('Metrics', 'Métricas'), content: <MetricsTab enrich={enrich} es={es} /> },
                 { id: 'summary', label: t('Summary', 'Resumen'), content: <SummaryTab cSample={cSample} lSample={lSample} aSample={aSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} es={es} /> },
@@ -367,9 +370,10 @@ function SlicTab({ wb, n, c, es }: { wb: WorkbenchSample | null; n: number; c: n
 
 // ---- a method family applied to the image (Classical / SOTA / Beyond) --------------------------
 
-function FamilyTab({ methods, sample, base, imageUrl, showGt, opacity, detail, setDetail, es, anomalyHeat }: {
+function FamilyTab({ methods, sample, base, imageUrl, showGt, opacity, detail, setDetail, es, anomalyHeat, dinoPca, showFeatures, setShowFeatures }: {
   methods: MethodDef[]; sample: ArtifactSample | null; base: ArtifactSample; imageUrl: string | null;
   showGt: boolean; opacity: number; detail: string; setDetail: (s: string) => void; es: boolean; anomalyHeat?: string | null;
+  dinoPca?: DinoPca | null; showFeatures?: boolean; setShowFeatures?: (v: boolean) => void;
 }) {
   const t = (en: string, esx: string) => (es ? esx : en);
   if (!sample) return <Callout variant="note" title={t('Not available for this image', 'No disponible para esta imagen')}>{t('This method family is baked on the committed example set.', 'Esta familia de métodos está baked sobre el set de ejemplos versionado.')}</Callout>;
@@ -379,20 +383,40 @@ function FamilyTab({ methods, sample, base, imageUrl, showGt, opacity, detail, s
   const lev = sample.levels[active];
   const seg = lev?.segmentation;
   const anom = (lev as (LevelRecord & { anomaly_score_norm?: number }) | undefined)?.anomaly_score_norm;
+  const pcaUrl = fam === 'learned' && showFeatures && dinoPca
+    ? dinoPca.samples.find((s) => s.id === base.sample_id)?.pca ?? null
+    : null;
   return (
     <div>
       <div className="fs-matrix-h"><span className="fs-dot" style={{ background: FAMILY_TONE[fam] }} />{t(...FAMILY_LABEL[fam])}</div>
       <div className="fs-wb-two">
         <div className="fs-wb-img">
-          <MethodTile imageUrl={imageUrl} size={(fam === 'anomaly' ? sample : base).size} mask={lev?.mask_rle ?? null} gt={base.gt_rle} showGt={showGt} opacity={opacity} color={FAMILY_RGB[fam]} heatUrl={fam === 'anomaly' ? anomalyHeat ?? null : null} />
-          <OverlayLegend items={fam === 'anomaly'
-            ? [{ color: 'linear-gradient(90deg,rgb(40,90,220),rgb(235,60,40))', label: t('anomaly heat (low to high)', 'calor de anomalía (bajo a alto)'), kind: 'gradient' }, { color: 'rgb(255,255,255)', label: t('flagged region outline', 'contorno de región marcada'), kind: 'outline' }, ...(showGt ? [{ color: 'rgb(46,204,113)', label: t('ground truth crack', 'grieta ground truth') }] : [])]
-            : predictionLegend(rgbStr(FAMILY_RGB[fam]), t('prediction', 'predicción'), t('ground truth', 'ground truth'), t('overlap', 'solape'), showGt)} />
-          <p className="fs-panel-sub">{t('The method prediction over the image. Pick a method to compare.', 'La predicción del método sobre la imagen. Elige un método para comparar.')}</p>
+          {pcaUrl ? (
+            <>
+              <img className="fs-wb-photo" src={`${import.meta.env.BASE_URL}data/${pcaUrl}`} alt="DINOv2 feature PCA" />
+              <OverlayLegend items={[{ color: 'linear-gradient(90deg,rgb(230,60,160),rgb(60,200,120),rgb(60,120,230))', label: t('DINOv2 feature space (PCA to RGB)', 'espacio de features DINOv2 (PCA a RGB)'), kind: 'gradient' }]} />
+              <p className="fs-panel-sub">
+                {t('What the FROZEN foundation model encodes, with no crack supervision at all: each 14 px patch becomes a 384-dim descriptor, and its first three principal components map to RGB. The crack separates as its own hue, which is exactly why a 385-parameter linear head on these features is competitive.', 'Lo que el modelo fundacional CONGELADO codifica, sin ninguna supervisión de grietas: cada parche de 14 px se vuelve un descriptor de 384 dimensiones, y sus tres primeras componentes principales mapean a RGB. La grieta se separa como su propio tono, que es exactamente por qué una cabeza lineal de 385 parámetros sobre estas features es competitiva.')}
+              </p>
+            </>
+          ) : (
+            <>
+              <MethodTile imageUrl={imageUrl} size={(fam === 'anomaly' ? sample : base).size} mask={lev?.mask_rle ?? null} gt={base.gt_rle} showGt={showGt} opacity={opacity} color={FAMILY_RGB[fam]} heatUrl={fam === 'anomaly' ? anomalyHeat ?? null : null} />
+              <OverlayLegend items={fam === 'anomaly'
+                ? [{ color: 'linear-gradient(90deg,rgb(40,90,220),rgb(235,60,40))', label: t('anomaly heat (low to high)', 'calor de anomalía (bajo a alto)'), kind: 'gradient' }, { color: 'rgb(255,255,255)', label: t('flagged region outline', 'contorno de región marcada'), kind: 'outline' }, ...(showGt ? [{ color: 'rgb(46,204,113)', label: t('ground truth crack', 'grieta ground truth') }] : [])]
+                : predictionLegend(rgbStr(FAMILY_RGB[fam]), t('prediction', 'predicción'), t('ground truth', 'ground truth'), t('overlap', 'solape'), showGt)} />
+              <p className="fs-panel-sub">{t('The method prediction over the image. Pick a method to compare.', 'La predicción del método sobre la imagen. Elige un método para comparar.')}</p>
+            </>
+          )}
         </div>
         <div className="fs-wb-read">
           <div className="fs-chips">
             {avail.map((m) => <button key={m.id} className={`chip ${m.id === active ? 'on' : ''}`} onClick={() => setDetail(m.id)} title={t(m.en, m.es)}>{m.label}</button>)}
+            {fam === 'learned' && dinoPca && setShowFeatures ? (
+              <button className={`chip ${showFeatures ? 'on' : ''}`} onClick={() => setShowFeatures(!showFeatures)} title={t('What the frozen DINOv2 features encode', 'Lo que codifican las features congeladas de DINOv2')}>
+                {t('DINOv2 features', 'features DINOv2')}
+              </button>
+            ) : null}
           </div>
           <p className="fs-detail-desc">{t(avail.find((m) => m.id === active)!.en, avail.find((m) => m.id === active)!.es)}</p>
           {seg ? (
