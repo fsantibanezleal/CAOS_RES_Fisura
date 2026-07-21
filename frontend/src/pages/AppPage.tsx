@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Callout, Tabs } from '@fasl-work/caos-app-shell';
 import {
-  heatUrl, loadCaseArtifact, loadDinoPca, loadEnrichment, loadWorkbench, overlayUrl, workbenchUrl,
-  type DinoPca, type Enrichment, type WorkbenchIndex, type WorkbenchSample,
+  heatUrl, loadCaseArtifact, loadDinoPca, loadEnrichment, loadGradCam, loadWorkbench, overlayUrl, workbenchUrl,
+  type DinoPca, type Enrichment, type GradCam, type WorkbenchIndex, type WorkbenchSample,
 } from '../api/artifacts';
 import type { ArtifactSample, CaseArtifact, LevelRecord } from '../lib/contract.types';
 import { useT } from '../lib/i18n';
@@ -68,7 +68,9 @@ export default function AppPage() {
   const [wb, setWb] = useState<WorkbenchIndex | null>(null);
   const [enrich, setEnrich] = useState<Enrichment | null>(null);
   const [dinoPca, setDinoPca] = useState<DinoPca | null>(null);
-  const [showFeatures, setShowFeatures] = useState(false);
+  const [gradCam, setGradCam] = useState<GradCam | null>(null);
+  // SOTA tab view mode: the prediction mask, the frozen-feature PCA, or the Grad-CAM evidence map
+  const [sotaView, setSotaView] = useState<'pred' | 'features' | 'cam'>('pred');
   const [sampleId, setSampleId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,6 +93,7 @@ export default function AppPage() {
     loadCaseArtifact(ANOMALY_SLUG).then(setAnomaly).catch(() => setAnomaly(null));
     loadWorkbench().then(setWb).catch(() => setWb(null));
     loadDinoPca().then(setDinoPca).catch(() => setDinoPca(null));
+    loadGradCam().then(setGradCam).catch(() => setGradCam(null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -199,7 +202,7 @@ export default function AppPage() {
                 { id: 'slic', label: t('SLIC', 'SLIC'), content: <SlicTab wb={wbSample} n={snapN} c={snapC} es={es} /> },
                 { id: 'quant', label: t('Quantification', 'Cuantificación'), content: <QuantTab enrich={enrich} imageUrl={imageUrl} es={es} /> },
                 { id: 'classical', label: t('Classical', 'Clásico'), content: <FamilyTab methods={CLASSICAL_METHODS} sample={cSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} /> },
-                { id: 'sota', label: t('SOTA', 'SOTA'), content: <FamilyTab methods={LEARNED_METHODS} sample={lSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} dinoPca={dinoPca} showFeatures={showFeatures} setShowFeatures={setShowFeatures} /> },
+                { id: 'sota', label: t('SOTA', 'SOTA'), content: <FamilyTab methods={LEARNED_METHODS} sample={lSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} dinoPca={dinoPca} gradCam={gradCam} sotaView={sotaView} setSotaView={setSotaView} /> },
                 { id: 'beyond', label: t('Beyond SOTA', 'Más allá SOTA'), content: <FamilyTab methods={ANOMALY_METHODS} sample={aSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} anomalyHeat={aSample?.heat_rel ? heatUrl(aSample.heat_rel) : null} /> },
                 { id: 'metrics', label: t('Metrics', 'Métricas'), content: <MetricsTab enrich={enrich} es={es} /> },
                 { id: 'summary', label: t('Summary', 'Resumen'), content: <SummaryTab cSample={cSample} lSample={lSample} aSample={aSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} es={es} /> },
@@ -370,10 +373,11 @@ function SlicTab({ wb, n, c, es }: { wb: WorkbenchSample | null; n: number; c: n
 
 // ---- a method family applied to the image (Classical / SOTA / Beyond) --------------------------
 
-function FamilyTab({ methods, sample, base, imageUrl, showGt, opacity, detail, setDetail, es, anomalyHeat, dinoPca, showFeatures, setShowFeatures }: {
+function FamilyTab({ methods, sample, base, imageUrl, showGt, opacity, detail, setDetail, es, anomalyHeat, dinoPca, gradCam, sotaView, setSotaView }: {
   methods: MethodDef[]; sample: ArtifactSample | null; base: ArtifactSample; imageUrl: string | null;
   showGt: boolean; opacity: number; detail: string; setDetail: (s: string) => void; es: boolean; anomalyHeat?: string | null;
-  dinoPca?: DinoPca | null; showFeatures?: boolean; setShowFeatures?: (v: boolean) => void;
+  dinoPca?: DinoPca | null; gradCam?: GradCam | null;
+  sotaView?: 'pred' | 'features' | 'cam'; setSotaView?: (v: 'pred' | 'features' | 'cam') => void;
 }) {
   const t = (en: string, esx: string) => (es ? esx : en);
   if (!sample) return <Callout variant="note" title={t('Not available for this image', 'No disponible para esta imagen')}>{t('This method family is baked on the committed example set.', 'Esta familia de métodos está baked sobre el set de ejemplos versionado.')}</Callout>;
@@ -383,15 +387,28 @@ function FamilyTab({ methods, sample, base, imageUrl, showGt, opacity, detail, s
   const lev = sample.levels[active];
   const seg = lev?.segmentation;
   const anom = (lev as (LevelRecord & { anomaly_score_norm?: number }) | undefined)?.anomaly_score_norm;
-  const pcaUrl = fam === 'learned' && showFeatures && dinoPca
+  const pcaUrl = fam === 'learned' && sotaView === 'features' && dinoPca
     ? dinoPca.samples.find((s) => s.id === base.sample_id)?.pca ?? null
+    : null;
+  const camRow = fam === 'learned' && sotaView === 'cam' && gradCam
+    ? gradCam.samples.find((s) => s.id === base.sample_id && s.arch === active) ?? null
     : null;
   return (
     <div>
       <div className="fs-matrix-h"><span className="fs-dot" style={{ background: FAMILY_TONE[fam] }} />{t(...FAMILY_LABEL[fam])}</div>
       <div className="fs-wb-two">
         <div className="fs-wb-img">
-          {pcaUrl ? (
+          {camRow ? (
+            <>
+              <img className="fs-wb-photo" src={`${import.meta.env.BASE_URL}data/${camRow.cam}`} alt="Grad-CAM" />
+              <OverlayLegend items={[{ color: 'linear-gradient(90deg,rgb(40,90,220),rgb(235,60,40))', label: t('Grad-CAM evidence (low to high)', 'evidencia Grad-CAM (baja a alta)'), kind: 'gradient' }]} />
+              <p className="fs-panel-sub">
+                {camRow.note
+                  ? t(`Grad-CAM for this image: ${camRow.note}`, `Grad-CAM para esta imagen: ${camRow.note}`)
+                  : t(`The evidence behind the mask, not the mask itself: gradients of the crack logit weight the encoder features. ${camRow.cam_mass_on_crack != null ? `${(camRow.cam_mass_on_crack * 100).toFixed(0)} percent of the CAM mass falls on the true crack.` : ''} Grad-CAM was built for whole-image classification, so on a 1-5 px crack these maps localise the evidence to a region, not to the outline.`, `La evidencia detrás de la máscara, no la máscara: los gradientes del logit de grieta ponderan las features del codificador. ${camRow.cam_mass_on_crack != null ? `${(camRow.cam_mass_on_crack * 100).toFixed(0)} por ciento de la masa del CAM cae sobre la grieta real.` : ''} Grad-CAM se diseñó para clasificación de imagen completa, así que sobre una grieta de 1-5 px estos mapas localizan la evidencia a una región, no al contorno.`)}
+              </p>
+            </>
+          ) : pcaUrl ? (
             <>
               <img className="fs-wb-photo" src={`${import.meta.env.BASE_URL}data/${pcaUrl}`} alt="DINOv2 feature PCA" />
               <OverlayLegend items={[{ color: 'linear-gradient(90deg,rgb(230,60,160),rgb(60,200,120),rgb(60,120,230))', label: t('DINOv2 feature space (PCA to RGB)', 'espacio de features DINOv2 (PCA a RGB)'), kind: 'gradient' }]} />
@@ -412,10 +429,23 @@ function FamilyTab({ methods, sample, base, imageUrl, showGt, opacity, detail, s
         <div className="fs-wb-read">
           <div className="fs-chips">
             {avail.map((m) => <button key={m.id} className={`chip ${m.id === active ? 'on' : ''}`} onClick={() => setDetail(m.id)} title={t(m.en, m.es)}>{m.label}</button>)}
-            {fam === 'learned' && dinoPca && setShowFeatures ? (
-              <button className={`chip ${showFeatures ? 'on' : ''}`} onClick={() => setShowFeatures(!showFeatures)} title={t('What the frozen DINOv2 features encode', 'Lo que codifican las features congeladas de DINOv2')}>
-                {t('DINOv2 features', 'features DINOv2')}
-              </button>
+            {fam === 'learned' && setSotaView ? (
+              <>
+                <span className="fs-chip-sep" aria-hidden="true" />
+                <button className={`chip ${sotaView === 'pred' ? 'on' : ''}`} onClick={() => setSotaView('pred')} title={t('The predicted crack mask', 'La máscara de grieta predicha')}>
+                  {t('mask', 'máscara')}
+                </button>
+                {dinoPca ? (
+                  <button className={`chip ${sotaView === 'features' ? 'on' : ''}`} onClick={() => setSotaView('features')} title={t('What the frozen DINOv2 features encode', 'Lo que codifican las features congeladas de DINOv2')}>
+                    {t('DINOv2 features', 'features DINOv2')}
+                  </button>
+                ) : null}
+                {gradCam && gradCam.archs.includes(active) ? (
+                  <button className={`chip ${sotaView === 'cam' ? 'on' : ''}`} onClick={() => setSotaView('cam')} title={t('What evidence drove the decision', 'Qué evidencia impulsó la decisión')}>
+                    {t('Grad-CAM', 'Grad-CAM')}
+                  </button>
+                ) : null}
+              </>
             ) : null}
           </div>
           <p className="fs-detail-desc">{t(avail.find((m) => m.id === active)!.en, avail.find((m) => m.id === active)!.es)}</p>
