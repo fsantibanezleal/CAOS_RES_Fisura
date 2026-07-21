@@ -89,16 +89,22 @@ class DaclDataset:
         return torch.from_numpy(x), torch.from_numpy(y)
 
 
-def _macro_iou(logits, target, thr: float = 0.5):
-    """Per-class IoU averaged over classes present in the batch (macro mIoU, the dacl10k metric)."""
+def _iou_parts(logits, target, thr: float = 0.5):
+    """Per-class intersection / union / ground-truth pixel counts for POOLED IoU.
+
+    Pooling these over the whole validation split and dividing ONCE is the benchmark protocol.
+    Averaging a per-batch IoU instead (the earlier form here) is a different and systematically lower
+    quantity: a class holding a handful of pixels in one batch contributes an equally-weighted
+    near-zero term. Quoting that against the paper's 0.424 would not be a like-for-like comparison.
+    See eval_dacl10k.py, which recomputes the pooled number from a saved checkpoint.
+    """
     import torch  # noqa: PLC0415
 
     pred = (torch.sigmoid(logits) > thr).float()
     inter = (pred * target).sum(dim=(0, 2, 3))
     union = ((pred + target) > 0).float().sum(dim=(0, 2, 3))
-    iou = inter / union.clamp(min=1)
-    valid = union > 0
-    return iou, valid
+    gt = target.sum(dim=(0, 2, 3))
+    return inter.double(), union.double(), gt.double()
 
 
 def main() -> None:
@@ -183,18 +189,21 @@ def main() -> None:
                 print(f"  ep{ep} it{bi}/{len(tl)} loss {loss.item():.4f}")
         # validation macro-IoU
         net.eval()
-        iou_sum = torch.zeros(N_CLASSES, device=device)
-        iou_cnt = torch.zeros(N_CLASSES, device=device)
+        inter_sum = torch.zeros(N_CLASSES, dtype=torch.float64, device=device)
+        union_sum = torch.zeros(N_CLASSES, dtype=torch.float64, device=device)
+        gt_sum = torch.zeros(N_CLASSES, dtype=torch.float64, device=device)
         with torch.no_grad():
             for x, y in vl:
                 x, y = x.to(device), y.to(device)
                 with torch.amp.autocast("cuda"):
                     out = net(x)
-                iou, valid = _macro_iou(out, y)
-                iou_sum += iou * valid
-                iou_cnt += valid.float()
-        per_class = (iou_sum / iou_cnt.clamp(min=1)).cpu().numpy()
-        present = iou_cnt.cpu().numpy() > 0
+                i_, u_, g_ = _iou_parts(out, y)
+                inter_sum += i_
+                union_sum += u_
+                gt_sum += g_
+        per_class = (inter_sum / union_sum.clamp(min=1)).cpu().numpy()
+        # a class counts if it OCCURS in the validation ground truth, not merely if something fired
+        present = gt_sum.cpu().numpy() > 0
         miou = float(per_class[present].mean()) if present.any() else 0.0
         star = ""
         if miou > best_miou and np.isfinite(miou) and miou > 0:
