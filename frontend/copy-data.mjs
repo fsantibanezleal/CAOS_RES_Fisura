@@ -37,3 +37,26 @@ if (existsSync(pkg)) {
   writeFileSync(join(PUB, 'pyodide', 'sources.json'), JSON.stringify(sources));
   console.log(`[copy-data] inlined ${Object.keys(sources).length} fisuralab sources -> public/pyodide/sources.json`);
 }
+
+// 3) onnxruntime-web wasm binaries -> public/ so ort loads them from the app base path (BL-013 live lane)
+const ortDist = join(ROOT, 'frontend', 'node_modules', 'onnxruntime-web', 'dist');
+if (existsSync(ortDist)) {
+  let n = 0;
+  for (const f of readdirSync(ortDist)) {
+    if (f.endsWith('.wasm') || f.endsWith('.mjs')) {
+      cpSync(join(ortDist, f), join(PUB, f));
+      n++;
+    }
+  }
+  console.log(`[copy-data] copied ${n} onnxruntime-web wasm/mjs -> public/`);
+}
+
+// 4) the committed browser ONNX model -> public/models (BL-013 live lane; small model, git-as-data)
+const modelsDir = join(ROOT, 'data', 'derived', 'models');
+if (existsSync(modelsDir)) {
+  mkdirSync(join(PUB, 'models'), { recursive: true });
+  for (const f of readdirSync(modelsDir)) {
+    if (f.endsWith('.onnx')) cpSync(join(modelsDir, f), join(PUB, 'models', f));
+  }
+  console.log('[copy-data] copied committed ONNX models -> public/models');
+}
