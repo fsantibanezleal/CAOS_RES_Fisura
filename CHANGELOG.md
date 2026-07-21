@@ -3,6 +3,24 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.17.000], 2026-07-20
+
+### Added (BL-013 live lane: bring-your-own-image, in-browser inference)
+- The App's Upload mode is now real. Drop a crack photo and the compact HrSegNet segmenter runs
+  ENTIRELY in the browser via onnxruntime-web (wasm); the image never leaves the device. New
+  `lib/liveEngine.ts` (session + preprocess + segment) and `pages/workbench/LiveLane.tsx` (dropzone,
+  crack-probability overlay, inference-time + backend + crack-fraction read-outs, an optional
+  millimetres-per-pixel scale, honest framing).
+- The browser-shippable model is HrSegNet (0.2 MB, committed under `data/derived/models/`); the
+  47-95 MB SOTA models stay in the offline lane. onnxruntime-web configured for the static Pages host:
+  single-thread wasm (no COOP/COEP on Pages), wasm + loader-mjs paths pinned to the app base (so
+  nothing 404s under the subpath), WebGPU deliberately off (the tiny model runs in ~55 ms on wasm and
+  the jsep glue does not resolve on the static host).
+- Correctness catch: HrSegNet was trained on img/255 with NO ImageNet mean/std normalization; applying
+  mean/std over-segmented to 52 percent of the image. Fixed the browser preprocessing to match the
+  training convention (verified against the ONNX in Python), which drops the prediction to a clean
+  0.2 percent conservative crack mask, matching the baked model's precision.
+
 ## [0.16.000], 2026-07-20
 
 ### Added (BL-012 DIC: 2D digital image correlation, deformation + crack-opening)

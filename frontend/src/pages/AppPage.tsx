@@ -11,6 +11,7 @@ import { OverlayLegend, predictionLegend } from '../render/OverlayLegend';
 import { PanelBoundary } from '../render/PanelBoundary';
 import { UPlotChart } from '../render/UPlotChart';
 import { MetricsTab, QuantTab } from './workbench/QuantMetricsTabs';
+import { LiveLane } from './workbench/LiveLane';
 
 // The App is a per-case interactive WORKBENCH (Felipe's spec, 2026-07-20):
 //   LEFT COLUMN: pick the case source (prebaked / pretrained / upload your own), pick the image,
@@ -132,14 +133,8 @@ export default function AppPage() {
             ? t('Committed replay cases: open-licensed concrete and steel patches with audited artifacts.', 'Casos replay versionados: parches de hormigón y acero con licencia abierta y artefactos auditados.')
             : source === 'pretrained'
               ? t('The trained learned and anomaly models applied to the committed images (same set, model outputs highlighted).', 'Los modelos aprendidos y de anomalía entrenados, aplicados a las imágenes versionadas (mismo set, salidas de modelos resaltadas).')
-              : t('Bring your own image: the in-browser lane (Pyodide classical + ONNX) arrives with BL-013. For now this loads the example set so every tab is usable.', 'Trae tu propia imagen: el carril en el navegador (clásico Pyodide + ONNX) llega con BL-013. Por ahora carga el set de ejemplos para que cada pestaña sea usable.')}
+              : t('Bring your own crack photo: a compact model segments it entirely in your browser (onnxruntime-web). The image never leaves your device. Drop it in the panel on the right.', 'Trae tu propia foto de grieta: un modelo compacto la segmenta por completo en tu navegador (onnxruntime-web). La imagen nunca sale de tu dispositivo. Suéltala en el panel de la derecha.')}
         </p>
-        {source === 'upload' ? (
-          <label className="fs-upload">
-            <input type="file" accept="image/*" disabled />
-            <span>{t('Drop an image (BL-013)', 'Suelta una imagen (BL-013)')}</span>
-          </label>
-        ) : null}
 
         <div className="fs-side-h">{t('2 · Image', '2 · Imagen')}</div>
         <div className="fs-thumbs">
@@ -186,7 +181,9 @@ export default function AppPage() {
         </h1>
 
         <PanelBoundary label={t('Workbench', 'Banco de trabajo')} es={es}>
-          {!cSample ? (
+          {source === 'upload' ? (
+            <LiveLane es={es} />
+          ) : !cSample ? (
             <div className="fs-panel"><div className="fs-panel-t">{t('Loading artifacts...', 'Cargando artefactos...')}</div></div>
           ) : (
             <Tabs
