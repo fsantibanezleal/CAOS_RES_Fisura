@@ -1,0 +1,175 @@
+{
+ "schema": "fisura.sac/v1",
+ "method": "Segment Any Crack (SAC): SAM ViT-B, norm-only tuning + light decode head",
+ "reference": "Rostami, Chen, Hosseini, 'Segment Any Crack', arXiv:2504.14138 (2025)",
+ "published_reference_point": {
+  "dataset": "OmniCrack30k",
+  "f1": 0.6122,
+  "iou": 0.4413
+ },
+ "trainable_norm_params": 36864,
+ "trainable_head_params": 387777,
+ "frozen_encoder_params": 89634048,
+ "val_f1_2px": 0.7499710790992611,
+ "n_train": 7786,
+ "n_val": 1373,
+ "train_minutes": 508.2,
+ "samples": [
+  {
+   "id": "bcl-nonsteel-c1",
+   "overlay": "sac/overlays/bcl-nonsteel-c1_sac.png",
+   "pred_positive_frac": 0.06294,
+   "f1_2px": 0.7618,
+   "f1_5px": 0.9435
+  },
+  {
+   "id": "bcl-nonsteel-c10",
+   "overlay": "sac/overlays/bcl-nonsteel-c10_sac.png",
+   "pred_positive_frac": 0.11455,
+   "f1_2px": 0.5898,
+   "f1_5px": 0.8811
+  },
+  {
+   "id": "bcl-steel-s1",
+   "overlay": "sac/overlays/bcl-steel-s1_sac.png",
+   "pred_positive_frac": 0.03912,
+   "f1_2px": 0.5399,
+   "f1_5px": 0.7996
+  },
+  {
+   "id": "bcl-noise-f1",
+   "overlay": "sac/overlays/bcl-noise-f1_sac.png",
+   "pred_positive_frac": 0.07193,
+   "f1_2px": 0.0,
+   "f1_5px": 0.0
+  },
+  {
+   "id": "sdnet-cp-001-100",
+   "overlay": "sac/overlays/sdnet-cp-001-100_sac.png",
+   "pred_positive_frac": 0.04062,
+   "f1_2px": null,
+   "f1_5px": null
+  },
+  {
+   "id": "sdnet-up-001-1",
+   "overlay": "sac/overlays/sdnet-up-001-1_sac.png",
+   "pred_positive_frac": 0.03276,
+   "f1_2px": null,
+   "f1_5px": null
+  },
+  {
+   "id": "synth-00-straight_bar",
+   "overlay": "sac/overlays/synth-00-straight_bar_sac.png",
+   "pred_positive_frac": 0.05132,
+   "f1_2px": 0.6335,
+   "f1_5px": 0.9559
+  },
+  {
+   "id": "synth-01-straight_bar",
+   "overlay": "sac/overlays/synth-01-straight_bar_sac.png",
+   "pred_positive_frac": 0.07834,
+   "f1_2px": 0.4727,
+   "f1_5px": 0.7864
+  },
+  {
+   "id": "synth-02-straight_bar",
+   "overlay": "sac/overlays/synth-02-straight_bar_sac.png",
+   "pred_positive_frac": 0.04947,
+   "f1_2px": 0.7229,
+   "f1_5px": 0.9856
+  },
+  {
+   "id": "synth-03-straight_bar",
+   "overlay": "sac/overlays/synth-03-straight_bar_sac.png",
+   "pred_positive_frac": 0.07965,
+   "f1_2px": 0.5279,
+   "f1_5px": 0.8177
+  },
+  {
+   "id": "synth-04-straight_bar",
+   "overlay": "sac/overlays/synth-04-straight_bar_sac.png",
+   "pred_positive_frac": 0.04065,
+   "f1_2px": 0.9005,
+   "f1_5px": 0.9966
+  },
+  {
+   "id": "synth-05-straight_bar",
+   "overlay": "sac/overlays/synth-05-straight_bar_sac.png",
+   "pred_positive_frac": 0.08351,
+   "f1_2px": 0.6158,
+   "f1_5px": 0.865
+  },
+  {
+   "id": "synth-06-straight_bar",
+   "overlay": "sac/overlays/synth-06-straight_bar_sac.png",
+   "pred_positive_frac": 0.01724,
+   "f1_2px": 0.6848,
+   "f1_5px": 0.8422
+  },
+  {
+   "id": "synth-07-straight_bar",
+   "overlay": "sac/overlays/synth-07-straight_bar_sac.png",
+   "pred_positive_frac": 0.09599,
+   "f1_2px": 0.7237,
+   "f1_5px": 0.915
+  },
+  {
+   "id": "synth-08-wavy_crack",
+   "overlay": "sac/overlays/synth-08-wavy_crack_sac.png",
+   "pred_positive_frac": 0.06496,
+   "f1_2px": 0.4794,
+   "f1_5px": 0.8248
+  },
+  {
+   "id": "synth-09-straight_bar",
+   "overlay": "sac/overlays/synth-09-straight_bar_sac.png",
+   "pred_positive_frac": 0.10602,
+   "f1_2px": 0.4948,
+   "f1_5px": 0.8145
+  },
+  {
+   "id": "synth-10-uncracked",
+   "overlay": "sac/overlays/synth-10-uncracked_sac.png",
+   "pred_positive_frac": 0.0,
+   "f1_2px": 1.0,
+   "f1_5px": 1.0
+  },
+  {
+   "id": "synth-11-uncracked",
+   "overlay": "sac/overlays/synth-11-uncracked_sac.png",
+   "pred_positive_frac": 0.0,
+   "f1_2px": 1.0,
+   "f1_5px": 1.0
+  },
+  {
+   "id": "fives-100_d",
+   "overlay": "sac/overlays/fives-100_d_sac.png",
+   "pred_positive_frac": 0.01266,
+   "f1_2px": 0.1725,
+   "f1_5px": 0.2106
+  },
+  {
+   "id": "fives-101_g",
+   "overlay": "sac/overlays/fives-101_g_sac.png",
+   "pred_positive_frac": 0.01114,
+   "f1_2px": 0.0409,
+   "f1_5px": 0.0458
+  },
+  {
+   "id": "fives-10_a",
+   "overlay": "sac/overlays/fives-10_a_sac.png",
+   "pred_positive_frac": 0.00967,
+   "f1_2px": 0.0899,
+   "f1_5px": 0.0984
+  },
+  {
+   "id": "fives-151_n",
+   "overlay": "sac/overlays/fives-151_n_sac.png",
+   "pred_positive_frac": 0.01103,
+   "f1_2px": 0.1139,
+   "f1_5px": 0.1327
+  }
+ ],
+ "framing": "The foundation-adapter rung: freeze SAM's 93 M-parameter ViT and tune ONLY its 37K normalization parameters plus a 388K decode head. That is under 0.5 percent of the network, yet it adapts a general segmenter to cracks. It shows the trade the rest of the ladder is measured against: near-frozen foundation weights vs a small task head, at a fraction of a full fine-tune's cost.",
+ "limitation": "SAM was built for prompt-driven, object-scale segmentation; a 1-5 px crack is far from its training distribution, so the prompt-free head does the heavy lifting and the norm deltas only re-tune the statistics. The published 61.22 F1 is on OmniCrack30k, a larger and cleaner benchmark than these few examples; the per-sample numbers here are illustrative, not a benchmark result."
+}
