@@ -49,6 +49,8 @@ export default function MultiClass() {
         <MultiClassBody d={d} pick={pick} setPick={setPick} es={t('x', 'y') === 'y'} />
       )}
 
+      <CodebrimSection es={t('x', 'y') === 'y'} />
+
       <Refs label={t('Refs', 'Refs')} ids={['flotzinger2024dacl10k', 'mundt2019codebrim', 'benz2024omnicrack']} />
     </div>
   );
@@ -117,6 +119,97 @@ function MultiClassBody({ d, pick, setPick, es }: { d: Dacl; pick: number; setPi
 
       <Callout variant="note" title={t('License and honesty', 'Licencia y honestidad')}>
         {t('dacl10k is CC BY-NC 4.0: non-commercial, no redistribution of the raw images. Fisura trains locally and publishes only the metrics and small transformative low-resolution overlays. Trained dacl10k weights carry the same non-commercial notice, never the MIT license of the lab code. CODEBRIM bounding-box detection (RT-DETR, Faster R-CNN) is the next rung of this track.', 'dacl10k es CC BY-NC 4.0: no comercial, sin redistribución de las imágenes crudas. Fisura entrena localmente y publica solo las métricas y pequeñas superposiciones transformadas de baja resolución. Los pesos entrenados de dacl10k llevan el mismo aviso no comercial, nunca la licencia MIT del código del laboratorio. La detección por cajas de CODEBRIM (RT-DETR, Faster R-CNN) es el siguiente peldaño de esta pista.')}
+      </Callout>
+    </>
+  );
+}
+
+// ---- CODEBRIM detection -------------------------------------------------------------------------
+// The second multi-class task, and a genuinely different one: dacl10k asks which pixels belong to
+// which damage class, CODEBRIM asks where the discrete defects ARE, as boxes. Same inspection domain,
+// different output type, so it needs a detector rather than a segmenter and a mAP rather than an IoU.
+// CODEBRIM ships a bespoke non-commercial licence that extends to trained models, so the 4608x3456
+// originals and the weights stay in the vault; only the metrics and small low-resolution box overlays
+// are published here.
+
+interface CbSample { id: string; overlay: string; n_pred: number; n_gt: number; gt_classes: string[]; }
+interface Cb {
+  dataset: string; arch: string; classes: string[]; palette: number[][];
+  mAP_50: number; mAP_50_95: number; baseline_yolov5x_mAP50: number; baseline_source: string;
+  n_train: number; n_test: number; epochs: number; samples: CbSample[];
+}
+
+function CodebrimSection({ es }: { es: boolean }) {
+  const t = (en: string, esx: string) => (es ? esx : en);
+  const [c, setC] = useState<Cb | null>(null);
+  const [pick, setPick] = useState(0);
+  useEffect(() => {
+    fetch(`${import.meta.env.BASE_URL}data/multiclass/codebrim.json`)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then(setC)
+      .catch(() => setC(null));
+  }, []);
+  if (!c) return null;
+  const s = c.samples[Math.min(pick, c.samples.length - 1)];
+  const rgb = (name: string) => {
+    const i = c.classes.indexOf(name);
+    const p = c.palette[i] ?? [136, 136, 136];
+    return `rgb(${p[0]},${p[1]},${p[2]})`;
+  };
+
+  return (
+    <>
+      <h2>{t('Detection, not segmentation: CODEBRIM', 'Detección, no segmentación: CODEBRIM')}</h2>
+      <p className="fs-detail-desc">
+        {t(
+          'dacl10k asks which pixels carry which damage. CODEBRIM asks a different question: where are the discrete defects, as boxes. That is a detector rather than a segmenter, scored with mean average precision instead of IoU, and it is the form an inspection report actually wants, since a report counts defects rather than shading pixels.',
+          'dacl10k pregunta qué píxeles llevan qué daño. CODEBRIM hace otra pregunta: dónde están los defectos discretos, como cajas. Eso es un detector y no un segmentador, evaluado con precisión promedio en vez de IoU, y es la forma que un informe de inspección realmente quiere, ya que un informe cuenta defectos en lugar de sombrear píxeles.',
+        )}{' '}
+        (<Cite id="mundt2019codebrim" />)
+      </p>
+
+      <div className="fs-kpis fs-kpis-4">
+        <div className="fs-kpi"><div className="fs-kpi-v">{c.mAP_50.toFixed(3)}</div><div className="fs-kpi-l">{t('measured mAP@0.5', 'mAP@0.5 medido')}</div></div>
+        <div className="fs-kpi"><div className="fs-kpi-v">{c.baseline_yolov5x_mAP50.toFixed(3)}</div><div className="fs-kpi-l">{t('YOLOv5x reference', 'referencia YOLOv5x')}</div></div>
+        <div className="fs-kpi"><div className="fs-kpi-v">{c.mAP_50_95.toFixed(3)}</div><div className="fs-kpi-l">mAP@0.5:0.95</div></div>
+        <div className="fs-kpi"><div className="fs-kpi-v">{c.n_train}</div><div className="fs-kpi-l">{t('train images', 'imágenes de entrenamiento')}</div></div>
+      </div>
+
+      <p className="fs-detail-desc">
+        {t(
+          `A torchvision Faster R-CNN with a ResNet-50 FPN backbone, ${c.epochs} epochs on ${c.n_train} images, reaching mAP@0.5 of ${c.mAP_50.toFixed(3)} on ${c.n_test} held-out images against ${c.baseline_yolov5x_mAP50.toFixed(3)} for the YOLOv5x reference. It is below that reference and the gap is not hidden: the reference run uses a stronger detector with a full augmentation stack, while this one is a short single-model run with none. What it does establish is that the detection rung is wired end to end on real annotations rather than described in a roadmap.`,
+          `Un Faster R-CNN de torchvision con backbone ResNet-50 FPN, ${c.epochs} épocas sobre ${c.n_train} imágenes, alcanzando mAP@0.5 de ${c.mAP_50.toFixed(3)} en ${c.n_test} imágenes retenidas frente a ${c.baseline_yolov5x_mAP50.toFixed(3)} de la referencia YOLOv5x. Está por debajo de esa referencia y la brecha no se esconde: la corrida de referencia usa un detector más fuerte con un stack completo de aumentación, mientras que esta es una corrida corta de un solo modelo sin ninguna. Lo que sí establece es que el peldaño de detección está cableado de punta a punta sobre anotaciones reales y no descrito en un roadmap.`,
+        )}
+      </p>
+
+      <div className="fs-panel">
+        <div className="fs-panel-t">{t('Predicted boxes on held-out inspection images', 'Cajas predichas en imágenes de inspección retenidas')}</div>
+        <div className="fs-seg" style={{ marginBottom: '0.6rem' }}>
+          {c.samples.map((x, i) => (
+            <button key={x.id} className={`fs-seg-b ${i === pick ? 'on' : ''}`} onClick={() => setPick(i)}>
+              {i + 1}
+            </button>
+          ))}
+        </div>
+        <img
+          src={`${import.meta.env.BASE_URL}data/${s.overlay}`}
+          alt={s.id}
+          style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid var(--color-border)' }}
+        />
+        <p className="fs-panel-sub">
+          {t(`${s.n_pred} predicted boxes above the 0.3 score threshold, ${s.n_gt} annotated. Ground-truth classes here: `,
+             `${s.n_pred} cajas predichas sobre el umbral de score 0.3, ${s.n_gt} anotadas. Clases de ground truth aquí: `)}
+          {s.gt_classes.map((g) => (
+            <span key={g} style={{ color: rgb(g), fontWeight: 600 }}>{g} </span>
+          ))}
+        </p>
+      </div>
+
+      <Callout variant="honest" title={t('Licence and what ships', 'Licencia y qué se publica')}>
+        {t(
+          'CODEBRIM carries a bespoke non-commercial licence whose terms extend to models trained on it. The original 4608x3456 photographs and the detector weights therefore stay local, and only these measured numbers and small downscaled box overlays are published. The weights are not MIT and are not redistributed.',
+          'CODEBRIM tiene una licencia no comercial a medida cuyos términos se extienden a los modelos entrenados con él. Las fotografías originales de 4608x3456 y los pesos del detector se quedan locales, y sólo se publican estos números medidos y pequeñas superposiciones de cajas reducidas. Los pesos no son MIT y no se redistribuyen.',
+        )}
       </Callout>
     </>
   );

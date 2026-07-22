@@ -1,0 +1,87 @@
+{
+ "schema": "fisura.codebrim/v1",
+ "dataset": "CODEBRIM (custom NC license; images + weights local, metrics + low-res overlays only)",
+ "arch": "fasterrcnn_resnet50_fpn_v2",
+ "classes": [
+  "Crack",
+  "Spallation",
+  "Efflorescence",
+  "ExposedBars",
+  "CorrosionStain"
+ ],
+ "palette": [
+  [
+   230,
+   57,
+   70
+  ],
+  [
+   244,
+   106,
+   60
+  ],
+  [
+   255,
+   159,
+   28
+  ],
+  [
+   204,
+   51,
+   139
+  ],
+  [
+   156,
+   102,
+   68
+  ]
+ ],
+ "mAP_50": 0.2666,
+ "mAP_50_95": 0.1301,
+ "baseline_yolov5x_mAP50": 0.357,
+ "baseline_source": "ertis-research/ConcreteDamageDetection (YOLOv5x + aug)",
+ "n_train": 715,
+ "n_test": 103,
+ "epochs": 8,
+ "samples": [
+  {
+   "id": "image_0001577",
+   "overlay": "multiclass/overlays/cb_image_0001577.png",
+   "n_pred": 5,
+   "n_gt": 2,
+   "gt_classes": [
+    "Spallation"
+   ]
+  },
+  {
+   "id": "image_0001332",
+   "overlay": "multiclass/overlays/cb_image_0001332.png",
+   "n_pred": 9,
+   "n_gt": 6,
+   "gt_classes": [
+    "Crack",
+    "Spallation"
+   ]
+  },
+  {
+   "id": "image_0001261",
+   "overlay": "multiclass/overlays/cb_image_0001261.png",
+   "n_pred": 5,
+   "n_gt": 6,
+   "gt_classes": [
+    "Crack",
+    "Spallation"
+   ]
+  },
+  {
+   "id": "image_0001165",
+   "overlay": "multiclass/overlays/cb_image_0001165.png",
+   "n_pred": 10,
+   "n_gt": 6,
+   "gt_classes": [
+    "CorrosionStain",
+    "Crack"
+   ]
+  }
+ ]
+}
