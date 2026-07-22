@@ -123,7 +123,7 @@ def class_pos_weight(pairs, n_sample: int = 400, cap: float = 50.0, seed: int = 
     """
     import numpy as _np  # noqa: PLC0415
 
-    cache = data_root() / "derived" / "multiclass" / f"pos_weight_n{n_sample}_s{seed}.json"
+    cache = data_root() / "derived" / "multiclass" / f"pos_weight_sqrt_n{n_sample}_s{seed}.json"
     if cache.exists():
         w = json.loads(cache.read_text(encoding="utf-8"))["pos_weight"]
         return _np.array(w, dtype=_np.float32)
@@ -141,7 +141,14 @@ def class_pos_weight(pairs, n_sample: int = 400, cap: float = 50.0, seed: int = 
         if k % 100 == 0:
             print(f"  pos_weight scan {k}/{len(idx)}")
     pos = _np.maximum(pos, 1.0)                              # never divide by zero
-    w = _np.clip((tot - pos) / pos, 1.0, cap).astype(_np.float32)
+    # sqrt of the neg/pos ratio, not the raw ratio. Measured rates span 0.094 percent
+    # (Restformwork) to 7.02 percent (Weathering), i.e. raw ratios from 13 to 1060. Using the raw
+    # ratio would hand the rarest classes a weight in the hundreds, which buys recall by destroying
+    # precision (and the IoU with it); a flat cap low enough to be safe instead collapses 14 of the
+    # 19 classes onto the same value and throws the ordering away. The square root keeps the
+    # ordering with a well-behaved 3.6x-to-32.6x spread, and Dice already carries per-class scale
+    # invariance alongside it.
+    w = _np.clip(_np.sqrt((tot - pos) / pos), 1.0, cap).astype(_np.float32)
     cache.parent.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps({
         "n_sample": int(len(idx)), "cap": cap, "seed": seed,
