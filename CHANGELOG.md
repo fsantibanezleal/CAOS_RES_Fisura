@@ -3,6 +3,63 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.20.000], 2026-07-21
+
+### Changed (the case source is a DATA axis, not a method axis)
+- The App's case-source selector offered `Prebaked` / `Pretrained` / `Upload`. The first two loaded the
+  SAME artifact and rendered the SAME tabs, differing only by one sentence of hint copy: dead UI. The
+  axis was also wrong, since prebaked-vs-pretrained is a method distinction and that is exactly what the
+  tabs already do (Classical / SOTA / Beyond SOTA), so wiring it would only have duplicated them.
+- The source now selects the DATA the workbench runs on: **Real samples / Synthetic / Upload**.
+- The `synthetic_battery` artifact, baked back in v0.03 and left unreachable behind a literal
+  `void SYNTH_SLUG`, is now wired. Overlay paths are derived from the shared naming convention rather
+  than re-baking, and only the samples whose overlays exist are offered as thumbnails.
+- Synthetic exposes only the tabs backed by real data (Overview, Classical, Degradation). The learned,
+  anomaly, SLIC and enrichment artifacts were never baked on synthetic cases, so those tabs are withheld
+  rather than rendered empty.
+
+### Added (Degradation tab)
+- Classical-ladder F1@2px against crack width, 9 px down to 2 px at fixed contrast and angle, over all 12
+  battery cases. The ground truth is exact by construction, so a drop measures the METHOD and not the
+  labelling.
+- The panel states the two things a reader would otherwise read as defects: the ordering INVERTS (Otsu
+  and Sauvola pinned at F1 1.0 while minimal-path bridging and RF fusion score below, because a generated
+  crack is precisely the case a global threshold solves perfectly), and fewer curves are visible than
+  methods because L3 and L4 land on identical values at every width when there is no gap to bridge.
+
+### Fixed (dacl10k validation metric was not benchmark-comparable)
+- `_macro_iou` averaged a per-BATCH IoU across batches. The dacl10k benchmark, like every standard
+  segmentation protocol, pools intersection and union over the whole split and divides once. The shipped
+  "0.117 vs the 0.424 baseline" comparison was therefore never like-for-like, and batch-averaging is
+  systematically lower.
+- Replaced by `_iou_parts` (per-class inter/union/gt counts, float64, pooled globally; a class counts as
+  present if it OCCURS in the val ground truth, not merely if something fired).
+- New `fisuralab.multiclass.eval_dacl10k` recomputes the pooled number from a saved checkpoint in a
+  single validation pass, so an in-flight run needs no restart, and sweeps the decision threshold.
+  Measured on the full-data best checkpoint: **0.0912** batch-averaged, **0.1441** pooled untuned,
+  **0.1685** pooled at a val-tuned threshold. The tuned-on-val caveat ships next to the untuned column.
+
+### Fixed (rare classes collapsing to exactly IoU 0)
+- The pooled per-class breakdown shows 19 classes present but only 10 non-zero, and those 10 average
+  **0.3201** IoU. The 9 zeros are precisely the rarest classes (ExposedRebars at 0.48 percent of labelled
+  pixels, Rockpocket 0.81, Crack 1.37). Crack scoring 0 is untenable for this lab.
+- Diagnosis: unweighted BCE collapsing rare classes to an all-negative prediction, a calibration failure
+  rather than a capacity or budget limit.
+- `class_pos_weight()` adds per-class positive weighting as `sqrt(neg/pos)`, estimated on a cached sample
+  of the TRAIN split (never val, which would leak). Raw ratios span 13x to 1060x and would buy recall by
+  destroying precision; a flat safe cap instead collapses 14 of 19 classes onto one value. sqrt keeps the
+  ordering at a 3.6x-to-32.6x spread. Opt-in via `--pos-weight`; setting and protocol recorded in results.
+
+### Added (SAC foundation-adapter scaffold)
+- `fisuralab.learned.train_sac` + `bake_sac`: SAM ViT-B with ONLY its normalization parameters tuned
+  (36.9K of 93.7M) plus a 387.8K decode head, under 0.5 percent of the network, after Rostami, Chen,
+  Hosseini, arXiv:2504.14138. Gradient-checkpointed blocks and batch-1 accumulation fit the 8 GB card;
+  fp32 losses, gradient clipping and non-finite step skipping carry the dacl10k NaN lesson forward.
+
+### Notes
+- A uPlot default-time-scale bug was caught in browser review: crack widths rendered as clock times
+  (":02.000", "12/31/69 9:00pm") on an axis the build reported as fine.
+
 ## [0.19.000], 2026-07-21
 
 ### Added (enrichment #9: Grad-CAM, the evidence behind the mask)

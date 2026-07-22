@@ -89,16 +89,73 @@ class DaclDataset:
         return torch.from_numpy(x), torch.from_numpy(y)
 
 
-def _macro_iou(logits, target, thr: float = 0.5):
-    """Per-class IoU averaged over classes present in the batch (macro mIoU, the dacl10k metric)."""
+def _iou_parts(logits, target, thr: float = 0.5):
+    """Per-class intersection / union / ground-truth pixel counts for POOLED IoU.
+
+    Pooling these over the whole validation split and dividing ONCE is the benchmark protocol.
+    Averaging a per-batch IoU instead (the earlier form here) is a different and systematically lower
+    quantity: a class holding a handful of pixels in one batch contributes an equally-weighted
+    near-zero term. Quoting that against the paper's 0.424 would not be a like-for-like comparison.
+    See eval_dacl10k.py, which recomputes the pooled number from a saved checkpoint.
+    """
     import torch  # noqa: PLC0415
 
     pred = (torch.sigmoid(logits) > thr).float()
     inter = (pred * target).sum(dim=(0, 2, 3))
     union = ((pred + target) > 0).float().sum(dim=(0, 2, 3))
-    iou = inter / union.clamp(min=1)
-    valid = union > 0
-    return iou, valid
+    gt = target.sum(dim=(0, 2, 3))
+    return inter.double(), union.double(), gt.double()
+
+
+def class_pos_weight(pairs, n_sample: int = 400, cap: float = 50.0, seed: int = 0):
+    """Per-class BCE pos_weight = negative/positive pixel ratio, estimated on a TRAIN-split sample.
+
+    Why this is needed (measured, not assumed): the first full-data run used a plain unweighted BCE
+    and 9 of the 19 classes ended at exactly IoU 0 in the pooled evaluation, including Crack itself
+    (1.4 percent of labelled pixels). The 10 classes the model did learn averaged 0.32 IoU, so the
+    macro mean was destroyed purely by rare classes collapsing to an all-negative prediction, which
+    is the textbook failure of unweighted BCE on heavily imbalanced multi-label segmentation.
+
+    Weighting the positive term by the inverse positive rate is the standard remedy. The weight is
+    capped because the rarest classes would otherwise draw weights in the thousands and dominate the
+    gradient. The estimate is sampled (not a full pass over ~6.9k images) and cached, since it only
+    sets a loss constant.
+    """
+    import numpy as _np  # noqa: PLC0415
+
+    cache = data_root() / "derived" / "multiclass" / f"pos_weight_sqrt_n{n_sample}_s{seed}.json"
+    if cache.exists():
+        w = json.loads(cache.read_text(encoding="utf-8"))["pos_weight"]
+        return _np.array(w, dtype=_np.float32)
+
+    rng = _np.random.default_rng(seed)
+    idx = rng.choice(len(pairs), size=min(n_sample, len(pairs)), replace=False)
+    pos = _np.zeros(N_CLASSES, dtype=_np.float64)
+    tot = 0.0
+    for k, i in enumerate(idx):
+        img_p, ann_p = pairs[i]
+        img = read_image(img_p)
+        m = rasterize(ann_p, out_hw=img.shape[:2])          # (C,H,W) binary
+        pos += m.reshape(N_CLASSES, -1).sum(axis=1)
+        tot += m.shape[1] * m.shape[2]
+        if k % 100 == 0:
+            print(f"  pos_weight scan {k}/{len(idx)}")
+    pos = _np.maximum(pos, 1.0)                              # never divide by zero
+    # sqrt of the neg/pos ratio, not the raw ratio. Measured rates span 0.094 percent
+    # (Restformwork) to 7.02 percent (Weathering), i.e. raw ratios from 13 to 1060. Using the raw
+    # ratio would hand the rarest classes a weight in the hundreds, which buys recall by destroying
+    # precision (and the IoU with it); a flat cap low enough to be safe instead collapses 14 of the
+    # 19 classes onto the same value and throws the ordering away. The square root keeps the
+    # ordering with a well-behaved 3.6x-to-32.6x spread, and Dice already carries per-class scale
+    # invariance alongside it.
+    w = _np.clip(_np.sqrt((tot - pos) / pos), 1.0, cap).astype(_np.float32)
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    cache.write_text(json.dumps({
+        "n_sample": int(len(idx)), "cap": cap, "seed": seed,
+        "positive_pixel_rate": {CLASSES[i]: float(pos[i] / tot) for i in range(N_CLASSES)},
+        "pos_weight": [float(v) for v in w],
+    }, indent=1), encoding="utf-8")
+    return w
 
 
 def main() -> None:
@@ -111,6 +168,9 @@ def main() -> None:
     ap.add_argument("--limit-val", type=int, default=None)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--pos-weight", action="store_true",
+                    help="per-class BCE positive weighting (fixes the rare-class collapse to IoU 0)")
+    ap.add_argument("--pos-weight-cap", type=float, default=50.0)
     args = ap.parse_args()
 
     import torch  # noqa: PLC0415
@@ -138,7 +198,13 @@ def main() -> None:
     net = _build(args.arch).to(device)
     opt = torch.optim.AdamW(net.parameters(), lr=args.lr, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=args.epochs * max(1, len(tl)))
-    bce = torch.nn.BCEWithLogitsLoss()
+    pw = None
+    if args.pos_weight:
+        pw_np = class_pos_weight(train_pairs, cap=args.pos_weight_cap, seed=args.seed)
+        pw = torch.from_numpy(pw_np).to(device).view(N_CLASSES, 1, 1)
+        top = sorted(zip(CLASSES, pw_np, strict=False), key=lambda kv: -kv[1])[:5]
+        print("pos_weight (top 5): " + ", ".join(f"{c} {v:.1f}" for c, v in top))
+    bce = torch.nn.BCEWithLogitsLoss(pos_weight=pw)
     scaler = torch.amp.GradScaler("cuda")
 
     def dice_loss(logits, target, eps=1.0):
@@ -183,18 +249,21 @@ def main() -> None:
                 print(f"  ep{ep} it{bi}/{len(tl)} loss {loss.item():.4f}")
         # validation macro-IoU
         net.eval()
-        iou_sum = torch.zeros(N_CLASSES, device=device)
-        iou_cnt = torch.zeros(N_CLASSES, device=device)
+        inter_sum = torch.zeros(N_CLASSES, dtype=torch.float64, device=device)
+        union_sum = torch.zeros(N_CLASSES, dtype=torch.float64, device=device)
+        gt_sum = torch.zeros(N_CLASSES, dtype=torch.float64, device=device)
         with torch.no_grad():
             for x, y in vl:
                 x, y = x.to(device), y.to(device)
                 with torch.amp.autocast("cuda"):
                     out = net(x)
-                iou, valid = _macro_iou(out, y)
-                iou_sum += iou * valid
-                iou_cnt += valid.float()
-        per_class = (iou_sum / iou_cnt.clamp(min=1)).cpu().numpy()
-        present = iou_cnt.cpu().numpy() > 0
+                i_, u_, g_ = _iou_parts(out, y)
+                inter_sum += i_
+                union_sum += u_
+                gt_sum += g_
+        per_class = (inter_sum / union_sum.clamp(min=1)).cpu().numpy()
+        # a class counts if it OCCURS in the validation ground truth, not merely if something fired
+        present = gt_sum.cpu().numpy() > 0
         miou = float(per_class[present].mean()) if present.any() else 0.0
         star = ""
         if miou > best_miou and np.isfinite(miou) and miou > 0:
@@ -215,7 +284,10 @@ def main() -> None:
         "n_train": len(train_pairs),
         "n_val": len(val_pairs),
         "epochs": args.epochs,
+        "pos_weight": bool(args.pos_weight),
+        "pos_weight_cap": args.pos_weight_cap if args.pos_weight else None,
         "val_mIoU": round(miou, 4),
+        "val_mIoU_protocol": "pooled (dataset-level) macro IoU over classes present in the val ground truth",
         "per_class_IoU": {CLASSES[i]: round(float(per_class[i]), 4) for i in range(N_CLASSES) if present[i]},
         "baseline_mIoU": 0.424,
         "baseline_source": "Flotzinger et al. WACV 2024 Table 4 (FPN + EfficientNet-B4 + aux loss)",
