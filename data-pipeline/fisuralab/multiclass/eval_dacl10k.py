@@ -26,8 +26,6 @@ import argparse
 import json
 import time
 
-import numpy as np
-
 from ..learned.shards import data_root
 from .dacl10k import CLASSES, N_CLASSES, list_split
 from .train_dacl10k import DaclDataset, _build
