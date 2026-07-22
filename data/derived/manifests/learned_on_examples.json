@@ -11,7 +11,7 @@
  },
  "engine": {
   "package": "fisuralab",
-  "version": "0.19.000",
+  "version": "0.20.000",
   "model": "learned track (deeplabv3p_r18, dinov2s14_linear, hrsegnet_b16, segformer_b2, unet_r18), replayed from the local GPU runs"
  },
  "params": {
@@ -122,7 +122,7 @@
   "path": "learned_on_examples/artifact.json",
   "format": "json",
   "artifact_schema": "fisura.artifact/v1",
-  "bytes": 144869
+  "bytes": 753137
  },
  "lane": "precompute",
  "gate": {
@@ -132,13 +132,14 @@
    "segmentation-models-pytorch",
    "torch"
   ],
-  "trace_bytes": 144869,
+  "trace_bytes": 753137,
   "run_ms_budget": 1500.0,
   "trace_bytes_budget": 524288,
   "reasons": [
    "not pure-python",
    "wheels not Pyodide-safe: ['segmentation-models-pytorch', 'torch']",
-   "runtime exceeds the 1500ms budget"
+   "runtime exceeds the 1500ms budget",
+   "trace_bytes 753137 > 524288"
   ]
  },
  "flags": [
@@ -152,7 +153,7 @@
  "metrics": {
   "protocol": "buffered P/R/F1 at 2 px AND 5 px tolerances; strict IoU; no thinning/NMS",
   "deeplabv3p_r18_val_f1_2px": 0.7199,
-  "deeplabv3p_r18_examples_mean_f1_5px": 0.6813,
+  "deeplabv3p_r18_examples_mean_f1_5px": 0.3877,
   "deeplabv3p_r18_onnx_sha256": "8100c058caaf3866",
   "deeplabv3p_r18_train_minutes": 13.0,
   "dinov2s14_linear_val_f1_2px": 0.6707,
@@ -160,15 +161,15 @@
   "dinov2s14_linear_onnx_sha256": "d7d3973a0f9e1e6c",
   "dinov2s14_linear_train_minutes": 15.5,
   "hrsegnet_b16_val_f1_2px": 0.5472,
-  "hrsegnet_b16_examples_mean_f1_5px": 0.5404,
+  "hrsegnet_b16_examples_mean_f1_5px": 0.5735,
   "hrsegnet_b16_onnx_sha256": "9cb94c87a1b95383",
   "hrsegnet_b16_train_minutes": 46.6,
   "segformer_b2_val_f1_2px": 0.7658,
-  "segformer_b2_examples_mean_f1_5px": 0.6526,
+  "segformer_b2_examples_mean_f1_5px": 0.2861,
   "segformer_b2_onnx_sha256": "7b4679737f2506be",
   "segformer_b2_train_minutes": 24.5,
   "unet_r18_val_f1_2px": 0.7523,
-  "unet_r18_examples_mean_f1_5px": 0.4855,
+  "unet_r18_examples_mean_f1_5px": 0.3613,
   "unet_r18_onnx_sha256": "9fe3320373785b58",
   "unet_r18_train_minutes": 11.6,
   "best_arch_val": "segformer_b2",
