@@ -14,16 +14,27 @@ import { MetricsTab, QuantTab } from './workbench/QuantMetricsTabs';
 import { LiveLane } from './workbench/LiveLane';
 
 // The App is a per-case interactive WORKBENCH (Felipe's spec, 2026-07-20):
-//   LEFT COLUMN: pick the case source (prebaked / pretrained / upload your own), pick the image,
+//   LEFT COLUMN: pick the case source (real samples / synthetic battery / upload your own), the image,
 //     and set the PARAMETERS that drive the tabs (e.g. the SLIC superpixel count + compactness).
 //   TABS: navigate rich, interactive views of the methods ON the selected image, in order:
 //     Overview -> Preprocessing -> Semantic segmentation -> SLIC (param-driven) -> Classical ->
 //     SOTA -> Beyond SOTA -> Summary. Every method is VISIBLE ON THE IMAGE; nothing is a bare table.
 
-type Source = 'prebaked' | 'pretrained' | 'upload';
+// The case source is a DATA axis: which images the whole workbench runs on. It is deliberately NOT a
+// method axis. An earlier "Prebaked / Pretrained" split tried to separate baked classical outputs from
+// trained-model outputs, but that is exactly what the TABS already do (Classical vs SOTA vs Beyond
+// SOTA), so both modes loaded the same artifact and rendered the same thing: a control that changed one
+// sentence of copy and nothing else.
+type Source = 'real' | 'synthetic' | 'upload';
 const CLASSICAL_SLUG = 'bcl_examples';
 const SYNTH_SLUG = 'synthetic_battery';
 const LEARNED_SLUG = 'learned_on_examples';
+// The synthetic samples whose overlay PNGs are baked. The battery holds 12 cases and every one of them
+// carries per-level metrics, but only these four were rendered to imagery; the degradation view below
+// uses all 12, the thumbnails only these.
+const SYNTH_WITH_OVERLAYS = [
+  'synth-02-straight_bar', 'synth-04-straight_bar', 'synth-08-wavy_crack', 'synth-11-uncracked',
+];
 const ANOMALY_SLUG = 'anomaly_examples';
 
 type Family = 'classical' | 'learned' | 'anomaly';
@@ -61,8 +72,9 @@ export default function AppPage() {
   const t = useT();
   const es = t('x', 'y') === 'y';
 
-  const [source, setSource] = useState<Source>('prebaked');
+  const [source, setSource] = useState<Source>('real');
   const [classical, setClassical] = useState<CaseArtifact | null>(null);
+  const [synth, setSynth] = useState<CaseArtifact | null>(null);
   const [learned, setLearned] = useState<CaseArtifact | null>(null);
   const [anomaly, setAnomaly] = useState<CaseArtifact | null>(null);
   const [wb, setWb] = useState<WorkbenchIndex | null>(null);
@@ -81,14 +93,12 @@ export default function AppPage() {
   const [slicC, setSlicC] = useState(10);
   const [detail, setDetail] = useState('segformer_b2'); // the method enlarged in Summary
 
-  // all three source modes use the committed real example set today; the synthetic battery and the
-  // in-browser upload lane (BL-013) are wired as their units land.
-  void SYNTH_SLUG;
   const classicalSlug = CLASSICAL_SLUG;
 
   useEffect(() => {
     setError(null);
     loadCaseArtifact(classicalSlug).then((c) => { setClassical(c); setSampleId(c.samples[0]?.sample_id ?? null); }).catch((e) => setError(String(e)));
+    loadCaseArtifact(SYNTH_SLUG).then(setSynth).catch(() => setSynth(null));
     loadCaseArtifact(LEARNED_SLUG).then(setLearned).catch(() => setLearned(null));
     loadCaseArtifact(ANOMALY_SLUG).then(setAnomaly).catch(() => setAnomaly(null));
     loadWorkbench().then(setWb).catch(() => setWb(null));
@@ -103,7 +113,35 @@ export default function AppPage() {
     loadEnrichment(sampleId).then(setEnrich).catch(() => setEnrich(null));
   }, [sampleId]);
 
-  const cSample = useMemo(() => classical?.samples.find((s) => s.sample_id === sampleId) ?? null, [classical, sampleId]);
+  // The synthetic battery is baked WITHOUT overlays_rel, but its overlay files follow the same
+  // "<case>/overlays/<sample_id>" + "_L0.png" / "_image.png" / "_gt.png" convention as the real set,
+  // so the path is derived here rather than re-baking the artifact. Only the samples whose overlays
+  // were actually rendered are offered: the rest carry metrics but no imagery, and a thumbnail that
+  // 404s would be a worse lie than not listing it.
+  const synthSamples = useMemo(() => {
+    if (!synth) return [];
+    const withImagery = new Set(SYNTH_WITH_OVERLAYS);
+    return synth.samples
+      .filter((s) => withImagery.has(s.sample_id))
+      .map((s) => ({ ...s, overlays_rel: s.overlays_rel ?? `${SYNTH_SLUG}/overlays/${s.sample_id}` }));
+  }, [synth]);
+
+  // the image list the left column offers, and the artifact the tabs read, both follow the source
+  const shownSamples = source === 'synthetic' ? synthSamples : (classical?.samples ?? []);
+
+  // keep the selected image valid when the source changes
+  useEffect(() => {
+    if (!shownSamples.length) return;
+    if (!shownSamples.some((s) => s.sample_id === sampleId)) setSampleId(shownSamples[0].sample_id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source, shownSamples.length]);
+
+  const cSample = useMemo(
+    () => (source === 'synthetic'
+      ? synthSamples.find((s) => s.sample_id === sampleId) ?? null
+      : classical?.samples.find((s) => s.sample_id === sampleId) ?? null),
+    [source, synthSamples, classical, sampleId],
+  );
   const lSample = useMemo(() => learned?.samples.find((s) => s.sample_id === sampleId) ?? null, [learned, sampleId]);
   const aSample = useMemo(() => anomaly?.samples.find((s) => s.sample_id === sampleId) ?? null, [anomaly, sampleId]);
   const wbSample: WorkbenchSample | null = sampleId ? wb?.samples[sampleId] ?? null : null;
@@ -130,21 +168,21 @@ export default function AppPage() {
       <aside className="fs-side">
         <div className="fs-side-h">{t('1 · Case source', '1 · Fuente del caso')}</div>
         <div className="fs-seg">
-          <button className={`fs-seg-b ${source === 'prebaked' ? 'on' : ''}`} onClick={() => setSource('prebaked')}>{t('Prebaked', 'Prehorneado')}</button>
-          <button className={`fs-seg-b ${source === 'pretrained' ? 'on' : ''}`} onClick={() => setSource('pretrained')}>{t('Pretrained', 'Preentrenado')}</button>
+          <button className={`fs-seg-b ${source === 'real' ? 'on' : ''}`} onClick={() => setSource('real')}>{t('Real samples', 'Muestras reales')}</button>
+          <button className={`fs-seg-b ${source === 'synthetic' ? 'on' : ''}`} onClick={() => setSource('synthetic')}>{t('Synthetic', 'Sintético')}</button>
           <button className={`fs-seg-b ${source === 'upload' ? 'on' : ''}`} onClick={() => setSource('upload')}>{t('Upload', 'Subir')}</button>
         </div>
         <p className="fs-hint">
-          {source === 'prebaked'
-            ? t('Committed replay cases: open-licensed concrete and steel patches with audited artifacts.', 'Casos replay versionados: parches de hormigón y acero con licencia abierta y artefactos auditados.')
-            : source === 'pretrained'
-              ? t('The trained learned and anomaly models applied to the committed images (same set, model outputs highlighted).', 'Los modelos aprendidos y de anomalía entrenados, aplicados a las imágenes versionadas (mismo set, salidas de modelos resaltadas).')
+          {source === 'real'
+            ? t('Open-licensed concrete and steel photographs, with hand-labelled pixel ground truth. Every method in the tabs runs on the image you pick.', 'Fotografías de hormigón y acero con licencia abierta, con ground truth de píxeles etiquetado a mano. Cada método de las pestañas corre sobre la imagen que elijas.')
+            : source === 'synthetic'
+              ? t('Generated cracks with knobs: width, contrast, angle, noise. The ground truth is exact by construction, not hand-drawn, so this is where you can read off exactly when a method stops working.', 'Grietas generadas con perillas: ancho, contraste, ángulo, ruido. El ground truth es exacto por construcción, no dibujado a mano, así que aquí se puede leer con precisión cuándo un método deja de funcionar.')
               : t('Bring your own crack photo: a compact model segments it entirely in your browser (onnxruntime-web). The image never leaves your device. Drop it in the panel on the right.', 'Trae tu propia foto de grieta: un modelo compacto la segmenta por completo en tu navegador (onnxruntime-web). La imagen nunca sale de tu dispositivo. Suéltala en el panel de la derecha.')}
         </p>
 
         <div className="fs-side-h">{t('2 · Image', '2 · Imagen')}</div>
         <div className="fs-thumbs">
-          {classical?.samples.map((s) => {
+          {shownSamples.map((s) => {
             const url = s.overlays_rel ? overlayUrl(s.overlays_rel, '_image.png') : null;
             return (
               <button key={s.sample_id} className={`fs-thumb ${s.sample_id === sampleId ? 'on' : ''}`} onClick={() => setSampleId(s.sample_id)} title={`${s.sample_id} (${s.material})`}>
@@ -195,7 +233,16 @@ export default function AppPage() {
             <Tabs
               ariaLabel="workbench stages"
               initial="overview"
-              tabs={[
+              tabs={source === 'synthetic' ? [
+                // The synthetic battery has the classical ladder and exact ground truth, but the
+                // learned, anomaly, SLIC and enrichment artifacts were never baked on it. Offering
+                // those tabs empty (or worse, showing the real-image ones while a synthetic case is
+                // selected) would misrepresent what was run, so the synthetic source exposes only the
+                // views backed by real data, plus the degradation sweep the battery exists for.
+                { id: 'overview', label: t('Overview', 'Vista general'), content: <OverviewTab sample={cSample} imageUrl={imageUrl} es={es} /> },
+                { id: 'classical', label: t('Classical', 'Clásico'), content: <FamilyTab methods={CLASSICAL_METHODS} sample={cSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} /> },
+                { id: 'degradation', label: t('Degradation', 'Degradación'), content: <DegradationTab samples={synth?.samples ?? []} es={es} /> },
+              ] : [
                 { id: 'overview', label: t('Overview', 'Vista general'), content: <OverviewTab sample={cSample} imageUrl={imageUrl} es={es} /> },
                 { id: 'prep', label: t('Preprocessing', 'Preprocesamiento'), content: <PrepTab wb={wbSample} es={es} /> },
                 { id: 'semantic', label: t('Semantic seg', 'Segm. semántica'), content: <SemanticTab cSample={cSample} lSample={lSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} es={es} /> },
@@ -534,6 +581,107 @@ function SummaryTab({ cSample, lSample, aSample, imageUrl, showGt, opacity, es }
           <p className="fs-panel-sub">{t('The same masks score differently at 2 px and 5 px; the protocol always travels with the number.', 'Las mismas máscaras puntúan distinto a 2 px y 5 px; el protocolo siempre viaja con el número.')}</p>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+// ---- Degradation (synthetic only) --------------------------------------------------------------
+// The reason the synthetic battery is worth having. On a photograph the ground truth is a human
+// tracing, so "the method missed the crack" and "the label was drawn a pixel wide" are not separable.
+// Here the mask is exact by construction, the only thing that changes across cases is one generator
+// knob, and the classical ladder was scored on every one of them. So the F1 collapse as the crack
+// narrows is a measurement of the METHOD, with the labelling error removed.
+
+function DegradationTab({ samples, es }: { samples: ArtifactSample[]; es: boolean }) {
+  const t = (en: string, esx: string) => (es ? esx : en);
+
+  // the controlled sweep: same generator, same contrast, only the crack width moves
+  const sweep = useMemo(() => {
+    const rows = samples
+      .filter((s) => {
+        const p = (s.synthetic_params ?? {}) as Record<string, unknown>;
+        return p.kind === 'straight_bar' && p.contrast === 0.35 && typeof p.width_px === 'number';
+      })
+      .map((s) => ({ w: Number((s.synthetic_params as Record<string, unknown>).width_px), s }))
+      .sort((a, b) => a.w - b.w);
+    // several seeds share a width: average them so each width is one honest point
+    const byWidth = new Map<number, ArtifactSample[]>();
+    for (const r of rows) byWidth.set(r.w, [...(byWidth.get(r.w) ?? []), r.s]);
+    return [...byWidth.entries()].sort((a, b) => a[0] - b[0]);
+  }, [samples]);
+
+  const f1 = (s: ArtifactSample, lvl: string): number | null => {
+    const rec = s.levels?.[lvl] as LevelRecord | undefined;
+    const v = rec?.segmentation?.tol2px?.f1;
+    return typeof v === 'number' ? v : null;
+  };
+
+  const widths = sweep.map(([w]) => w);
+  const levels = ['L0', 'L1', 'L2', 'L3', 'L4', 'L5'];
+  const labels: Record<string, string> = {
+    L0: 'L0 Otsu', L1: 'L1 Sauvola', L2: 'L2 top-hat', L3: 'L3 Hessian', L4: 'L4 min-path', L5: 'L5 RF fusion',
+  };
+  const colors = ['#b0304f', '#d1663a', '#c9a227', '#3f8f5f', '#2f6f9f', '#6a4c93'];
+
+  const series = levels.map((lvl, i) => {
+    const vals = sweep.map(([, ss]) => {
+      const got = ss.map((s) => f1(s, lvl)).filter((v): v is number => v !== null);
+      return got.length ? got.reduce((a, b) => a + b, 0) / got.length : null;
+    });
+    return { lvl, vals, color: colors[i] };
+  });
+
+  const data = [widths, ...series.map((s) => s.vals)] as unknown as import('uplot').AlignedData;
+  const uSeries = [
+    {},
+    ...series.map((s) => ({ label: labels[s.lvl], stroke: s.color, width: 2, points: { show: true, size: 6 } })),
+  ];
+
+  const controls = samples.filter((s) => (s.synthetic_params as Record<string, unknown> | undefined)?.kind === 'uncracked');
+  const lowContrast = samples.find((s) => {
+    const p = (s.synthetic_params ?? {}) as Record<string, unknown>;
+    return p.kind === 'straight_bar' && p.contrast === 0.12;
+  });
+
+  return (
+    <div className="fs-wb-read">
+      <h3>{t('Where each classical method stops working', 'Dónde cada método clásico deja de funcionar')}</h3>
+      <p className="fs-detail-desc">
+        {t('Same generator, same contrast (0.35), same angle: only the crack width changes, from 9 px down to 2 px. Because these cracks are generated, the mask is exact rather than hand-traced, so a drop in F1 measures the method and not the labelling. Scored at the strict 2 px tolerance.',
+           'Mismo generador, mismo contraste (0.35), mismo ángulo: sólo cambia el ancho de la grieta, de 9 px a 2 px. Como estas grietas son generadas, la máscara es exacta y no trazada a mano, así que una caída de F1 mide el método y no el etiquetado. Evaluado con la tolerancia estricta de 2 px.')}
+      </p>
+      <p className="fs-detail-desc">
+        {t('Read the ordering carefully, because it inverts here: the simple thresholds sit at F1 1.0 across the whole sweep, while the two most elaborate rungs, minimal-path bridging and the random-forest fusion, score BELOW them. That is not a defect. A generated crack is a high-contrast mark on a nearly uniform field, which is the exact case a global threshold solves perfectly, and the later rungs pay for machinery built to survive staining, shadow and texture that is simply not present. The ladder only starts to order itself the way you would expect once the images get hard. You will also count fewer curves than methods: L0 and L1 are both pinned at 1.0, and L3 and L4 land on identical values at every width, because minimal-path bridging has nothing to bridge when the generated crack is already one unbroken stroke.',
+           'Lee el orden con cuidado, porque aquí se invierte: los umbrales simples se quedan en F1 1.0 durante todo el barrido, mientras que los dos peldaños más elaborados, el puente de caminos mínimos y la fusión random-forest, puntúan POR DEBAJO. No es un defecto. Una grieta generada es una marca de alto contraste sobre un fondo casi uniforme, que es justo el caso que un umbral global resuelve a la perfección, y los peldaños posteriores pagan por maquinaria construida para sobrevivir manchas, sombras y textura que aquí no existen. La escalera sólo empieza a ordenarse como esperarías cuando las imágenes se ponen difíciles. También contarás menos curvas que métodos: L0 y L1 quedan fijos en 1.0, y L3 y L4 caen en valores idénticos en cada ancho, porque el puente de caminos mínimos no tiene nada que unir cuando la grieta generada ya es un trazo continuo.')}
+      </p>
+      {widths.length > 1 ? (
+        <UPlotChart
+          data={data}
+          series={uSeries}
+          height={300}
+          axes={[
+            // without an explicit formatter uPlot renders the x values as clock times (":02.000"),
+            // because its default x scale is a time scale; these are pixel widths
+            { label: t('crack width (px)', 'ancho de grieta (px)'), values: (_u, vs) => vs.map((v) => `${v}`) },
+            { label: 'F1 @ 2 px' },
+          ]}
+          scales={{ x: { time: false }, y: { range: [0, 1] } }}
+        />
+      ) : (
+        <Callout variant="honest" title={t('Sweep unavailable', 'Barrido no disponible')}>
+          {t('The width sweep needs at least two widths in the committed battery.', 'El barrido de ancho necesita al menos dos anchos en la batería versionada.')}
+        </Callout>
+      )}
+      <div className="fs-kpis fs-kpis-2" style={{ marginTop: '0.8rem' }}>
+        <div className="fs-kpi"><div className="fs-kpi-v">{widths.length}</div><div className="fs-kpi-l">{t('widths swept', 'anchos barridos')}</div></div>
+        <div className="fs-kpi"><div className="fs-kpi-v">{samples.length}</div><div className="fs-kpi-l">{t('cases in the battery', 'casos en la batería')}</div></div>
+        <div className="fs-kpi"><div className="fs-kpi-v">{controls.length}</div><div className="fs-kpi-l">{t('uncracked controls', 'controles sin grieta')}</div></div>
+        <div className="fs-kpi"><div className="fs-kpi-v">{lowContrast ? '0.12' : '-'}</div><div className="fs-kpi-l">{t('low-contrast case', 'caso de bajo contraste')}</div></div>
+      </div>
+      <Callout variant="honest" title={t('What this view cannot tell you', 'Lo que esta vista no puede decirte')}>
+        {t('Synthetic cracks are clean: no shadows, no surface staining, no camera blur, no joints mistaken for damage. A method that survives this sweep has cleared the easy half of the problem. That is why the real samples sit next to it, and why the uncracked controls matter, since a method can score well here purely by firing everywhere.',
+           'Las grietas sintéticas son limpias: sin sombras, sin manchas de superficie, sin desenfoque de cámara, sin juntas confundidas con daño. Un método que sobrevive este barrido superó la mitad fácil del problema. Por eso las muestras reales están al lado, y por eso importan los controles sin grieta, ya que un método puede puntuar bien aquí simplemente disparando en todas partes.')}
+      </Callout>
     </div>
   );
 }

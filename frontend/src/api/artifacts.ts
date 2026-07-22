@@ -89,3 +89,23 @@ export interface GradCam {
   excluded: Record<string, string>; samples: CamSample[]; limitation: string; framing: string;
 }
 export const loadGradCam = (): Promise<GradCam> => getJSON<GradCam>('gradcam/cam.json');
+
+// CODEBRIM concrete-defect box detection (Faster R-CNN): the multi-class detection rung.
+export interface CodebrimSample { id: string; overlay: string; n_pred: number; n_gt: number; gt_classes: string[]; }
+export interface Codebrim {
+  schema: string; dataset: string; arch: string; classes: string[]; palette: number[][];
+  mAP_50: number; mAP_50_95: number; baseline_yolov5x_mAP50: number; baseline_source: string;
+  n_train: number; n_test: number; epochs: number; samples: CodebrimSample[];
+}
+export const loadCodebrim = (): Promise<Codebrim> => getJSON<Codebrim>('multiclass/codebrim.json');
+
+// SAC (Segment Any Crack): SAM ViT-B norm-only tuning, the foundation-adapter rung.
+export interface SacSample { id: string; overlay: string; pred_positive_frac: number; f1_2px: number | null; f1_5px: number | null; }
+export interface Sac {
+  schema: string; method: string; reference: string;
+  published_reference_point: { dataset: string; f1: number; iou: number };
+  trainable_norm_params: number; trainable_head_params: number; frozen_encoder_params: number;
+  val_f1_2px: number | null; n_train: number | null; n_val: number | null; train_minutes: number | null;
+  samples: SacSample[]; framing: string; limitation: string;
+}
+export const loadSac = (): Promise<Sac> => getJSON<Sac>('sac/sac.json');
