@@ -11,7 +11,7 @@
  },
  "engine": {
   "package": "fisuralab",
-  "version": "0.19.000",
+  "version": "0.20.000",
   "model": "classical ladder L0-L5 (staged S0-S8)"
  },
  "params": {
@@ -38,7 +38,7 @@
   },
   "train": {
    "trained": true,
-   "n_samples": 4,
+   "n_samples": 20,
    "features": "LBP(8,1)+LBP(16,2)+GLCM(contrast,homogeneity,energy,correlation)+HOG",
    "model": "RandomForestClassifier(n_estimators=120, min_samples_leaf=2)",
    "seed": 42
@@ -49,7 +49,7 @@
   "path": "bcl_examples/artifact.json",
   "format": "json",
   "artifact_schema": "fisura.artifact/v1",
-  "bytes": 540873
+  "bytes": 3480038
  },
  "lane": "precompute",
  "gate": {
@@ -62,13 +62,13 @@
    "scikit-learn",
    "scipy"
   ],
-  "trace_bytes": 540873,
+  "trace_bytes": 3480038,
   "run_ms_budget": 1500.0,
   "trace_bytes_budget": 524288,
   "reasons": [
    "wheels not Pyodide-safe: ['imageio', 'scikit-learn']",
    "runtime exceeds the 1500ms budget",
-   "trace_bytes 540873 > 524288"
+   "trace_bytes 3480038 > 524288"
   ]
  },
  "flags": [
@@ -77,22 +77,34 @@
    "flags": [
     "mask: empty (no positive pixels); valid for uncracked samples"
    ]
+  },
+  {
+   "sample_id": "synth-10-uncracked",
+   "flags": [
+    "mask: empty (no positive pixels); valid for uncracked samples"
+   ]
+  },
+  {
+   "sample_id": "synth-11-uncracked",
+   "flags": [
+    "mask: empty (no positive pixels); valid for uncracked samples"
+   ]
   }
  ],
  "metrics": {
   "protocol": "buffered P/R/F1 at 2 px AND 5 px tolerances; strict IoU; no thinning/NMS",
-  "mean_f1_L0_2px": 0.1079,
-  "mean_f1_L0_5px": 0.1427,
-  "mean_f1_L1_2px": 0.2556,
-  "mean_f1_L1_5px": 0.2857,
-  "mean_f1_L2_2px": 0.5112,
-  "mean_f1_L2_5px": 0.5457,
-  "mean_f1_L3_2px": 0.4229,
-  "mean_f1_L3_5px": 0.4609,
-  "mean_f1_L4_2px": 0.4169,
-  "mean_f1_L4_5px": 0.455,
-  "mean_f1_L5_2px": 0.4696,
-  "mean_f1_L5_5px": 0.5581,
-  "mean_f1_L4_tol5": 0.455
+  "mean_f1_L0_2px": 0.5728,
+  "mean_f1_L0_5px": 0.5899,
+  "mean_f1_L1_2px": 0.5767,
+  "mean_f1_L1_5px": 0.5827,
+  "mean_f1_L2_2px": 0.8217,
+  "mean_f1_L2_5px": 0.8413,
+  "mean_f1_L3_2px": 0.6609,
+  "mean_f1_L3_5px": 0.7527,
+  "mean_f1_L4_2px": 0.6597,
+  "mean_f1_L4_5px": 0.7516,
+  "mean_f1_L5_2px": 0.6088,
+  "mean_f1_L5_5px": 0.7228,
+  "mean_f1_L4_tol5": 0.7516
  }
 }

@@ -312,6 +312,606 @@
      "argmax": "workbench/sdnet-up-001-1/ridge_argmax.png"
     }
    }
+  },
+  "synth-00-straight_bar": {
+   "material": "synthetic",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/synth-00-straight_bar/prep_gray.png",
+    "flatten": "workbench/synth-00-straight_bar/prep_flatten.png",
+    "denoise": "workbench/synth-00-straight_bar/prep_denoise.png",
+    "ridge": "workbench/synth-00-straight_bar/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/synth-00-straight_bar/slic_n80_c5.png",
+    "80_10": "workbench/synth-00-straight_bar/slic_n80_c10.png",
+    "80_20": "workbench/synth-00-straight_bar/slic_n80_c20.png",
+    "150_5": "workbench/synth-00-straight_bar/slic_n150_c5.png",
+    "150_10": "workbench/synth-00-straight_bar/slic_n150_c10.png",
+    "150_20": "workbench/synth-00-straight_bar/slic_n150_c20.png",
+    "300_5": "workbench/synth-00-straight_bar/slic_n300_c5.png",
+    "300_10": "workbench/synth-00-straight_bar/slic_n300_c10.png",
+    "300_20": "workbench/synth-00-straight_bar/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 59,
+    "80_10": 77,
+    "80_20": 78,
+    "150_5": 109,
+    "150_10": 135,
+    "150_20": 136,
+    "300_5": 218,
+    "300_10": 274,
+    "300_20": 277
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/synth-00-straight_bar/ridge_s1.png",
+     "2": "workbench/synth-00-straight_bar/ridge_s2.png",
+     "3": "workbench/synth-00-straight_bar/ridge_s3.png",
+     "4": "workbench/synth-00-straight_bar/ridge_s4.png",
+     "argmax": "workbench/synth-00-straight_bar/ridge_argmax.png"
+    }
+   }
+  },
+  "synth-01-straight_bar": {
+   "material": "synthetic",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/synth-01-straight_bar/prep_gray.png",
+    "flatten": "workbench/synth-01-straight_bar/prep_flatten.png",
+    "denoise": "workbench/synth-01-straight_bar/prep_denoise.png",
+    "ridge": "workbench/synth-01-straight_bar/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/synth-01-straight_bar/slic_n80_c5.png",
+    "80_10": "workbench/synth-01-straight_bar/slic_n80_c10.png",
+    "80_20": "workbench/synth-01-straight_bar/slic_n80_c20.png",
+    "150_5": "workbench/synth-01-straight_bar/slic_n150_c5.png",
+    "150_10": "workbench/synth-01-straight_bar/slic_n150_c10.png",
+    "150_20": "workbench/synth-01-straight_bar/slic_n150_c20.png",
+    "300_5": "workbench/synth-01-straight_bar/slic_n300_c5.png",
+    "300_10": "workbench/synth-01-straight_bar/slic_n300_c10.png",
+    "300_20": "workbench/synth-01-straight_bar/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 56,
+    "80_10": 74,
+    "80_20": 76,
+    "150_5": 107,
+    "150_10": 133,
+    "150_20": 137,
+    "300_5": 221,
+    "300_10": 277,
+    "300_20": 279
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/synth-01-straight_bar/ridge_s1.png",
+     "2": "workbench/synth-01-straight_bar/ridge_s2.png",
+     "3": "workbench/synth-01-straight_bar/ridge_s3.png",
+     "4": "workbench/synth-01-straight_bar/ridge_s4.png",
+     "argmax": "workbench/synth-01-straight_bar/ridge_argmax.png"
+    }
+   }
+  },
+  "synth-02-straight_bar": {
+   "material": "synthetic",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/synth-02-straight_bar/prep_gray.png",
+    "flatten": "workbench/synth-02-straight_bar/prep_flatten.png",
+    "denoise": "workbench/synth-02-straight_bar/prep_denoise.png",
+    "ridge": "workbench/synth-02-straight_bar/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/synth-02-straight_bar/slic_n80_c5.png",
+    "80_10": "workbench/synth-02-straight_bar/slic_n80_c10.png",
+    "80_20": "workbench/synth-02-straight_bar/slic_n80_c20.png",
+    "150_5": "workbench/synth-02-straight_bar/slic_n150_c5.png",
+    "150_10": "workbench/synth-02-straight_bar/slic_n150_c10.png",
+    "150_20": "workbench/synth-02-straight_bar/slic_n150_c20.png",
+    "300_5": "workbench/synth-02-straight_bar/slic_n300_c5.png",
+    "300_10": "workbench/synth-02-straight_bar/slic_n300_c10.png",
+    "300_20": "workbench/synth-02-straight_bar/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 54,
+    "80_10": 74,
+    "80_20": 76,
+    "150_5": 104,
+    "150_10": 136,
+    "150_20": 136,
+    "300_5": 197,
+    "300_10": 278,
+    "300_20": 286
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/synth-02-straight_bar/ridge_s1.png",
+     "2": "workbench/synth-02-straight_bar/ridge_s2.png",
+     "3": "workbench/synth-02-straight_bar/ridge_s3.png",
+     "4": "workbench/synth-02-straight_bar/ridge_s4.png",
+     "argmax": "workbench/synth-02-straight_bar/ridge_argmax.png"
+    }
+   }
+  },
+  "synth-03-straight_bar": {
+   "material": "synthetic",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/synth-03-straight_bar/prep_gray.png",
+    "flatten": "workbench/synth-03-straight_bar/prep_flatten.png",
+    "denoise": "workbench/synth-03-straight_bar/prep_denoise.png",
+    "ridge": "workbench/synth-03-straight_bar/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/synth-03-straight_bar/slic_n80_c5.png",
+    "80_10": "workbench/synth-03-straight_bar/slic_n80_c10.png",
+    "80_20": "workbench/synth-03-straight_bar/slic_n80_c20.png",
+    "150_5": "workbench/synth-03-straight_bar/slic_n150_c5.png",
+    "150_10": "workbench/synth-03-straight_bar/slic_n150_c10.png",
+    "150_20": "workbench/synth-03-straight_bar/slic_n150_c20.png",
+    "300_5": "workbench/synth-03-straight_bar/slic_n300_c5.png",
+    "300_10": "workbench/synth-03-straight_bar/slic_n300_c10.png",
+    "300_20": "workbench/synth-03-straight_bar/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 55,
+    "80_10": 75,
+    "80_20": 76,
+    "150_5": 110,
+    "150_10": 133,
+    "150_20": 135,
+    "300_5": 212,
+    "300_10": 281,
+    "300_20": 282
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/synth-03-straight_bar/ridge_s1.png",
+     "2": "workbench/synth-03-straight_bar/ridge_s2.png",
+     "3": "workbench/synth-03-straight_bar/ridge_s3.png",
+     "4": "workbench/synth-03-straight_bar/ridge_s4.png",
+     "argmax": "workbench/synth-03-straight_bar/ridge_argmax.png"
+    }
+   }
+  },
+  "synth-04-straight_bar": {
+   "material": "synthetic",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/synth-04-straight_bar/prep_gray.png",
+    "flatten": "workbench/synth-04-straight_bar/prep_flatten.png",
+    "denoise": "workbench/synth-04-straight_bar/prep_denoise.png",
+    "ridge": "workbench/synth-04-straight_bar/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/synth-04-straight_bar/slic_n80_c5.png",
+    "80_10": "workbench/synth-04-straight_bar/slic_n80_c10.png",
+    "80_20": "workbench/synth-04-straight_bar/slic_n80_c20.png",
+    "150_5": "workbench/synth-04-straight_bar/slic_n150_c5.png",
+    "150_10": "workbench/synth-04-straight_bar/slic_n150_c10.png",
+    "150_20": "workbench/synth-04-straight_bar/slic_n150_c20.png",
+    "300_5": "workbench/synth-04-straight_bar/slic_n300_c5.png",
+    "300_10": "workbench/synth-04-straight_bar/slic_n300_c10.png",
+    "300_20": "workbench/synth-04-straight_bar/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 64,
+    "80_10": 77,
+    "80_20": 76,
+    "150_5": 120,
+    "150_10": 139,
+    "150_20": 137,
+    "300_5": 235,
+    "300_10": 279,
+    "300_20": 286
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/synth-04-straight_bar/ridge_s1.png",
+     "2": "workbench/synth-04-straight_bar/ridge_s2.png",
+     "3": "workbench/synth-04-straight_bar/ridge_s3.png",
+     "4": "workbench/synth-04-straight_bar/ridge_s4.png",
+     "argmax": "workbench/synth-04-straight_bar/ridge_argmax.png"
+    }
+   }
+  },
+  "synth-05-straight_bar": {
+   "material": "synthetic",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/synth-05-straight_bar/prep_gray.png",
+    "flatten": "workbench/synth-05-straight_bar/prep_flatten.png",
+    "denoise": "workbench/synth-05-straight_bar/prep_denoise.png",
+    "ridge": "workbench/synth-05-straight_bar/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/synth-05-straight_bar/slic_n80_c5.png",
+    "80_10": "workbench/synth-05-straight_bar/slic_n80_c10.png",
+    "80_20": "workbench/synth-05-straight_bar/slic_n80_c20.png",
+    "150_5": "workbench/synth-05-straight_bar/slic_n150_c5.png",
+    "150_10": "workbench/synth-05-straight_bar/slic_n150_c10.png",
+    "150_20": "workbench/synth-05-straight_bar/slic_n150_c20.png",
+    "300_5": "workbench/synth-05-straight_bar/slic_n300_c5.png",
+    "300_10": "workbench/synth-05-straight_bar/slic_n300_c10.png",
+    "300_20": "workbench/synth-05-straight_bar/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 61,
+    "80_10": 74,
+    "80_20": 76,
+    "150_5": 106,
+    "150_10": 138,
+    "150_20": 138,
+    "300_5": 203,
+    "300_10": 280,
+    "300_20": 284
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/synth-05-straight_bar/ridge_s1.png",
+     "2": "workbench/synth-05-straight_bar/ridge_s2.png",
+     "3": "workbench/synth-05-straight_bar/ridge_s3.png",
+     "4": "workbench/synth-05-straight_bar/ridge_s4.png",
+     "argmax": "workbench/synth-05-straight_bar/ridge_argmax.png"
+    }
+   }
+  },
+  "synth-06-straight_bar": {
+   "material": "synthetic",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/synth-06-straight_bar/prep_gray.png",
+    "flatten": "workbench/synth-06-straight_bar/prep_flatten.png",
+    "denoise": "workbench/synth-06-straight_bar/prep_denoise.png",
+    "ridge": "workbench/synth-06-straight_bar/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/synth-06-straight_bar/slic_n80_c5.png",
+    "80_10": "workbench/synth-06-straight_bar/slic_n80_c10.png",
+    "80_20": "workbench/synth-06-straight_bar/slic_n80_c20.png",
+    "150_5": "workbench/synth-06-straight_bar/slic_n150_c5.png",
+    "150_10": "workbench/synth-06-straight_bar/slic_n150_c10.png",
+    "150_20": "workbench/synth-06-straight_bar/slic_n150_c20.png",
+    "300_5": "workbench/synth-06-straight_bar/slic_n300_c5.png",
+    "300_10": "workbench/synth-06-straight_bar/slic_n300_c10.png",
+    "300_20": "workbench/synth-06-straight_bar/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 65,
+    "80_10": 77,
+    "80_20": 81,
+    "150_5": 119,
+    "150_10": 138,
+    "150_20": 143,
+    "300_5": 228,
+    "300_10": 276,
+    "300_20": 282
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/synth-06-straight_bar/ridge_s1.png",
+     "2": "workbench/synth-06-straight_bar/ridge_s2.png",
+     "3": "workbench/synth-06-straight_bar/ridge_s3.png",
+     "4": "workbench/synth-06-straight_bar/ridge_s4.png",
+     "argmax": "workbench/synth-06-straight_bar/ridge_argmax.png"
+    }
+   }
+  },
+  "synth-07-straight_bar": {
+   "material": "synthetic",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/synth-07-straight_bar/prep_gray.png",
+    "flatten": "workbench/synth-07-straight_bar/prep_flatten.png",
+    "denoise": "workbench/synth-07-straight_bar/prep_denoise.png",
+    "ridge": "workbench/synth-07-straight_bar/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/synth-07-straight_bar/slic_n80_c5.png",
+    "80_10": "workbench/synth-07-straight_bar/slic_n80_c10.png",
+    "80_20": "workbench/synth-07-straight_bar/slic_n80_c20.png",
+    "150_5": "workbench/synth-07-straight_bar/slic_n150_c5.png",
+    "150_10": "workbench/synth-07-straight_bar/slic_n150_c10.png",
+    "150_20": "workbench/synth-07-straight_bar/slic_n150_c20.png",
+    "300_5": "workbench/synth-07-straight_bar/slic_n300_c5.png",
+    "300_10": "workbench/synth-07-straight_bar/slic_n300_c10.png",
+    "300_20": "workbench/synth-07-straight_bar/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 70,
+    "80_10": 78,
+    "80_20": 80,
+    "150_5": 116,
+    "150_10": 139,
+    "150_20": 142,
+    "300_5": 226,
+    "300_10": 274,
+    "300_20": 285
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/synth-07-straight_bar/ridge_s1.png",
+     "2": "workbench/synth-07-straight_bar/ridge_s2.png",
+     "3": "workbench/synth-07-straight_bar/ridge_s3.png",
+     "4": "workbench/synth-07-straight_bar/ridge_s4.png",
+     "argmax": "workbench/synth-07-straight_bar/ridge_argmax.png"
+    }
+   }
+  },
+  "synth-08-wavy_crack": {
+   "material": "synthetic",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/synth-08-wavy_crack/prep_gray.png",
+    "flatten": "workbench/synth-08-wavy_crack/prep_flatten.png",
+    "denoise": "workbench/synth-08-wavy_crack/prep_denoise.png",
+    "ridge": "workbench/synth-08-wavy_crack/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/synth-08-wavy_crack/slic_n80_c5.png",
+    "80_10": "workbench/synth-08-wavy_crack/slic_n80_c10.png",
+    "80_20": "workbench/synth-08-wavy_crack/slic_n80_c20.png",
+    "150_5": "workbench/synth-08-wavy_crack/slic_n150_c5.png",
+    "150_10": "workbench/synth-08-wavy_crack/slic_n150_c10.png",
+    "150_20": "workbench/synth-08-wavy_crack/slic_n150_c20.png",
+    "300_5": "workbench/synth-08-wavy_crack/slic_n300_c5.png",
+    "300_10": "workbench/synth-08-wavy_crack/slic_n300_c10.png",
+    "300_20": "workbench/synth-08-wavy_crack/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 38,
+    "80_10": 79,
+    "80_20": 78,
+    "150_5": 60,
+    "150_10": 139,
+    "150_20": 142,
+    "300_5": 127,
+    "300_10": 278,
+    "300_20": 285
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/synth-08-wavy_crack/ridge_s1.png",
+     "2": "workbench/synth-08-wavy_crack/ridge_s2.png",
+     "3": "workbench/synth-08-wavy_crack/ridge_s3.png",
+     "4": "workbench/synth-08-wavy_crack/ridge_s4.png",
+     "argmax": "workbench/synth-08-wavy_crack/ridge_argmax.png"
+    }
+   }
+  },
+  "synth-09-straight_bar": {
+   "material": "synthetic",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/synth-09-straight_bar/prep_gray.png",
+    "flatten": "workbench/synth-09-straight_bar/prep_flatten.png",
+    "denoise": "workbench/synth-09-straight_bar/prep_denoise.png",
+    "ridge": "workbench/synth-09-straight_bar/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/synth-09-straight_bar/slic_n80_c5.png",
+    "80_10": "workbench/synth-09-straight_bar/slic_n80_c10.png",
+    "80_20": "workbench/synth-09-straight_bar/slic_n80_c20.png",
+    "150_5": "workbench/synth-09-straight_bar/slic_n150_c5.png",
+    "150_10": "workbench/synth-09-straight_bar/slic_n150_c10.png",
+    "150_20": "workbench/synth-09-straight_bar/slic_n150_c20.png",
+    "300_5": "workbench/synth-09-straight_bar/slic_n300_c5.png",
+    "300_10": "workbench/synth-09-straight_bar/slic_n300_c10.png",
+    "300_20": "workbench/synth-09-straight_bar/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 7,
+    "80_10": 65,
+    "80_20": 73,
+    "150_5": 11,
+    "150_10": 122,
+    "150_20": 132,
+    "300_5": 32,
+    "300_10": 236,
+    "300_20": 273
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/synth-09-straight_bar/ridge_s1.png",
+     "2": "workbench/synth-09-straight_bar/ridge_s2.png",
+     "3": "workbench/synth-09-straight_bar/ridge_s3.png",
+     "4": "workbench/synth-09-straight_bar/ridge_s4.png",
+     "argmax": "workbench/synth-09-straight_bar/ridge_argmax.png"
+    }
+   }
+  },
+  "synth-10-uncracked": {
+   "material": "synthetic",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/synth-10-uncracked/prep_gray.png",
+    "flatten": "workbench/synth-10-uncracked/prep_flatten.png",
+    "denoise": "workbench/synth-10-uncracked/prep_denoise.png",
+    "ridge": "workbench/synth-10-uncracked/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/synth-10-uncracked/slic_n80_c5.png",
+    "80_10": "workbench/synth-10-uncracked/slic_n80_c10.png",
+    "80_20": "workbench/synth-10-uncracked/slic_n80_c20.png",
+    "150_5": "workbench/synth-10-uncracked/slic_n150_c5.png",
+    "150_10": "workbench/synth-10-uncracked/slic_n150_c10.png",
+    "150_20": "workbench/synth-10-uncracked/slic_n150_c20.png",
+    "300_5": "workbench/synth-10-uncracked/slic_n300_c5.png",
+    "300_10": "workbench/synth-10-uncracked/slic_n300_c10.png",
+    "300_20": "workbench/synth-10-uncracked/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 7,
+    "80_10": 72,
+    "80_20": 81,
+    "150_5": 14,
+    "150_10": 134,
+    "150_20": 144,
+    "300_5": 23,
+    "300_10": 266,
+    "300_20": 289
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/synth-10-uncracked/ridge_s1.png",
+     "2": "workbench/synth-10-uncracked/ridge_s2.png",
+     "3": "workbench/synth-10-uncracked/ridge_s3.png",
+     "4": "workbench/synth-10-uncracked/ridge_s4.png",
+     "argmax": "workbench/synth-10-uncracked/ridge_argmax.png"
+    }
+   }
+  },
+  "synth-11-uncracked": {
+   "material": "synthetic",
+   "size": [
+    256,
+    256
+   ],
+   "prep": {
+    "gray": "workbench/synth-11-uncracked/prep_gray.png",
+    "flatten": "workbench/synth-11-uncracked/prep_flatten.png",
+    "denoise": "workbench/synth-11-uncracked/prep_denoise.png",
+    "ridge": "workbench/synth-11-uncracked/prep_ridge.png"
+   },
+   "slic": {
+    "80_5": "workbench/synth-11-uncracked/slic_n80_c5.png",
+    "80_10": "workbench/synth-11-uncracked/slic_n80_c10.png",
+    "80_20": "workbench/synth-11-uncracked/slic_n80_c20.png",
+    "150_5": "workbench/synth-11-uncracked/slic_n150_c5.png",
+    "150_10": "workbench/synth-11-uncracked/slic_n150_c10.png",
+    "150_20": "workbench/synth-11-uncracked/slic_n150_c20.png",
+    "300_5": "workbench/synth-11-uncracked/slic_n300_c5.png",
+    "300_10": "workbench/synth-11-uncracked/slic_n300_c10.png",
+    "300_20": "workbench/synth-11-uncracked/slic_n300_c20.png"
+   },
+   "slic_real_counts": {
+    "80_5": 49,
+    "80_10": 75,
+    "80_20": 76,
+    "150_5": 91,
+    "150_10": 140,
+    "150_20": 139,
+    "300_5": 170,
+    "300_10": 276,
+    "300_20": 275
+   },
+   "scale_space": {
+    "sigmas": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "maps": {
+     "1": "workbench/synth-11-uncracked/ridge_s1.png",
+     "2": "workbench/synth-11-uncracked/ridge_s2.png",
+     "3": "workbench/synth-11-uncracked/ridge_s3.png",
+     "4": "workbench/synth-11-uncracked/ridge_s4.png",
+     "argmax": "workbench/synth-11-uncracked/ridge_argmax.png"
+    }
+   }
   }
  }
 }

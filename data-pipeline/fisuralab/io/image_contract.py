@@ -35,6 +35,12 @@ MATERIALS = (
     "steel",
     "ceramic",
     "synthetic",
+    # Not a built material, and deliberately so. The lab's thesis is that a crack is a thin,
+    # branching, low-contrast curvilinear structure, and that most of the tooling was invented for
+    # some other instance of that shape: the ridge rung calls sato/frangi/meijering, published for
+    # vessels and for neurites. Retinal fundus images are therefore carried as first-class cases, so
+    # the claim is tested by running the ladder on them rather than asserted in prose.
+    "retina",
     "other",
 )
 

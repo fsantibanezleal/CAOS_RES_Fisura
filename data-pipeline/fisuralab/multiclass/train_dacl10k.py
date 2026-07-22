@@ -52,20 +52,19 @@ def _dacl_item(img_p, ann_p, train: bool, rng):
     # difference between comfortable and a MemoryError in a DataLoader worker, which is exactly how
     # this run died once.
     img = img[..., :3]
-    m = rasterize(ann_p, out_hw=img.shape[:2])  # (C,H,W) uint8
+    H0, W0 = img.shape[:2]                      # true image size, before any padding
+    if H0 < CROP or W0 < CROP:
+        img = np.pad(img, ((0, max(0, CROP - H0)), (0, max(0, CROP - W0)), (0, 0)))
     H, W = img.shape[:2]
-    if H < CROP or W < CROP:
-        ph, pw = max(0, CROP - H), max(0, CROP - W)
-        img = np.pad(img, ((0, ph), (0, pw), (0, 0)))
-        m = np.pad(m, ((0, 0), (0, ph), (0, pw)))
-        H, W = img.shape[:2]
     if train:
         y0 = int(rng.integers(0, H - CROP + 1))
         x0 = int(rng.integers(0, W - CROP + 1))
     else:
         y0, x0 = (H - CROP) // 2, (W - CROP) // 2
     img = img[y0:y0 + CROP, x0:x0 + CROP]
-    m = m[:, y0:y0 + CROP, x0:x0 + CROP]
+    # rasterize ONLY the crop window, in the unpadded image's coordinate space. Building the full
+    # (19, H, W) mask first and slicing it costs ~183 MB per sample and is what exhausted host RAM.
+    m = rasterize(ann_p, out_hw=(H0, W0), window=(y0, x0, CROP, CROP))
     if train and rng.random() < 0.5:
         img = img[:, ::-1].copy()
         m = m[:, :, ::-1].copy()
