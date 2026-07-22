@@ -3,6 +3,64 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.21.000], 2026-07-22
+
+### Added (fundus images as first-class cases: the lab's own thesis, tested)
+- Four FIVES retinal fundus images (normal, diabetic retinopathy, glaucoma, AMD) run through the
+  ENTIRE ladder unchanged. If a crack is just a thin, branching, low-contrast curvilinear structure,
+  the ladder should behave on a retina the way it behaves on concrete. Measuring that beats asserting
+  it, and the answer is more interesting than the assertion was.
+- CC BY 4.0, verified on the primary source (Jin K. et al., Sci Data 9:475, 2022), which is why these
+  may ship while the non-commercial crack datasets stay local. CONTRACT 1 gains `retina`.
+- Downscaled 2048 -> 768 so vessels sit at 3-8 px, the regime the ladder and its 2/5 px tolerances
+  are tuned for.
+
+### THE RESULT: transfer scales inversely with how much a model was fitted
+Same images, same protocol, F1 at 2 px on a retina:
+
+| rung | crack fitting | F1 on retina |
+|---|---|---|
+| DINOv2 frozen + linear head | backbone never fitted | 0.196 |
+| SAC (SAM, 0.45 percent tuned) | minimal | 0.041 - 0.173 |
+| SegFormer / U-Net / DeepLabV3+ | fully supervised | 0.004 / 0.002 / 0.000 |
+
+DeepLabV3+ finds ZERO vessel pixels. The supervised networks learned concrete, not curvilinear
+structure. The uncracked synthetic controls predict 0.00 percent (F1 1.0), so this is not over-firing.
+Meanwhile the CLASSICAL ridge rung transfers by construction: sato/frangi/meijering were published for
+vessels and neurites and run here unmodified.
+
+### Added (SAC foundation-adapter rung)
+- SAM ViT-B, normalization parameters only (36.9K) + a 387.8K decode head = 424.6K trainable, 0.45
+  percent of the network. Best val F1@2px **0.7500**, matching a fully trained U-Net (0.7523) and
+  beating DeepLabV3+ (0.7199). 7786 train / 1373 val, 508 min.
+
+### Fixed (dacl10k: the rare-class collapse is gone)
+- pooled mIoU **0.1441 -> 0.2975** (untuned, thr 0.50), classes at exactly IoU 0 **9 of 19 -> 0 of 19**,
+  gap to the 0.424 WACV baseline 2.94x -> 1.43x. No change to the model or the training budget: only
+  per-class positive weighting, and bf16 so that weighting could actually run.
+- The fp16 forward overflowed to inf once pos-weighting raised the logits, so every step failed the
+  non-finite check and hit a `continue` placed BEFORE the progress print and the loss accumulator. A
+  fully diverged run therefore looked quiet and cheap while occupying the GPU for hours. Skips are now
+  printed, the epoch line reports steps taken/total, and an epoch over 25 percent skipped ABORTS.
+- Training state is written every epoch with `--resume`.
+
+### Changed (every source gets every tab)
+- Case source is a DATA axis with three real sources: Real samples (6), Synthetic (12), Fundus (4).
+  All 10 tabs on every one. Degradation is an 11th for synthetic only, because it needs a controlled
+  width sweep against exact ground truth, which is a different thing from withholding a tab that applies.
+- Synthetic and fundus are materialized into `data/examples`, so every existing bake covers them with
+  no special-casing.
+
+### Fixed (memory, and a silent metric)
+- `rasterize(window=...)` draws polygons straight into the 512 crop: 183 MB -> 5 MB per sample.
+  `_dacl_item` stays uint8 until after the crop: 146 MB -> 3 MB. Both verified bit-identical.
+- `predict_full` selects cuda only when `device_count() > 0`; `is_available()` alone returns True under
+  `CUDA_VISIBLE_DEVICES=""` and killed CPU-side runs.
+- DINOv2 is wired into the prediction path (518 tile, head-only checkpoint), so the rung now covers all
+  22 cases instead of the original 6.
+- The workbench sidebar drops out of sticky when the layout stacks below 940 px; it was overlapping the
+  method image at narrow viewports.
+
 ## [0.20.000], 2026-07-21
 
 ### Changed (the case source is a DATA axis, not a method axis)

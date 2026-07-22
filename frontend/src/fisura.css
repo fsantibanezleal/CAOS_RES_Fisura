@@ -44,7 +44,17 @@
 
 /* ---- App page (ADR-0017 section 3): parametrization sidebar + method tabs main ---- */
 .fs-app-layout { display: grid; grid-template-columns: 320px 1fr; gap: 1.5rem; align-items: start; }
-@media (max-width: 940px) { .fs-app-layout { grid-template-columns: 1fr; } }
+/* Below 940px the two columns collapse to one, so the sidebar stacks ABOVE the workbench instead of
+   sitting beside it. It must drop out of sticky at the same breakpoint: a sticky element that is no
+   longer in its own column stays pinned to the viewport while the content scrolls underneath, and
+   because the sidebar has no background of its own the thumbnails and sliders render straight over
+   the method image. Caught while capturing reel frames at a narrow viewport. */
+@media (max-width: 940px) {
+  .fs-app-layout { grid-template-columns: 1fr; }
+  /* two classes, not one: a media query adds no specificity, and the base `.fs-side` rule is
+     declared after this block, so a bare `.fs-side` override loses the cascade and stays sticky. */
+  .fs-app-layout .fs-side { position: static; top: auto; }
+}
 .fs-side { display: flex; flex-direction: column; gap: 0.9rem; position: sticky; top: 0.5rem; }
 .fs-side-h { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-fg-subtle); font-weight: 700; }
 .fs-seg { display: flex; gap: 0.25rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 0.2rem; }

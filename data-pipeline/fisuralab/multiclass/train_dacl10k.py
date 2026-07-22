@@ -46,24 +46,29 @@ def _dacl_item(img_p, ann_p, train: bool, rng):
     img = read_image(img_p)
     if img.ndim == 2:
         img = np.stack([img, img, img], -1)
-    img = img[..., :3].astype(np.float32) / 255.0
-    m = rasterize(ann_p, out_hw=img.shape[:2])  # (C,H,W)
+    # Stay in uint8 until AFTER the crop. dacl10k originals are ~3024x4032, so converting the whole
+    # image to float32 here costs about 146 MB per sample and every byte of it is discarded by the
+    # 512-crop two lines later. With several workers each holding a prefetched batch that is the
+    # difference between comfortable and a MemoryError in a DataLoader worker, which is exactly how
+    # this run died once.
+    img = img[..., :3]
+    H0, W0 = img.shape[:2]                      # true image size, before any padding
+    if H0 < CROP or W0 < CROP:
+        img = np.pad(img, ((0, max(0, CROP - H0)), (0, max(0, CROP - W0)), (0, 0)))
     H, W = img.shape[:2]
-    if H < CROP or W < CROP:
-        ph, pw = max(0, CROP - H), max(0, CROP - W)
-        img = np.pad(img, ((0, ph), (0, pw), (0, 0)))
-        m = np.pad(m, ((0, 0), (0, ph), (0, pw)))
-        H, W = img.shape[:2]
     if train:
         y0 = int(rng.integers(0, H - CROP + 1))
         x0 = int(rng.integers(0, W - CROP + 1))
     else:
         y0, x0 = (H - CROP) // 2, (W - CROP) // 2
     img = img[y0:y0 + CROP, x0:x0 + CROP]
-    m = m[:, y0:y0 + CROP, x0:x0 + CROP]
+    # rasterize ONLY the crop window, in the unpadded image's coordinate space. Building the full
+    # (19, H, W) mask first and slicing it costs ~183 MB per sample and is what exhausted host RAM.
+    m = rasterize(ann_p, out_hw=(H0, W0), window=(y0, x0, CROP, CROP))
     if train and rng.random() < 0.5:
         img = img[:, ::-1].copy()
         m = m[:, :, ::-1].copy()
+    img = img.astype(np.float32) / 255.0   # now 512x512, so the float copy is ~3 MB, not ~146 MB
     img = (img - _MEAN) / _STD
     return np.ascontiguousarray(img.transpose(2, 0, 1)), np.ascontiguousarray(m).astype(np.float32)
 
@@ -171,6 +176,8 @@ def main() -> None:
     ap.add_argument("--pos-weight", action="store_true",
                     help="per-class BCE positive weighting (fixes the rare-class collapse to IoU 0)")
     ap.add_argument("--pos-weight-cap", type=float, default=50.0)
+    ap.add_argument("--resume", action="store_true",
+                    help="continue from the last saved training state if one exists")
     args = ap.parse_args()
 
     import torch  # noqa: PLC0415
@@ -205,7 +212,20 @@ def main() -> None:
         top = sorted(zip(CLASSES, pw_np, strict=False), key=lambda kv: -kv[1])[:5]
         print("pos_weight (top 5): " + ", ".join(f"{c} {v:.1f}" for c, v in top))
     bce = torch.nn.BCEWithLogitsLoss(pos_weight=pw)
-    scaler = torch.amp.GradScaler("cuda")
+    # bf16, not fp16. The fp16 forward overflowed to inf once the pos_weighted loss pushed the logits
+    # up, every step then failed the isfinite check, and the run silently stopped learning while still
+    # occupying the GPU. bf16 carries fp32's exponent range so it cannot overflow that way, and it
+    # needs no GradScaler (kept disabled rather than removed so the call sites stay unchanged).
+    AMP_DTYPE = torch.bfloat16
+    scaler = torch.amp.GradScaler("cuda", enabled=False)
+
+    # Resumable by design, not by luxury. This run was killed three times mid-training by host memory
+    # pressure from other work on the machine, with no Python traceback, and each kill threw away
+    # every completed epoch. A full training state written once per epoch turns that from hours lost
+    # into minutes lost. The state file sits next to the best-metric checkpoint and holds the
+    # optimizer and scheduler too, so a resumed run is not silently restarting the LR schedule.
+    state_path = data_root() / "derived" / "multiclass" / f"{args.arch}_trainstate.pt"
+    start_epoch = 0
 
     def dice_loss(logits, target, eps=1.0):
         # computed in fp32: under AMP the fp16 sums over 512x512x19 underflow/overflow and the loss
@@ -225,18 +245,37 @@ def main() -> None:
     best_present = None
     t0 = time.perf_counter()
     n_skipped = 0
-    for ep in range(args.epochs):
+
+    if args.resume and state_path.exists():
+        st = torch.load(state_path, map_location=device, weights_only=False)
+        net.load_state_dict(st["model"])
+        opt.load_state_dict(st["opt"])
+        sched.load_state_dict(st["sched"])
+        scaler.load_state_dict(st["scaler"])
+        start_epoch = int(st["epoch"]) + 1
+        best_miou = float(st["best_miou"])
+        best_per_class = st.get("best_per_class")
+        best_present = st.get("best_present")
+        n_skipped = int(st.get("n_skipped", 0))
+        print(f"resumed from epoch {st['epoch']} (best mIoU {best_miou:.4f}); continuing at {start_epoch}")
+
+    for ep in range(start_epoch, args.epochs):
         net.train()
         run = 0.0
+        ep_skipped = 0
+        ep_stepped = 0
         for bi, (x, y) in enumerate(tl):
             x, y = x.to(device, non_blocking=True), y.to(device, non_blocking=True)
             opt.zero_grad(set_to_none=True)
-            with torch.amp.autocast("cuda"):
+            with torch.amp.autocast("cuda", dtype=AMP_DTYPE):
                 out = net(x)
             # losses in fp32 outside autocast (AMP fp16 reductions over 19x512x512 go NaN)
             loss = bce(out.float(), y.float()) + dice_loss(out, y)
             if not torch.isfinite(loss):
                 n_skipped += 1
+                ep_skipped += 1
+                if ep_skipped in (1, 10, 100) or ep_skipped % 500 == 0:
+                    print(f"  ep{ep} it{bi}: NON-FINITE loss, step skipped ({ep_skipped} this epoch)")
                 continue  # skip a bad step rather than poison every weight with NaN
             scaler.scale(loss).backward()
             scaler.unscale_(opt)
@@ -245,6 +284,7 @@ def main() -> None:
             scaler.update()
             sched.step()
             run += float(loss.item())
+            ep_stepped += 1
             if bi % 100 == 0:
                 print(f"  ep{ep} it{bi}/{len(tl)} loss {loss.item():.4f}")
         # validation macro-IoU
@@ -255,7 +295,7 @@ def main() -> None:
         with torch.no_grad():
             for x, y in vl:
                 x, y = x.to(device), y.to(device)
-                with torch.amp.autocast("cuda"):
+                with torch.amp.autocast("cuda", dtype=AMP_DTYPE):
                     out = net(x)
                 i_, u_, g_ = _iou_parts(out, y)
                 inter_sum += i_
@@ -272,7 +312,19 @@ def main() -> None:
             best_present = present
             torch.save(net.state_dict(), best_ckpt)  # keep the BEST epoch, not the last
             star = " *best (saved)"
-        print(f"epoch {ep}: train_loss {run / max(1, len(tl)):.4f}  val_mIoU {miou:.4f}{star}")
+        skip_frac = ep_skipped / max(1, ep_skipped + ep_stepped)
+        print(f"epoch {ep}: train_loss {run / max(1, ep_stepped):.4f}  val_mIoU {miou:.4f}"
+              f"  steps {ep_stepped}/{ep_skipped + ep_stepped}{star}")
+        if skip_frac > 0.25:
+            raise SystemExit(
+                f"ABORT epoch {ep}: {skip_frac:.0%} of steps had a non-finite loss, so the model is "
+                f"barely updating. Failing loudly instead of holding the GPU for hours while the "
+                f"metric quietly re-scores stale weights."
+            )
+        torch.save({"epoch": ep, "model": net.state_dict(), "opt": opt.state_dict(),
+                    "sched": sched.state_dict(), "scaler": scaler.state_dict(),
+                    "best_miou": best_miou, "best_per_class": best_per_class,
+                    "best_present": best_present, "n_skipped": n_skipped}, state_path)
 
     per_class = best_per_class
     present = best_present

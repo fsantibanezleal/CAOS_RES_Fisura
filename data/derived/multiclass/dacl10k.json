@@ -135,33 +135,35 @@
    166
   ]
  ],
- "val_mIoU": 0.1169,
+ "val_mIoU": 0.2997,
+ "val_mIoU_protocol": "pooled (dataset-level) macro IoU over classes present in the val ground truth",
+ "pos_weight": true,
  "baseline_mIoU": 0.424,
  "baseline_source": "Flotzinger et al. WACV 2024 Table 4 (FPN + EfficientNet-B4 + aux loss)",
  "per_class_IoU": {
-  "Crack": 0.0,
-  "ACrack": 0.3105,
-  "Wetspot": 0.0958,
-  "Efflorescence": 0.2157,
-  "Rust": 0.2733,
-  "Rockpocket": 0.0,
-  "Hollowareas": 0.3146,
-  "Cavity": 0.0477,
-  "Spalling": 0.2341,
-  "Graffiti": 0.3803,
-  "Weathering": 0.2323,
-  "Restformwork": 0.0,
-  "ExposedRebars": 0.0,
-  "Bearing": 0.0407,
-  "EJoint": 0.0,
-  "Drainage": 0.0,
-  "PEquipment": 0.0759,
-  "JTape": 0.0,
-  "WConccor": 0.0
+  "Crack": 0.2498,
+  "ACrack": 0.4183,
+  "Wetspot": 0.1911,
+  "Efflorescence": 0.2714,
+  "Rust": 0.4419,
+  "Rockpocket": 0.1406,
+  "Hollowareas": 0.3641,
+  "Cavity": 0.1447,
+  "Spalling": 0.4184,
+  "Graffiti": 0.5784,
+  "Weathering": 0.3681,
+  "Restformwork": 0.2771,
+  "ExposedRebars": 0.1808,
+  "Bearing": 0.3001,
+  "EJoint": 0.2512,
+  "Drainage": 0.3246,
+  "PEquipment": 0.4862,
+  "JTape": 0.2754,
+  "WConccor": 0.0115
  },
- "n_train": 2500,
- "n_val": 400,
- "epochs": 12,
+ "n_train": 6935,
+ "n_val": 975,
+ "epochs": 14,
  "samples": [
   {
    "id": "dacl10k_v2_validation_0607",
@@ -174,9 +176,9 @@
    ],
    "per_class_iou": {
     "Crack": 0.0,
-    "Rust": 0.459,
+    "Rust": 0.449,
     "Cavity": 0.0,
-    "Bearing": 0.303
+    "Bearing": 0.541
    }
   },
   {
@@ -184,17 +186,24 @@
    "overlay": "multiclass/overlays/dacl10k_v2_validation_0665.png",
    "present_classes": [
     "Wetspot",
-    "Weathering"
+    "Spalling",
+    "Weathering",
+    "Restformwork",
+    "JTape"
    ],
    "per_class_iou": {
     "Wetspot": 0.0,
-    "Weathering": 0.308
+    "Spalling": 0.0,
+    "Weathering": 0.256,
+    "Restformwork": 0.0,
+    "JTape": 0.0
    }
   },
   {
    "id": "dacl10k_v2_validation_0917",
    "overlay": "multiclass/overlays/dacl10k_v2_validation_0917.png",
    "present_classes": [
+    "Wetspot",
     "Rust",
     "Hollowareas",
     "Spalling",
@@ -203,30 +212,39 @@
     "JTape"
    ],
    "per_class_iou": {
-    "Rust": 0.0,
+    "Wetspot": 0.0,
+    "Rust": 0.184,
     "Hollowareas": 0.0,
     "Spalling": 0.0,
-    "Weathering": 0.015,
-    "PEquipment": 0.72,
-    "JTape": 0.0
+    "Weathering": 0.123,
+    "PEquipment": 0.743,
+    "JTape": 0.314
    }
   },
   {
    "id": "dacl10k_v2_validation_0563",
    "overlay": "multiclass/overlays/dacl10k_v2_validation_0563.png",
    "present_classes": [
+    "Wetspot",
     "Efflorescence",
     "Rust",
     "Hollowareas",
     "Spalling",
-    "Weathering"
+    "Weathering",
+    "Restformwork",
+    "Drainage",
+    "JTape"
    ],
    "per_class_iou": {
-    "Efflorescence": 0.0,
-    "Rust": 0.0,
-    "Hollowareas": 0.472,
-    "Spalling": 0.721,
-    "Weathering": 0.0
+    "Wetspot": 0.0,
+    "Efflorescence": 0.111,
+    "Rust": 0.19,
+    "Hollowareas": 0.618,
+    "Spalling": 0.741,
+    "Weathering": 0.292,
+    "Restformwork": 0.0,
+    "Drainage": 0.0,
+    "JTape": 0.0
    }
   },
   {
@@ -240,18 +258,25 @@
     "Hollowareas",
     "Cavity",
     "Spalling",
-    "Weathering"
+    "Weathering",
+    "Restformwork",
+    "JTape"
    ],
    "per_class_iou": {
     "Crack": 0.0,
-    "Wetspot": 0.022,
-    "Rust": 0.398,
+    "Wetspot": 0.381,
+    "Rust": 0.178,
     "Rockpocket": 0.0,
-    "Hollowareas": 0.317,
+    "Hollowareas": 0.322,
     "Cavity": 0.0,
-    "Spalling": 0.119,
-    "Weathering": 0.621
+    "Spalling": 0.212,
+    "Weathering": 0.744,
+    "Restformwork": 0.0,
+    "JTape": 0.0
    }
   }
- ]
+ ],
+ "classes_present": 19,
+ "classes_nonzero": 19,
+ "mean_IoU_over_nonzero": 0.2997
 }

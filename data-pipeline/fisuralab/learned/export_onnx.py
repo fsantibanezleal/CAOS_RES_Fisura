@@ -30,9 +30,15 @@ def export(arch: str, ckpt: Path, out_dir: Path | None = None, opset: int = 17) 
     out_dir = out_dir or model_root()
     out_dir.mkdir(parents=True, exist_ok=True)
     model = build_model(arch)
-    model.load_state_dict(torch.load(ckpt, map_location="cpu", weights_only=True))
+    # strict=False because the DINOv2 probe checkpoint stores ONLY the trained linear head; its
+    # frozen backbone is restored by the probe builder, not by this file.
+    model.load_state_dict(torch.load(ckpt, map_location="cpu", weights_only=True), strict=False)
     model.eval()
-    dummy = torch.randn(1, 3, 512, 512)
+    # the DINOv2 probe's patch embed asserts the input is a multiple of 14, so its export (and the
+    # parity check below) uses the 518 px grid the probe was built for rather than the 512 tile the
+    # convolutional models use
+    side = 518 if arch == "dinov2s14_linear" else 512
+    dummy = torch.randn(1, 3, side, side)
     onnx_path = out_dir / f"{arch}.onnx"
     torch.onnx.export(
         model,

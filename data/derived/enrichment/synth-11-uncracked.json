@@ -1,0 +1,86 @@
+{
+ "sample_id": "synth-11-uncracked",
+ "size": [
+  256,
+  256
+ ],
+ "material": "synthetic",
+ "has_gt": true,
+ "uncertainty": {
+  "mean_std": 0.0809,
+  "disagree_px": 13214,
+  "n_models": 5
+ },
+ "models": {
+  "segformer_b2": {
+   "sweep": {
+    "tol_px": [],
+    "f1": []
+   },
+   "confusion": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tol_px": 2
+   },
+   "f1_2px": 1.0,
+   "f1_5px": 1.0
+  },
+  "deeplabv3p_r18": {
+   "sweep": {
+    "tol_px": [],
+    "f1": []
+   },
+   "confusion": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tol_px": 2
+   },
+   "f1_2px": 1.0,
+   "f1_5px": 1.0
+  },
+  "unet_r18": {
+   "sweep": {
+    "tol_px": [],
+    "f1": []
+   },
+   "confusion": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tol_px": 2
+   },
+   "f1_2px": 1.0,
+   "f1_5px": 1.0
+  },
+  "hrsegnet_b16": {
+   "sweep": {
+    "tol_px": [],
+    "f1": []
+   },
+   "confusion": {
+    "tp": 0,
+    "fp": 725,
+    "fn": 0,
+    "tol_px": 2
+   },
+   "f1_2px": 0.0,
+   "f1_5px": 0.0
+  },
+  "dinov2s14_linear": {
+   "sweep": {
+    "tol_px": [],
+    "f1": []
+   },
+   "confusion": {
+    "tp": 0,
+    "fp": 12654,
+    "fn": 0,
+    "tol_px": 2
+   },
+   "f1_2px": 0.0,
+   "f1_5px": 0.0
+  }
+ }
+}

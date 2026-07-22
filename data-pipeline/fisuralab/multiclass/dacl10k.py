@@ -54,15 +54,42 @@ def list_split(split: str) -> list[tuple[Path, Path]]:
     return pairs
 
 
-def rasterize(ann_path: Path, out_hw: tuple[int, int] | None = None) -> np.ndarray:
+def rasterize(ann_path: Path, out_hw: tuple[int, int] | None = None,
+              window: tuple[int, int, int, int] | None = None) -> np.ndarray:
     """Polygons -> a (C, H, W) uint8 multi-label mask (1 where any polygon of class c covers the pixel).
 
     Rasterized at the annotation's native resolution unless out_hw is given (then scaled). Uses
-    skimage.draw.polygon (no OpenCV dependency needed here)."""
+    skimage.draw.polygon (no OpenCV dependency needed here).
+
+    `window` is (y0, x0, h, w) in OUTPUT coordinates and returns just that region, rasterizing the
+    polygons straight into the small canvas. Training takes a 512 crop, so building the full mask
+    first means allocating (19, 2592, 3888) uint8, about 183 MB, per sample per worker, and then
+    discarding over 98 percent of it. That allocation is what killed two training runs with a
+    MemoryError in a DataLoader worker. Windowed, the same sample costs about 5 MB. Any part of the
+    window past the image edge stays zero, which matches the zero padding the caller applies to the
+    image itself.
+    """
     from skimage.draw import polygon as sk_polygon  # noqa: PLC0415
 
     a = json.loads(ann_path.read_text(encoding="utf-8"))
     H, W = int(a["imageHeight"]), int(a["imageWidth"])
+
+    if window is not None:
+        oh, ow = out_hw if out_hw is not None else (H, W)
+        sy, sx = oh / H, ow / W          # annotation space -> output space
+        y0, x0, wh, ww = window
+        out = np.zeros((N_CLASSES, wh, ww), dtype=np.uint8)
+        for sh in a.get("shapes", []):
+            ci = CLASS_INDEX.get(sh.get("label"))
+            if ci is None:
+                continue
+            pts = np.asarray(sh.get("points", []), dtype=np.float64)
+            if len(pts) < 3:
+                continue
+            rr, cc = sk_polygon(pts[:, 1] * sy - y0, pts[:, 0] * sx - x0, shape=(wh, ww))
+            out[ci, rr, cc] = 1
+        return out
+
     mask = np.zeros((N_CLASSES, H, W), dtype=np.uint8)
     for sh in a.get("shapes", []):
         lbl = sh.get("label")

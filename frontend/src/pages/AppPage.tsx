@@ -25,16 +25,20 @@ import { LiveLane } from './workbench/LiveLane';
 // trained-model outputs, but that is exactly what the TABS already do (Classical vs SOTA vs Beyond
 // SOTA), so both modes loaded the same artifact and rendered the same thing: a control that changed one
 // sentence of copy and nothing else.
-type Source = 'real' | 'synthetic' | 'upload';
+type Source = 'real' | 'synthetic' | 'fundus' | 'upload';
 const CLASSICAL_SLUG = 'bcl_examples';
-const SYNTH_SLUG = 'synthetic_battery';
 const LEARNED_SLUG = 'learned_on_examples';
 // The synthetic samples whose overlay PNGs are baked. The battery holds 12 cases and every one of them
 // carries per-level metrics, but only these four were rendered to imagery; the degradation view below
 // uses all 12, the thumbnails only these.
-const SYNTH_WITH_OVERLAYS = [
-  'synth-02-straight_bar', 'synth-04-straight_bar', 'synth-08-wavy_crack', 'synth-11-uncracked',
-];
+// Which committed sources feed each case-source button. The generated battery and the FIVES fundus
+// images are materialized into data/examples like every other sample, so they live in the SAME
+// artifacts and every tab covers them; this is only a filter over one list.
+const SOURCE_FILTER: Record<'real' | 'synthetic' | 'fundus', (src: string) => boolean> = {
+  real: (src) => src === 'bcl' || src === 'sdnet2018',
+  synthetic: (src) => src === 'fisuralab-synthetic',
+  fundus: (src) => src === 'fives',
+};
 const ANOMALY_SLUG = 'anomaly_examples';
 
 type Family = 'classical' | 'learned' | 'anomaly';
@@ -74,7 +78,6 @@ export default function AppPage() {
 
   const [source, setSource] = useState<Source>('real');
   const [classical, setClassical] = useState<CaseArtifact | null>(null);
-  const [synth, setSynth] = useState<CaseArtifact | null>(null);
   const [learned, setLearned] = useState<CaseArtifact | null>(null);
   const [anomaly, setAnomaly] = useState<CaseArtifact | null>(null);
   const [wb, setWb] = useState<WorkbenchIndex | null>(null);
@@ -98,7 +101,6 @@ export default function AppPage() {
   useEffect(() => {
     setError(null);
     loadCaseArtifact(classicalSlug).then((c) => { setClassical(c); setSampleId(c.samples[0]?.sample_id ?? null); }).catch((e) => setError(String(e)));
-    loadCaseArtifact(SYNTH_SLUG).then(setSynth).catch(() => setSynth(null));
     loadCaseArtifact(LEARNED_SLUG).then(setLearned).catch(() => setLearned(null));
     loadCaseArtifact(ANOMALY_SLUG).then(setAnomaly).catch(() => setAnomaly(null));
     loadWorkbench().then(setWb).catch(() => setWb(null));
@@ -118,16 +120,11 @@ export default function AppPage() {
   // so the path is derived here rather than re-baking the artifact. Only the samples whose overlays
   // were actually rendered are offered: the rest carry metrics but no imagery, and a thumbnail that
   // 404s would be a worse lie than not listing it.
-  const synthSamples = useMemo(() => {
-    if (!synth) return [];
-    const withImagery = new Set(SYNTH_WITH_OVERLAYS);
-    return synth.samples
-      .filter((s) => withImagery.has(s.sample_id))
-      .map((s) => ({ ...s, overlays_rel: s.overlays_rel ?? `${SYNTH_SLUG}/overlays/${s.sample_id}` }));
-  }, [synth]);
-
-  // the image list the left column offers, and the artifact the tabs read, both follow the source
-  const shownSamples = source === 'synthetic' ? synthSamples : (classical?.samples ?? []);
+  const shownSamples = useMemo(() => {
+    const all = classical?.samples ?? [];
+    if (source === 'upload') return all;
+    return all.filter((s) => SOURCE_FILTER[source](s.source));
+  }, [classical, source]);
 
   // keep the selected image valid when the source changes
   useEffect(() => {
@@ -137,10 +134,8 @@ export default function AppPage() {
   }, [source, shownSamples.length]);
 
   const cSample = useMemo(
-    () => (source === 'synthetic'
-      ? synthSamples.find((s) => s.sample_id === sampleId) ?? null
-      : classical?.samples.find((s) => s.sample_id === sampleId) ?? null),
-    [source, synthSamples, classical, sampleId],
+    () => classical?.samples.find((s) => s.sample_id === sampleId) ?? null,
+    [classical, sampleId],
   );
   const lSample = useMemo(() => learned?.samples.find((s) => s.sample_id === sampleId) ?? null, [learned, sampleId]);
   const aSample = useMemo(() => anomaly?.samples.find((s) => s.sample_id === sampleId) ?? null, [anomaly, sampleId]);
@@ -170,11 +165,14 @@ export default function AppPage() {
         <div className="fs-seg">
           <button className={`fs-seg-b ${source === 'real' ? 'on' : ''}`} onClick={() => setSource('real')}>{t('Real samples', 'Muestras reales')}</button>
           <button className={`fs-seg-b ${source === 'synthetic' ? 'on' : ''}`} onClick={() => setSource('synthetic')}>{t('Synthetic', 'Sintético')}</button>
+          <button className={`fs-seg-b ${source === 'fundus' ? 'on' : ''}`} onClick={() => setSource('fundus')}>{t('Fundus', 'Fondo de ojo')}</button>
           <button className={`fs-seg-b ${source === 'upload' ? 'on' : ''}`} onClick={() => setSource('upload')}>{t('Upload', 'Subir')}</button>
         </div>
         <p className="fs-hint">
           {source === 'real'
             ? t('Open-licensed concrete and steel photographs, with hand-labelled pixel ground truth. Every method in the tabs runs on the image you pick.', 'Fotografías de hormigón y acero con licencia abierta, con ground truth de píxeles etiquetado a mano. Cada método de las pestañas corre sobre la imagen que elijas.')
+            : source === 'fundus'
+              ? t('Retinal fundus photographs (FIVES, CC BY 4.0), carried as a control on the thesis behind this lab. A vessel and a crack are the same kind of object to a camera, so the whole ladder runs here unchanged and you can read off which rungs actually transfer.', 'Fotografías de fondo de ojo (FIVES, CC BY 4.0), como control de la tesis de este laboratorio. Un vaso y una grieta son el mismo tipo de objeto para una cámara, así que toda la escalera corre aquí sin cambios y se puede leer qué peldaños transfieren de verdad.')
             : source === 'synthetic'
               ? t('Generated cracks with knobs: width, contrast, angle, noise. The ground truth is exact by construction, not hand-drawn, so this is where you can read off exactly when a method stops working.', 'Grietas generadas con perillas: ancho, contraste, ángulo, ruido. El ground truth es exacto por construcción, no dibujado a mano, así que aquí se puede leer con precisión cuándo un método deja de funcionar.')
               : t('Bring your own crack photo: a compact model segments it entirely in your browser (onnxruntime-web). The image never leaves your device. Drop it in the panel on the right.', 'Trae tu propia foto de grieta: un modelo compacto la segmenta por completo en tu navegador (onnxruntime-web). La imagen nunca sale de tu dispositivo. Suéltala en el panel de la derecha.')}
@@ -233,16 +231,7 @@ export default function AppPage() {
             <Tabs
               ariaLabel="workbench stages"
               initial="overview"
-              tabs={source === 'synthetic' ? [
-                // The synthetic battery has the classical ladder and exact ground truth, but the
-                // learned, anomaly, SLIC and enrichment artifacts were never baked on it. Offering
-                // those tabs empty (or worse, showing the real-image ones while a synthetic case is
-                // selected) would misrepresent what was run, so the synthetic source exposes only the
-                // views backed by real data, plus the degradation sweep the battery exists for.
-                { id: 'overview', label: t('Overview', 'Vista general'), content: <OverviewTab sample={cSample} imageUrl={imageUrl} es={es} /> },
-                { id: 'classical', label: t('Classical', 'Clásico'), content: <FamilyTab methods={CLASSICAL_METHODS} sample={cSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} /> },
-                { id: 'degradation', label: t('Degradation', 'Degradación'), content: <DegradationTab samples={synth?.samples ?? []} es={es} /> },
-              ] : [
+              tabs={[
                 { id: 'overview', label: t('Overview', 'Vista general'), content: <OverviewTab sample={cSample} imageUrl={imageUrl} es={es} /> },
                 { id: 'prep', label: t('Preprocessing', 'Preprocesamiento'), content: <PrepTab wb={wbSample} es={es} /> },
                 { id: 'semantic', label: t('Semantic seg', 'Segm. semántica'), content: <SemanticTab cSample={cSample} lSample={lSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} es={es} /> },
@@ -253,6 +242,10 @@ export default function AppPage() {
                 { id: 'beyond', label: t('Beyond SOTA', 'Más allá SOTA'), content: <FamilyTab methods={ANOMALY_METHODS} sample={aSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} anomalyHeat={aSample?.heat_rel ? heatUrl(aSample.heat_rel) : null} /> },
                 { id: 'metrics', label: t('Metrics', 'Métricas'), content: <MetricsTab enrich={enrich} es={es} /> },
                 { id: 'summary', label: t('Summary', 'Resumen'), content: <SummaryTab cSample={cSample} lSample={lSample} aSample={aSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} es={es} /> },
+                ...(source === 'synthetic'
+                  ? [{ id: 'degradation', label: t('Degradation', 'Degradación'),
+                       content: <DegradationTab samples={shownSamples} es={es} /> }]
+                  : []),
               ]}
             />
           )}
