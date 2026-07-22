@@ -46,8 +46,13 @@ def _dacl_item(img_p, ann_p, train: bool, rng):
     img = read_image(img_p)
     if img.ndim == 2:
         img = np.stack([img, img, img], -1)
-    img = img[..., :3].astype(np.float32) / 255.0
-    m = rasterize(ann_p, out_hw=img.shape[:2])  # (C,H,W)
+    # Stay in uint8 until AFTER the crop. dacl10k originals are ~3024x4032, so converting the whole
+    # image to float32 here costs about 146 MB per sample and every byte of it is discarded by the
+    # 512-crop two lines later. With several workers each holding a prefetched batch that is the
+    # difference between comfortable and a MemoryError in a DataLoader worker, which is exactly how
+    # this run died once.
+    img = img[..., :3]
+    m = rasterize(ann_p, out_hw=img.shape[:2])  # (C,H,W) uint8
     H, W = img.shape[:2]
     if H < CROP or W < CROP:
         ph, pw = max(0, CROP - H), max(0, CROP - W)
@@ -64,6 +69,7 @@ def _dacl_item(img_p, ann_p, train: bool, rng):
     if train and rng.random() < 0.5:
         img = img[:, ::-1].copy()
         m = m[:, :, ::-1].copy()
+    img = img.astype(np.float32) / 255.0   # now 512x512, so the float copy is ~3 MB, not ~146 MB
     img = (img - _MEAN) / _STD
     return np.ascontiguousarray(img.transpose(2, 0, 1)), np.ascontiguousarray(m).astype(np.float32)
 
