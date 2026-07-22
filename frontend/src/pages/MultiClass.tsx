@@ -13,6 +13,10 @@ interface Dacl {
   dataset: string; arch: string; classes: string[]; damage_classes: string[]; palette: number[][];
   val_mIoU: number; baseline_mIoU: number; baseline_source: string;
   per_class_IoU: Record<string, number>; n_train: number; n_val: number; epochs: number; samples: Sample[];
+  // carried by the bake so the page can state the metric DEFINITION and the per-class split rather
+  // than a bare mean; optional because older committed artifacts predate them
+  val_mIoU_protocol?: string; pos_weight?: boolean | null;
+  classes_present?: number; classes_nonzero?: number; mean_IoU_over_nonzero?: number;
 }
 
 export default function MultiClass() {
@@ -76,9 +80,19 @@ function MultiClassBody({ d, pick, setPick, es }: { d: Dacl; pick: number; setPi
 
       <Callout variant={beat ? 'strong' : 'honest'} title={beat ? t('Beats the published baseline', 'Supera la línea base publicada') : t('Measured against the published baseline', 'Medido contra la línea base publicada')}>
         {beat
-          ? t(`The model reaches mIoU ${d.val_mIoU.toFixed(3)}, above the ${d.baseline_mIoU} of the WACV 2024 paper baseline (${d.baseline_source}). Trained on ${d.n_train} images for ${d.epochs} epochs on the local GPU.`, `El modelo alcanza mIoU ${d.val_mIoU.toFixed(3)}, sobre el ${d.baseline_mIoU} de la línea base del paper WACV 2024. Entrenado en ${d.n_train} imágenes por ${d.epochs} épocas en la GPU local.`)
-          : t(`The model reaches mIoU ${d.val_mIoU.toFixed(3)} against the ${d.baseline_mIoU} paper baseline (${d.baseline_source}), a single-model run on ${d.n_train} images for ${d.epochs} epochs. The published baseline uses the full 6,935-image train set; the gap is the honest cost of the reduced budget, stated rather than hidden.`, `El modelo alcanza mIoU ${d.val_mIoU.toFixed(3)} contra el ${d.baseline_mIoU} de la línea base del paper, una corrida de un solo modelo sobre ${d.n_train} imágenes por ${d.epochs} épocas. La línea base publicada usa el set completo de 6,935 imágenes; la brecha es el costo honesto del presupuesto reducido, declarado y no escondido.`)}
+          ? t(`The model reaches mIoU ${d.val_mIoU.toFixed(4)}, above the ${d.baseline_mIoU} of the WACV 2024 paper baseline (${d.baseline_source}). Trained on ${d.n_train} images for ${d.epochs} epochs on the local GPU.`, `El modelo alcanza mIoU ${d.val_mIoU.toFixed(4)}, sobre el ${d.baseline_mIoU} de la línea base del paper WACV 2024. Entrenado en ${d.n_train} imágenes por ${d.epochs} épocas en la GPU local.`)
+          : t(`The model reaches mIoU ${d.val_mIoU.toFixed(4)} against the ${d.baseline_mIoU} paper baseline (${d.baseline_source}), a single-model run on ${d.n_train} images for ${d.epochs} epochs. Both numbers are the same quantity: intersection and union are pooled over the whole validation split and divided once, then averaged over the classes present in the ground truth. That matters, because an earlier build of this page averaged a per-batch IoU instead and quoted it straight against this baseline, which was not a like-for-like comparison and made the gap look worse than it is.`, `El modelo alcanza mIoU ${d.val_mIoU.toFixed(4)} contra el ${d.baseline_mIoU} de la línea base del paper, una corrida de un solo modelo sobre ${d.n_train} imágenes por ${d.epochs} épocas. Ambos números son la misma cantidad: intersección y unión se agrupan sobre todo el split de validación y se dividen una vez, luego se promedia sobre las clases presentes en el ground truth. Esto importa, porque una versión anterior de esta página promediaba un IoU por lote y lo citaba directamente contra esta línea base, lo que no era una comparación equivalente y hacía ver la brecha peor de lo que es.`)}
       </Callout>
+
+      {d.classes_nonzero != null && d.classes_present != null && d.classes_nonzero < d.classes_present ? (
+        <Callout variant="honest" title={t('The mean hides which classes failed', 'La media esconde qué clases fallaron')}>
+          {t(
+            `Of the ${d.classes_present} classes present in the validation ground truth, ${d.classes_nonzero} are learned and average IoU ${(d.mean_IoU_over_nonzero ?? 0).toFixed(4)}. The remaining ${d.classes_present - d.classes_nonzero} score exactly zero, and they are the rarest ones in the label set. A class the model never predicts at all contributes a hard zero to the macro mean, so a single headline number can be dominated by calibration rather than by segmentation quality. That is a different failure from "the model is too small", and it is why the per-class bars below ship next to the mean instead of behind it.`,
+            `De las ${d.classes_present} clases presentes en el ground truth de validación, ${d.classes_nonzero} se aprenden y promedian IoU ${(d.mean_IoU_over_nonzero ?? 0).toFixed(4)}. Las ${d.classes_present - d.classes_nonzero} restantes puntúan exactamente cero, y son las más raras del conjunto de etiquetas. Una clase que el modelo nunca predice aporta un cero duro a la media macro, así que un solo número principal puede estar dominado por la calibración y no por la calidad de segmentación. Ese es un fallo distinto de "el modelo es muy chico", y por eso las barras por clase de abajo se publican junto a la media y no detrás de ella.`,
+          )}
+          {d.pos_weight ? t(' This run uses per-class positive weighting in the loss, which is the direct remedy for that collapse.', ' Esta corrida usa ponderación positiva por clase en la pérdida, que es el remedio directo para ese colapso.') : ''}
+        </Callout>
+      ) : null}
 
       {sample ? (
         <div className="fs-wb-two" style={{ marginTop: '1rem' }}>

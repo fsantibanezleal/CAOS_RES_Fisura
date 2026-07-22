@@ -133,6 +133,13 @@ def main() -> None:
         "damage_classes": sorted(DAMAGE_CLASSES),
         "palette": PALETTE,
         "val_mIoU": results["val_mIoU"],
+        # the metric DEFINITION travels with the number. An earlier build averaged a per-batch IoU
+        # and quoted it against this pooled baseline, which was not a like-for-like comparison.
+        "val_mIoU_protocol": results.get(
+            "val_mIoU_protocol",
+            "pooled (dataset-level) macro IoU over classes present in the val ground truth",
+        ),
+        "pos_weight": results.get("pos_weight"),
         "baseline_mIoU": results["baseline_mIoU"],
         "baseline_source": results["baseline_source"],
         "per_class_IoU": results.get("per_class_IoU", {}),
@@ -141,6 +148,12 @@ def main() -> None:
         "epochs": results["epochs"],
         "samples": samples,
     }
+    # the honest split the mean hides: how many classes the model actually learned at all
+    pcv = [v for v in rec["per_class_IoU"].values()]
+    nz = [v for v in pcv if v > 0]
+    rec["classes_present"] = len(pcv)
+    rec["classes_nonzero"] = len(nz)
+    rec["mean_IoU_over_nonzero"] = round(sum(nz) / len(nz), 4) if nz else 0.0
     (OUT / "dacl10k.json").write_text(json.dumps(rec, indent=1), encoding="utf-8")
     print(f"val mIoU {rec['val_mIoU']} vs baseline {rec['baseline_mIoU']}")
     print(f"-> {OUT / 'dacl10k.json'}")
