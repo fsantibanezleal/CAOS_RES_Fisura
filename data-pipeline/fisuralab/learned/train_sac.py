@@ -203,7 +203,13 @@ def _dice_loss(logits, target, eps: float = 1.0):
 
 
 def train(epochs: int = 8, accum: int = 8, seed: int = 42, limit_train: int | None = None,
-          limit_val: int | None = None) -> dict:
+          limit_val: int | None = None, out_tag: str = "") -> dict:
+    """out_tag suffixes the checkpoint and results filenames.
+
+    It exists so a smoke run cannot overwrite the real artifacts. A pytest run once clobbered a
+    committed GPU bake in this codebase and two releases shipped it, so anything that writes into the
+    vault takes an explicit name when it is not the canonical run.
+    """
     torch = _lazy_torch()
     from torch.utils.data import DataLoader  # noqa: PLC0415
 
@@ -231,7 +237,7 @@ def train(epochs: int = 8, accum: int = 8, seed: int = 42, limit_train: int | No
 
     out_dir = data_root() / "derived" / "learned" / "checkpoints"
     out_dir.mkdir(parents=True, exist_ok=True)
-    ckpt = out_dir / "sac_samvitb.pt"
+    ckpt = out_dir / f"sac_samvitb{out_tag}.pt"
 
     print(f"SAC: trainable = {n_norm/1e3:.1f}K norm + {n_head/1e3:.1f}K head "
           f"({sum(p.numel() for p in trainable)/1e3:.1f}K total); {len(train_recs)} train / {len(val_recs)} val")
@@ -315,7 +321,7 @@ def train(epochs: int = 8, accum: int = 8, seed: int = 42, limit_train: int | No
         "checkpoint": str(ckpt),
         "history": history,
     }
-    (out_dir / "sac_samvitb.json").write_text(json.dumps(record, indent=1), encoding="utf-8")
+    (out_dir / f"sac_samvitb{out_tag}.json").write_text(json.dumps(record, indent=1), encoding="utf-8")
     print(f"-> best val F1@2px {best['f1_2px']:.4f} @ epoch {best['epoch']}; {record['train_minutes']} min")
     return record
 
@@ -327,5 +333,7 @@ if __name__ == "__main__":
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--limit-train", type=int, default=None)
     ap.add_argument("--limit-val", type=int, default=None)
+    ap.add_argument("--out-tag", default="", help="suffix for checkpoint/results so a smoke run cannot clobber the real bake")
     a = ap.parse_args()
-    train(epochs=a.epochs, accum=a.accum, seed=a.seed, limit_train=a.limit_train, limit_val=a.limit_val)
+    train(epochs=a.epochs, accum=a.accum, seed=a.seed, limit_train=a.limit_train, limit_val=a.limit_val,
+          out_tag=a.out_tag)
