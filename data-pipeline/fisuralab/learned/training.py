@@ -48,6 +48,10 @@ def build_model(arch: str):
         return smp.DeepLabV3Plus("resnet18", encoder_weights="imagenet", in_channels=3, classes=1)
     if arch == "segformer_b2":
         return smp.Segformer("mit_b2", encoder_weights="imagenet", in_channels=3, classes=1)
+    if arch == "dinov2s14_linear":
+        from .dinov2_probe import build_dinov2_probe  # noqa: PLC0415
+
+        return build_dinov2_probe()
     if arch.startswith("hrsegnet_b"):
         from .hrsegnet import build_hrsegnet  # noqa: PLC0415
 
@@ -246,12 +250,18 @@ def train_arch(
     return record
 
 
-def predict_full(arch: str, ckpt: Path, image: np.ndarray, tile: int = 512, overlap: int = 64) -> np.ndarray:
+DINOV2_TILE = 518   # 37 patches x 14 px: the probe's grid is fixed, so the tile must match it
+
+
+def predict_full(arch: str, ckpt: Path, image: np.ndarray, tile: int | None = None, overlap: int = 64) -> np.ndarray:
     """Tiled full-image inference (reflect-padded), returning a probability map in [0, 1]."""
     torch = _lazy_torch()
     device = _device(torch)
+    if tile is None:
+        tile = DINOV2_TILE if arch == "dinov2s14_linear" else 512
     model = build_model(arch)
-    model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=True))
+    # the probe ships only its trained head; the frozen backbone is restored by its own builder
+    model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=True), strict=False)
     model.to(device).eval()
 
     x = _to_chw3(image)
