@@ -176,6 +176,8 @@ def main() -> None:
     ap.add_argument("--pos-weight", action="store_true",
                     help="per-class BCE positive weighting (fixes the rare-class collapse to IoU 0)")
     ap.add_argument("--pos-weight-cap", type=float, default=50.0)
+    ap.add_argument("--resume", action="store_true",
+                    help="continue from the last saved training state if one exists")
     args = ap.parse_args()
 
     import torch  # noqa: PLC0415
@@ -212,6 +214,14 @@ def main() -> None:
     bce = torch.nn.BCEWithLogitsLoss(pos_weight=pw)
     scaler = torch.amp.GradScaler("cuda")
 
+    # Resumable by design, not by luxury. This run was killed three times mid-training by host memory
+    # pressure from other work on the machine, with no Python traceback, and each kill threw away
+    # every completed epoch. A full training state written once per epoch turns that from hours lost
+    # into minutes lost. The state file sits next to the best-metric checkpoint and holds the
+    # optimizer and scheduler too, so a resumed run is not silently restarting the LR schedule.
+    state_path = data_root() / "derived" / "multiclass" / f"{args.arch}_trainstate.pt"
+    start_epoch = 0
+
     def dice_loss(logits, target, eps=1.0):
         # computed in fp32: under AMP the fp16 sums over 512x512x19 underflow/overflow and the loss
         # goes NaN a few epochs in (observed: NaN from epoch 6 of the first full-data run).
@@ -230,7 +240,21 @@ def main() -> None:
     best_present = None
     t0 = time.perf_counter()
     n_skipped = 0
-    for ep in range(args.epochs):
+
+    if args.resume and state_path.exists():
+        st = torch.load(state_path, map_location=device, weights_only=False)
+        net.load_state_dict(st["model"])
+        opt.load_state_dict(st["opt"])
+        sched.load_state_dict(st["sched"])
+        scaler.load_state_dict(st["scaler"])
+        start_epoch = int(st["epoch"]) + 1
+        best_miou = float(st["best_miou"])
+        best_per_class = st.get("best_per_class")
+        best_present = st.get("best_present")
+        n_skipped = int(st.get("n_skipped", 0))
+        print(f"resumed from epoch {st['epoch']} (best mIoU {best_miou:.4f}); continuing at {start_epoch}")
+
+    for ep in range(start_epoch, args.epochs):
         net.train()
         run = 0.0
         for bi, (x, y) in enumerate(tl):
@@ -278,6 +302,10 @@ def main() -> None:
             torch.save(net.state_dict(), best_ckpt)  # keep the BEST epoch, not the last
             star = " *best (saved)"
         print(f"epoch {ep}: train_loss {run / max(1, len(tl)):.4f}  val_mIoU {miou:.4f}{star}")
+        torch.save({"epoch": ep, "model": net.state_dict(), "opt": opt.state_dict(),
+                    "sched": sched.state_dict(), "scaler": scaler.state_dict(),
+                    "best_miou": best_miou, "best_per_class": best_per_class,
+                    "best_present": best_present, "n_skipped": n_skipped}, state_path)
 
     per_class = best_per_class
     present = best_present
