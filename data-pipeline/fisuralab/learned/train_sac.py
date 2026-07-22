@@ -138,9 +138,11 @@ def _pad_crop(img, mask, rng, train: bool):
         mask = np.pad(mask, ((0, ph), (0, pw)), mode="reflect")
         h, w = mask.shape
     if train:
-        r = int(rng.integers(0, h - CROP + 1)); c = int(rng.integers(0, w - CROP + 1))
+        r = int(rng.integers(0, h - CROP + 1))
+        c = int(rng.integers(0, w - CROP + 1))
     else:
-        r = (h - CROP) // 2; c = (w - CROP) // 2
+        r = (h - CROP) // 2
+        c = (w - CROP) // 2
     return img[r:r + CROP, c:c + CROP], mask[r:r + CROP, c:c + CROP]
 
 
