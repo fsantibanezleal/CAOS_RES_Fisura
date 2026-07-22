@@ -11,16 +11,32 @@
   ]
  },
  "shared_scale": {
-  "lo": 1.2985483407974243,
-  "hi": 3.264734983444214
+  "lo": 1.2274248600006104,
+  "hi": 3.929433584213257
  },
  "scores": {
   "bcl-nonsteel-c1": 3.2647,
-  "bcl-nonsteel-c10": 2.7414,
-  "bcl-steel-s1": 2.8102,
-  "bcl-noise-f1": 2.8894,
+  "bcl-nonsteel-c10": 2.7415,
+  "bcl-steel-s1": 2.8101,
+  "bcl-noise-f1": 2.8893,
   "sdnet-cp-001-100": 2.5875,
-  "sdnet-up-001-1": 3.1765
+  "sdnet-up-001-1": 3.1765,
+  "synth-00-straight_bar": 3.1828,
+  "synth-01-straight_bar": 3.1576,
+  "synth-02-straight_bar": 3.2619,
+  "synth-03-straight_bar": 3.1184,
+  "synth-04-straight_bar": 3.3743,
+  "synth-05-straight_bar": 3.1895,
+  "synth-06-straight_bar": 3.3743,
+  "synth-07-straight_bar": 3.2381,
+  "synth-08-wavy_crack": 3.7293,
+  "synth-09-straight_bar": 2.9869,
+  "synth-10-uncracked": 3.1547,
+  "synth-11-uncracked": 3.1172,
+  "fives-100_d": 3.7796,
+  "fives-101_g": 3.7422,
+  "fives-10_a": 3.9294,
+  "fives-151_n": 3.6669
  },
- "minutes": 0.7
+ "minutes": 0.6
 }
