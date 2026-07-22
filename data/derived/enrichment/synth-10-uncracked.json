@@ -1,0 +1,10 @@
+{
+ "sample_id": "synth-10-uncracked",
+ "size": [
+  256,
+  256
+ ],
+ "material": "synthetic",
+ "has_gt": true,
+ "models": {}
+}

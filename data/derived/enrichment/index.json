@@ -6,6 +6,22 @@
   "bcl-steel-s1",
   "bcl-noise-f1",
   "sdnet-cp-001-100",
-  "sdnet-up-001-1"
+  "sdnet-up-001-1",
+  "synth-00-straight_bar",
+  "synth-01-straight_bar",
+  "synth-02-straight_bar",
+  "synth-03-straight_bar",
+  "synth-04-straight_bar",
+  "synth-05-straight_bar",
+  "synth-06-straight_bar",
+  "synth-07-straight_bar",
+  "synth-08-wavy_crack",
+  "synth-09-straight_bar",
+  "synth-10-uncracked",
+  "synth-11-uncracked",
+  "fives-100_d",
+  "fives-101_g",
+  "fives-10_a",
+  "fives-151_n"
  ]
 }

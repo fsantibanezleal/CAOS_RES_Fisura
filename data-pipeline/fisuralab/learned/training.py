@@ -28,6 +28,17 @@ def _lazy_torch():
     return torch
 
 
+def _device(torch) -> str:
+    """'cuda' only when a device is really usable.
+
+    torch.cuda.is_available() can return True while device_count() is 0, which is exactly what
+    happens under CUDA_VISIBLE_DEVICES="" on this build. The old check then selected 'cuda', and
+    torch.load(map_location='cuda') died with "Attempting to deserialize object on CUDA device 0 but
+    torch.cuda.device_count() is 0". Checking the count as well makes CPU-only runs work.
+    """
+    return "cuda" if (torch.cuda.is_available() and torch.cuda.device_count() > 0) else "cpu"
+
+
 def build_model(arch: str):
     import segmentation_models_pytorch as smp  # noqa: PLC0415
 
@@ -150,7 +161,7 @@ def train_arch(
     torch = _lazy_torch()
     from torch.utils.data import DataLoader  # noqa: PLC0415
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = _device(torch)
     torch.manual_seed(seed)
     np.random.seed(seed)
 
@@ -238,7 +249,7 @@ def train_arch(
 def predict_full(arch: str, ckpt: Path, image: np.ndarray, tile: int = 512, overlap: int = 64) -> np.ndarray:
     """Tiled full-image inference (reflect-padded), returning a probability map in [0, 1]."""
     torch = _lazy_torch()
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = _device(torch)
     model = build_model(arch)
     model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=True))
     model.to(device).eval()
