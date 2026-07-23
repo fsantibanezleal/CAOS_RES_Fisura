@@ -3,6 +3,39 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.22.000], 2026-07-22
+
+### Fixed (fundus: mask to the field of view; the disc rim was a confound)
+A FIVES fundus image is a bright retina disc on black, so the disc RIM is a strong closed curvilinear
+edge that every crack detector fires on, the ridge filters especially. Scoring over the whole frame
+confounded "found vessels" with "found the edge of the photograph". The fundus cases are now masked to
+the field of view (Otsu on luminance, largest component, fill holes, erode 2 percent so the rim falls
+outside), the outside flattened to the median retina colour and the ground truth zeroed there, as
+retinal-vessel evaluation requires. The result is CLEANER, since the rim had been adding false
+positives:
+
+| rung | mean F1 retina | same rung concrete |
+|---|---|---|
+| classical RF fusion (L5) | 0.717 | 0.361 |
+| classical ridge (L3) | 0.661 | 0.317 |
+| SAM adapter (SAC, 0.45 percent tuned) | 0.332 | 0.634 |
+| DINOv2 frozen | 0.086 | 0.030 |
+| SegFormer / DeepLabV3+ / U-Net | 0.03 / 0.01 / 0.00 | 0.47 / 0.50 / 0.34 |
+
+What transfers is the generality of the prior: hand-designed curvilinear filters best (better on
+retinas than on the concrete they were borrowed for), a SAM foundation prior moderately, small
+concrete-fitted networks not at all. Supersedes the v0.21.000 fundus figures, which were unmasked and
+partly single-image.
+
+### Added (SAC wired into the App)
+- The foundation-adapter rung, baked in v0.21.000, now renders on the SOTA tab: the per-image SAC
+  overlay plus val F1 0.750, 0.47 percent of the network trained, vs the published 0.612 on
+  OmniCrack30k.
+
+### Fixed
+- The SAC train/bake device guard selected cuda when `is_available()` is True but `device_count()` is
+  0 (under `CUDA_VISIBLE_DEVICES=""`); it now checks the count, matching the learned lane.
+
 ## [0.21.000], 2026-07-22
 
 ### Added (fundus images as first-class cases: the lab's own thesis, tested)
