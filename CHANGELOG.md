@@ -15,19 +15,25 @@ while on mock/synthetic data. Tag every release.
 - Downscaled 2048 -> 768 so vessels sit at 3-8 px, the regime the ladder and its 2/5 px tolerances
   are tuned for.
 
-### THE RESULT: transfer scales inversely with how much a model was fitted
-Same images, same protocol, F1 at 2 px on a retina:
+### THE RESULT: the hand-designed filter transfers, the learned appearance model does not
+Mean F1 at 2 px over the four retinas (CORRECTED 2026-07-22: an earlier draft of this entry quoted
+single-image figures from fives-100_d, which overstated the effect; these are the means):
 
-| rung | crack fitting | F1 on retina |
+| rung | mean F1 on retina | same rung on concrete |
 |---|---|---|
-| DINOv2 frozen + linear head | backbone never fitted | 0.196 |
-| SAC (SAM, 0.45 percent tuned) | minimal | 0.041 - 0.173 |
-| SegFormer / U-Net / DeepLabV3+ | fully supervised | 0.004 / 0.002 / 0.000 |
+| classical ridge (L3, sato/frangi/meijering) | 0.645 | 0.317 |
+| classical RF fusion (L5) | 0.684 | 0.369 |
+| DINOv2 frozen + linear | 0.095 | 0.030 |
+| SegFormer-B2 | 0.058 | 0.472 |
+| DeepLabV3+ | 0.010 | 0.503 |
+| U-Net R18 | 0.001 | 0.338 |
 
-DeepLabV3+ finds ZERO vessel pixels. The supervised networks learned concrete, not curvilinear
-structure. The uncracked synthetic controls predict 0.00 percent (F1 1.0), so this is not over-firing.
-Meanwhile the CLASSICAL ridge rung transfers by construction: sato/frangi/meijering were published for
-vessels and neurites and run here unmodified.
+The vessel filters, published for vessels, score HIGHER on retinas than on the cracks they were
+borrowed for. Every network trained on concrete collapses below 0.10 on the retina, from 0.34-0.50 on
+concrete: they learned the look of concrete, not curvilinear structure. DINOv2 is the mirror image,
+worst of the learned tier on concrete and best on the retina, because it was fitted to neither. The
+clean monotonic story is NOT true per image (SegFormer beats DINOv2 on fives-151_n); the honest result
+is the split between hand-designed and learned, on the means.
 
 ### Added (SAC foundation-adapter rung)
 - SAM ViT-B, normalization parameters only (36.9K) + a 387.8K decode head = 424.6K trainable, 0.45
