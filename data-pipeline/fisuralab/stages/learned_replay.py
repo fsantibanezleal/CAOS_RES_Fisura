@@ -20,7 +20,7 @@ from ..io.image_formats import load_example, load_examples_manifest, read_mask
 from ..learned.shards import data_root
 from ..model.classical import to_gray_float
 from ..model.geometry import measure, width_stats
-from ..model.metrics import evaluate_mask
+from ..model.metrics import evaluate_mask, restrict_to_fov
 
 EXAMPLES_DIR = Path(__file__).resolve().parents[3] / "data" / "examples"
 
@@ -79,7 +79,7 @@ def run(*, case, seed: int, derived_dir: str, manifests_dir: str) -> dict:
             png = results["archs"][arch]["examples"].get(sample.sample_id, {}).get("mask_png")
             if not png or not Path(png).exists():
                 continue
-            mask = read_mask(png)
+            mask = restrict_to_fov(read_mask(png), sample.fov)  # drop any response outside the retina disc
             if arch.startswith("dinov2"):
                 note = f"{arch}: DINOv2 frozen features + linear head (518 resize, 1/14-resolution probe, coarse by design)"
             elif arch.startswith("hrsegnet"):

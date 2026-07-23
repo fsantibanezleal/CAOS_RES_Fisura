@@ -76,6 +76,11 @@ class ImageSample:
     license_tag: str = "unknown"
     sample_id: str = ""
     flags: list[str] = field(default_factory=list)
+    # Region of interest: where analysis is valid. None means the whole image (the usual case). For a
+    # fundus photograph it is the retina disc, eroded off the rim, so a method's response on the
+    # circular retina-to-surround edge is EXCLUDED rather than scored as a crack. A prediction is
+    # intersected with this before it is measured, stored or drawn.
+    fov: np.ndarray | None = None
 
 
 @dataclass

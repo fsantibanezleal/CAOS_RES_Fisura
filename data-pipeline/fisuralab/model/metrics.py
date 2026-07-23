@@ -51,6 +51,20 @@ def iou(pred: np.ndarray, gt: np.ndarray) -> float:
     return float((pred & gt).sum()) / union
 
 
+def restrict_to_fov(mask: np.ndarray, fov: np.ndarray | None) -> np.ndarray:
+    """Intersect a predicted mask with the region of interest (the retina disc for fundus).
+
+    Applied wherever a prediction is finalized, so a response outside the FOV, the rim of the
+    photograph above all, is removed BEFORE it is scored, stored or drawn, instead of counting as a
+    false positive. The ground truth is already zero outside the FOV, so intersecting only the
+    prediction is enough to make every metric field FOV-restricted. `fov` None (the usual case) leaves
+    the mask untouched.
+    """
+    if fov is None:
+        return mask
+    return mask.astype(bool) & fov.astype(bool)
+
+
 def evaluate_mask(pred: np.ndarray, gt: np.ndarray) -> dict:
     """The full per-sample record: both tolerance conventions + strict IoU + the protocol strings."""
     out = {

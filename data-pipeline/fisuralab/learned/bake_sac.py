@@ -122,6 +122,13 @@ def main() -> None:
         img = read_image(REPO_EXAMPLES / s["image_rel"])
         prob = _predict(model, img, device)
         mask = prob > 0.5
+        # exclude the retina rim: for a fundus sample a sibling <stem>_fov.png marks the valid disc,
+        # and a response outside it must not be scored or drawn (see materialize_fundus)
+        fov_p = (REPO_EXAMPLES / s["image_rel"]).with_name(Path(s["image_rel"]).stem + "_fov.png")
+        if fov_p.exists():
+            from ..io.image_formats import read_mask  # noqa: PLC0415
+
+            mask = mask & read_mask(fov_p)
         base = img[..., :3] if img.ndim == 3 else img
         (OUT / "overlays" / f"{sid}_sac.png").write_bytes(_overlay_png(base, mask))
         f1_2 = f1_5 = None

@@ -3,6 +3,34 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.23.000], 2026-07-22
+
+### Fixed (fundus FOV: exclude the region, do not just recolour it)
+The v0.22.000 FOV handling recoloured outside the disc and still scored the whole frame, so detectors
+kept firing on the retina-to-fill transition and that firing was still counted (Felipe caught the rim
+arc persisting in the learned overlays). A first attempt filled outside the ERODED disc, putting the
+transition exactly on the FOV boundary, so masking the prediction to the FOV still kept it.
+
+Now the disc edge and the FOV boundary are separated: the image is filled outside the FULL disc (so
+the transition is at the disc edge), the FOV is the disc eroded 4 percent inward, and every predicted
+mask is intersected with the FOV before it is scored, stored or drawn (ImageSample.fov +
+metrics.restrict_to_fov, applied in infer, learned_replay, run_ladder_a, bake_sac). The transition band
+falls outside the FOV and is genuinely excluded, verified in the overlays.
+
+Final FOV-restricted means, F1@2px retina / concrete:
+
+| rung | retina | concrete |
+|---|---|---|
+| classical RF fusion (L5) | 0.723 | 0.361 |
+| classical ridge (L3) | 0.692 | 0.317 |
+| SAM adapter (SAC) | 0.182 | 0.634 |
+| DINOv2 frozen | 0.086 | 0.031 |
+| SegFormer / DeepLabV3+ / U-Net | 0.07 / 0.01 / 0.00 | 0.47 / 0.50 / 0.33 |
+
+Conclusion unchanged: hand-designed curvilinear filters transfer strongly (better on retinas than the
+concrete they were borrowed for), the SAM foundation prior weakly, small concrete-fitted nets not at
+all. Supersedes the v0.22.000 fundus figures.
+
 ## [0.22.000], 2026-07-22
 
 ### Fixed (fundus: mask to the field of view; the disc rim was a confound)

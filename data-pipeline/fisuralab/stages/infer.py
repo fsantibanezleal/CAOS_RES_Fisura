@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from ..io.image_contract import ImageSample
 from ..model.classical import LEVELS, LadderParams, LevelResult, run_level
+from ..model.metrics import restrict_to_fov
 
 
 def run(samples: list[ImageSample], params: LadderParams, rf) -> list[dict[str, LevelResult]]:
@@ -13,6 +14,11 @@ def run(samples: list[ImageSample], params: LadderParams, rf) -> list[dict[str, 
         for level in LEVELS:
             if level == "L5" and rf is None:
                 continue
-            per_level[level] = run_level(s.image, level, params=params, rf=rf)
+            res = run_level(s.image, level, params=params, rf=rf)
+            # exclude anything outside the region of interest (the retina disc) HERE, at the single
+            # point every consumer reads from: scoring, mask_rle and the overlays all see the masked
+            # prediction, so a response on the fundus rim never reaches a metric or the screen.
+            res.mask = restrict_to_fov(res.mask, s.fov)
+            per_level[level] = res
         out.append(per_level)
     return out
