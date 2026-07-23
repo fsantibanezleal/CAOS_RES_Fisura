@@ -20,7 +20,7 @@ from pathlib import Path
 import numpy as np
 
 from ..io.image_formats import load_example, load_examples_manifest, write_mask
-from ..model.metrics import buffered_prf
+from ..model.metrics import buffered_prf, restrict_to_fov
 from .export_onnx import export
 from .shards import data_root, ensure_crackseg9k_index
 from .training import ARCHS, predict_full, train_arch
@@ -34,7 +34,7 @@ def evaluate_on_examples(arch: str, ckpt: Path, out_dir: Path) -> dict:
     for rec in load_examples_manifest(EXAMPLES_DIR):
         sample, _ = load_example(EXAMPLES_DIR, rec)
         prob = predict_full(arch, ckpt, sample.image)
-        mask = prob > 0.5
+        mask = restrict_to_fov(prob > 0.5, sample.fov)   # exclude the retina rim before scoring/saving
         write_mask(out_dir / f"{rec.sample_id}.png", mask)
         entry: dict = {"mask_png": str(out_dir / f"{rec.sample_id}.png")}
         if sample.mask is not None:

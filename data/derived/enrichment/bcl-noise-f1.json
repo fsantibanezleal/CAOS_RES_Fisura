@@ -7,8 +7,8 @@
  "material": "concrete",
  "has_gt": true,
  "uncertainty": {
-  "mean_std": 0.1053,
-  "disagree_px": 16666,
+  "mean_std": 0.064,
+  "disagree_px": 10016,
   "n_models": 5
  },
  "models": {
@@ -19,7 +19,7 @@
    },
    "confusion": {
     "tp": 0,
-    "fp": 4218,
+    "fp": 4217,
     "fn": 0,
     "tol_px": 2
    },
@@ -33,7 +33,7 @@
    },
    "confusion": {
     "tp": 0,
-    "fp": 1876,
+    "fp": 1873,
     "fn": 0,
     "tol_px": 2
    },
@@ -47,7 +47,7 @@
    },
    "confusion": {
     "tp": 0,
-    "fp": 2700,
+    "fp": 2694,
     "fn": 0,
     "tol_px": 2
    },
@@ -75,7 +75,7 @@
    },
    "confusion": {
     "tp": 0,
-    "fp": 13772,
+    "fp": 5811,
     "fn": 0,
     "tol_px": 2
    },

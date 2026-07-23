@@ -65,6 +65,7 @@ class ExampleRecord:
     mask: str | None = None
     mm_per_px: float | None = None
     label: str | None = None  # classification-style label where the source defines one
+    fov: str | None = None    # region-of-interest mask (the retina disc for fundus); None = whole image
 
 
 def load_examples_manifest(examples_dir: str | Path) -> list[ExampleRecord]:
@@ -84,5 +85,6 @@ def load_example(examples_dir: str | Path, rec: ExampleRecord) -> tuple[ImageSam
         source=rec.source,
         license_tag=rec.license_tag,
         sample_id=rec.sample_id,
+        fov=read_mask(root / rec.fov) if rec.fov else None,
     )
     return sample, validate_sample(sample)

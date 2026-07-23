@@ -144,30 +144,30 @@
   {
    "id": "fives-100_d",
    "overlay": "sac/overlays/fives-100_d_sac.png",
-   "pred_positive_frac": 0.0352,
-   "f1_2px": 0.5252,
-   "f1_5px": 0.5673
+   "pred_positive_frac": 0.00512,
+   "f1_2px": 0.158,
+   "f1_5px": 0.1969
   },
   {
    "id": "fives-101_g",
    "overlay": "sac/overlays/fives-101_g_sac.png",
-   "pred_positive_frac": 0.02181,
-   "f1_2px": 0.304,
-   "f1_5px": 0.3533
+   "pred_positive_frac": 0.02012,
+   "f1_2px": 0.3158,
+   "f1_5px": 0.3622
   },
   {
    "id": "fives-10_a",
    "overlay": "sac/overlays/fives-10_a_sac.png",
-   "pred_positive_frac": 0.01346,
-   "f1_2px": 0.2532,
-   "f1_5px": 0.2807
+   "pred_positive_frac": 4e-05,
+   "f1_2px": 0.0046,
+   "f1_5px": 0.0138
   },
   {
    "id": "fives-151_n",
    "overlay": "sac/overlays/fives-151_n_sac.png",
-   "pred_positive_frac": 0.03905,
-   "f1_2px": 0.2463,
-   "f1_5px": 0.2859
+   "pred_positive_frac": 0.02403,
+   "f1_2px": 0.2486,
+   "f1_5px": 0.2807
   }
  ],
  "framing": "The foundation-adapter rung: freeze SAM's 93 M-parameter ViT and tune ONLY its 37K normalization parameters plus a 388K decode head. That is under 0.5 percent of the network, yet it adapts a general segmenter to cracks. It shows the trade the rest of the ladder is measured against: near-frozen foundation weights vs a small task head, at a fraction of a full fine-tune's cost.",

@@ -48,28 +48,25 @@ def _resize(a: np.ndarray, size: int, order: int) -> np.ndarray:
     return out
 
 
-def _fov_mask(rgb: np.ndarray, erode_frac: float = 0.02) -> np.ndarray:
-    """The field-of-view mask: the retina disc, eroded inward to drop the rim.
+def _disc_and_fov(rgb: np.ndarray, erode_frac: float = 0.04):
+    """Return (disc, fov): the full retina disc, and the disc eroded inward for the analysis ROI.
 
     A fundus image is a bright retina disc on a black surround, so the disc RIM is a strong closed
-    curvilinear edge. Left in, every crack detector fires on it, the ridge filters especially, because
-    the rim is exactly the dark-to-bright curve they were built to find. That would confound "the
-    method found vessels" with "the method found the edge of the photograph". Standard retinal-vessel
-    evaluation restricts everything to the FOV; masking here is the same discipline.
+    curvilinear edge that every crack detector fires on. Two separate boundaries are needed, and
+    conflating them was the earlier bug. The DISC is where the image is filled (outside it goes to a
+    flat colour), so the retina-to-fill transition sits at the disc edge. The FOV is the disc eroded
+    inward, and analysis is restricted to it. Because the FOV boundary is well INSIDE the disc edge,
+    the transition (and the band of rim firing around it) falls OUTSIDE the FOV and is excluded, rather
+    than sitting exactly on the FOV boundary where masking would still keep it.
 
-    The disc is found by thresholding the luminance well above the black surround, keeping the largest
-    connected component (so bright specular flecks outside do not leak in), filling holes, then eroding
-    by a couple of percent of the width so the rim transition itself falls OUTSIDE the mask.
+    The disc is found by Otsu on the luminance (a bright optic disc pushes a relative threshold high
+    enough to drop a dim retina, so Otsu, capped low, is used, with a near-black fallback), keeping the
+    largest connected component and filling holes.
     """
     from scipy import ndimage as ndi  # noqa: PLC0415
     from skimage.filters import threshold_otsu  # noqa: PLC0415
 
     lum = rgb.mean(axis=2)
-    # Otsu, not a fraction of the max: a bright optic disc pushes a relative threshold high enough to
-    # exclude a dim retina body (this happened on the glaucoma image, whose disc is bright and whose
-    # retina is dark, leaving an 18 percent FOV). Otsu finds the valley between the near-black surround
-    # and the retina. It is then capped low so a strongly bimodal retina cannot split itself, and the
-    # result is sanity-checked: fundus discs fill well over a third of the frame.
     try:
         thr = float(threshold_otsu(lum))
     except ValueError:
@@ -82,10 +79,10 @@ def _fov_mask(rgb: np.ndarray, erode_frac: float = 0.02) -> np.ndarray:
     if n > 1:                                     # keep the largest blob = the disc, drop stray flecks
         sizes = ndi.sum(np.ones_like(lbl), lbl, index=np.arange(1, n + 1))
         m = lbl == (1 + int(np.argmax(sizes)))
-    m = ndi.binary_fill_holes(m)
+    disc = ndi.binary_fill_holes(m)
     r = max(1, int(erode_frac * rgb.shape[1]))
-    m = ndi.binary_erosion(m, iterations=r)
-    return m
+    fov = ndi.binary_erosion(disc, iterations=r)
+    return disc, fov
 
 
 def main() -> None:
@@ -127,26 +124,37 @@ def main() -> None:
         # binary annotation would thin or erase the finest branches before any method has seen them
         gt_s = (_resize((gt > 127).astype(np.float32), args.size, 0) > 0.5)
 
-        # FOV mask, then flatten everything outside it to the median retina colour. This removes the
-        # disc rim (a strong curvilinear edge) so no detector can score on the edge of the photograph;
-        # the ground truth is zeroed there too, so the region is simply inert.
-        fov = _fov_mask(img_s)
-        med = np.median(img_s[fov], axis=0) if fov.any() else np.array([0, 0, 0], np.float32)
-        img_s[~fov] = med
+        # The FOV mask is the retina disc, eroded off the rim. It is SAVED and travels with the sample,
+        # so every downstream method intersects its prediction with it before scoring, storing or
+        # drawing: a response on the retina-to-surround edge is then excluded from the analysis rather
+        # than counted as a crack (filling the outside with a colour, as an earlier version did, does
+        # not help, since the detectors still fire on the new retina-to-fill transition and that firing
+        # was still being scored). Flattening the outside to the median retina colour is kept only so
+        # the displayed image has no harsh rim; it is cosmetic now, not the mechanism.
+        disc, fov = _disc_and_fov(img_s)
+        # fill outside the FULL disc: the transition is now at the disc edge, which is 4 percent
+        # OUTSIDE the FOV, so rim firing lands outside the ROI and is excluded rather than kept on the
+        # boundary
+        med = np.median(img_s[disc], axis=0) if disc.any() else np.array([0, 0, 0], np.float32)
+        img_s[~disc] = med
         gt_s = gt_s & fov
         fov_frac = float(fov.mean())
         img_s = np.clip(img_s, 0, 255).astype(np.uint8)
         gt_s = gt_s.astype(np.uint8) * 255
 
         sid = f"fives-{stem.lower()}"
-        img_rel, mask_rel = f"fundus/{sid}.png", f"fundus/{sid}_mask.png"
+        img_rel = f"fundus/{sid}.png"
+        mask_rel = f"fundus/{sid}_mask.png"
+        fov_rel = f"fundus/{sid}_fov.png"
         iio.imwrite(EXAMPLES / img_rel, img_s, extension=".png")
         iio.imwrite(EXAMPLES / mask_rel, gt_s, extension=".png")
+        iio.imwrite(EXAMPLES / fov_rel, fov.astype(np.uint8) * 255, extension=".png")
 
         entries.append({
             "sample_id": sid,
             "file": img_rel,
             "mask": mask_rel,
+            "fov": fov_rel,
             "material": "retina",
             "source": "fives",
             "license_tag": "cc-by",

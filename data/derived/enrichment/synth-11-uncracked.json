@@ -7,8 +7,8 @@
  "material": "synthetic",
  "has_gt": true,
  "uncertainty": {
-  "mean_std": 0.0809,
-  "disagree_px": 13214,
+  "mean_std": 0.3501,
+  "disagree_px": 57208,
   "n_models": 5
  },
  "models": {
@@ -61,7 +61,7 @@
    },
    "confusion": {
     "tp": 0,
-    "fp": 725,
+    "fp": 714,
     "fn": 0,
     "tol_px": 2
    },
@@ -74,8 +74,8 @@
     "f1": []
    },
    "confusion": {
-    "tp": 0,
-    "fp": 12654,
+    "tp": 3,
+    "fp": 57204,
     "fn": 0,
     "tol_px": 2
    },
