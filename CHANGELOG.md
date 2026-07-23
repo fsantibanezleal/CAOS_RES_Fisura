@@ -3,6 +3,39 @@
 All notable changes to this product. Format: `X.XX.XXX` (display), see `fisuralab.__version__`. Keep `0.x`
 while on mock/synthetic data. Tag every release.
 
+## [0.22.000], 2026-07-22
+
+### Fixed (fundus: mask to the field of view; the disc rim was a confound)
+A FIVES fundus image is a bright retina disc on black, so the disc RIM is a strong closed curvilinear
+edge that every crack detector fires on, the ridge filters especially. Scoring over the whole frame
+confounded "found vessels" with "found the edge of the photograph". The fundus cases are now masked to
+the field of view (Otsu on luminance, largest component, fill holes, erode 2 percent so the rim falls
+outside), the outside flattened to the median retina colour and the ground truth zeroed there, as
+retinal-vessel evaluation requires. The result is CLEANER, since the rim had been adding false
+positives:
+
+| rung | mean F1 retina | same rung concrete |
+|---|---|---|
+| classical RF fusion (L5) | 0.717 | 0.361 |
+| classical ridge (L3) | 0.661 | 0.317 |
+| SAM adapter (SAC, 0.45 percent tuned) | 0.332 | 0.634 |
+| DINOv2 frozen | 0.086 | 0.030 |
+| SegFormer / DeepLabV3+ / U-Net | 0.03 / 0.01 / 0.00 | 0.47 / 0.50 / 0.34 |
+
+What transfers is the generality of the prior: hand-designed curvilinear filters best (better on
+retinas than on the concrete they were borrowed for), a SAM foundation prior moderately, small
+concrete-fitted networks not at all. Supersedes the v0.21.000 fundus figures, which were unmasked and
+partly single-image.
+
+### Added (SAC wired into the App)
+- The foundation-adapter rung, baked in v0.21.000, now renders on the SOTA tab: the per-image SAC
+  overlay plus val F1 0.750, 0.47 percent of the network trained, vs the published 0.612 on
+  OmniCrack30k.
+
+### Fixed
+- The SAC train/bake device guard selected cuda when `is_available()` is True but `device_count()` is
+  0 (under `CUDA_VISIBLE_DEVICES=""`); it now checks the count, matching the learned lane.
+
 ## [0.21.000], 2026-07-22
 
 ### Added (fundus images as first-class cases: the lab's own thesis, tested)
@@ -15,19 +48,25 @@ while on mock/synthetic data. Tag every release.
 - Downscaled 2048 -> 768 so vessels sit at 3-8 px, the regime the ladder and its 2/5 px tolerances
   are tuned for.
 
-### THE RESULT: transfer scales inversely with how much a model was fitted
-Same images, same protocol, F1 at 2 px on a retina:
+### THE RESULT: the hand-designed filter transfers, the learned appearance model does not
+Mean F1 at 2 px over the four retinas (CORRECTED 2026-07-22: an earlier draft of this entry quoted
+single-image figures from fives-100_d, which overstated the effect; these are the means):
 
-| rung | crack fitting | F1 on retina |
+| rung | mean F1 on retina | same rung on concrete |
 |---|---|---|
-| DINOv2 frozen + linear head | backbone never fitted | 0.196 |
-| SAC (SAM, 0.45 percent tuned) | minimal | 0.041 - 0.173 |
-| SegFormer / U-Net / DeepLabV3+ | fully supervised | 0.004 / 0.002 / 0.000 |
+| classical ridge (L3, sato/frangi/meijering) | 0.645 | 0.317 |
+| classical RF fusion (L5) | 0.684 | 0.369 |
+| DINOv2 frozen + linear | 0.095 | 0.030 |
+| SegFormer-B2 | 0.058 | 0.472 |
+| DeepLabV3+ | 0.010 | 0.503 |
+| U-Net R18 | 0.001 | 0.338 |
 
-DeepLabV3+ finds ZERO vessel pixels. The supervised networks learned concrete, not curvilinear
-structure. The uncracked synthetic controls predict 0.00 percent (F1 1.0), so this is not over-firing.
-Meanwhile the CLASSICAL ridge rung transfers by construction: sato/frangi/meijering were published for
-vessels and neurites and run here unmodified.
+The vessel filters, published for vessels, score HIGHER on retinas than on the cracks they were
+borrowed for. Every network trained on concrete collapses below 0.10 on the retina, from 0.34-0.50 on
+concrete: they learned the look of concrete, not curvilinear structure. DINOv2 is the mirror image,
+worst of the learned tier on concrete and best on the retina, because it was fitted to neither. The
+clean monotonic story is NOT true per image (SegFormer beats DINOv2 on fives-151_n); the honest result
+is the split between hand-designed and learned, on the means.
 
 ### Added (SAC foundation-adapter rung)
 - SAM ViT-B, normalization parameters only (36.9K) + a 387.8K decode head = 424.6K trainable, 0.45

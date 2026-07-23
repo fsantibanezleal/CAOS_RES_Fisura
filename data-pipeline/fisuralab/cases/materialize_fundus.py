@@ -48,6 +48,46 @@ def _resize(a: np.ndarray, size: int, order: int) -> np.ndarray:
     return out
 
 
+def _fov_mask(rgb: np.ndarray, erode_frac: float = 0.02) -> np.ndarray:
+    """The field-of-view mask: the retina disc, eroded inward to drop the rim.
+
+    A fundus image is a bright retina disc on a black surround, so the disc RIM is a strong closed
+    curvilinear edge. Left in, every crack detector fires on it, the ridge filters especially, because
+    the rim is exactly the dark-to-bright curve they were built to find. That would confound "the
+    method found vessels" with "the method found the edge of the photograph". Standard retinal-vessel
+    evaluation restricts everything to the FOV; masking here is the same discipline.
+
+    The disc is found by thresholding the luminance well above the black surround, keeping the largest
+    connected component (so bright specular flecks outside do not leak in), filling holes, then eroding
+    by a couple of percent of the width so the rim transition itself falls OUTSIDE the mask.
+    """
+    from scipy import ndimage as ndi  # noqa: PLC0415
+    from skimage.filters import threshold_otsu  # noqa: PLC0415
+
+    lum = rgb.mean(axis=2)
+    # Otsu, not a fraction of the max: a bright optic disc pushes a relative threshold high enough to
+    # exclude a dim retina body (this happened on the glaucoma image, whose disc is bright and whose
+    # retina is dark, leaving an 18 percent FOV). Otsu finds the valley between the near-black surround
+    # and the retina. It is then capped low so a strongly bimodal retina cannot split itself, and the
+    # result is sanity-checked: fundus discs fill well over a third of the frame.
+    try:
+        thr = float(threshold_otsu(lum))
+    except ValueError:
+        thr = 20.0
+    thr = min(thr, 40.0)
+    m = lum > thr
+    if m.mean() < 0.35:                          # fallback: the surround is genuinely near-black
+        m = lum > 18.0
+    lbl, n = ndi.label(m)
+    if n > 1:                                     # keep the largest blob = the disc, drop stray flecks
+        sizes = ndi.sum(np.ones_like(lbl), lbl, index=np.arange(1, n + 1))
+        m = lbl == (1 + int(np.argmax(sizes)))
+    m = ndi.binary_fill_holes(m)
+    r = max(1, int(erode_frac * rgb.shape[1]))
+    m = ndi.binary_erosion(m, iterations=r)
+    return m
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="fisuralab.cases.materialize_fundus")
     ap.add_argument("--src", default="E:/_Temp/fives", help="folder holding orig/ and gt/ subfolders")
@@ -82,10 +122,21 @@ def main() -> None:
         if gt.ndim == 3:
             gt = gt[..., 0]
 
-        img_s = np.clip(_resize(img.astype(np.float32), args.size, 1), 0, 255).astype(np.uint8)
+        img_s = np.clip(_resize(img.astype(np.float32), args.size, 1), 0, 255).astype(np.float32)
         # nearest for the mask: a vessel is a few pixels wide after downscaling and interpolating a
         # binary annotation would thin or erase the finest branches before any method has seen them
-        gt_s = (_resize((gt > 127).astype(np.float32), args.size, 0) > 0.5).astype(np.uint8) * 255
+        gt_s = (_resize((gt > 127).astype(np.float32), args.size, 0) > 0.5)
+
+        # FOV mask, then flatten everything outside it to the median retina colour. This removes the
+        # disc rim (a strong curvilinear edge) so no detector can score on the edge of the photograph;
+        # the ground truth is zeroed there too, so the region is simply inert.
+        fov = _fov_mask(img_s)
+        med = np.median(img_s[fov], axis=0) if fov.any() else np.array([0, 0, 0], np.float32)
+        img_s[~fov] = med
+        gt_s = gt_s & fov
+        fov_frac = float(fov.mean())
+        img_s = np.clip(img_s, 0, 255).astype(np.uint8)
+        gt_s = gt_s.astype(np.uint8) * 255
 
         sid = f"fives-{stem.lower()}"
         img_rel, mask_rel = f"fundus/{sid}.png", f"fundus/{sid}_mask.png"
@@ -107,7 +158,7 @@ def main() -> None:
         })
         added += 1
         print(f"  {sid}: {img_s.shape} + mask, {CONDITION.get(cond_key, cond_key)}, "
-              f"{100.0 * (gt_s > 0).mean():.2f}% vessel pixels")
+              f"{100.0 * (gt_s > 0).mean():.2f}% vessel pixels, FOV {100.0 * fov_frac:.1f}% of frame")
 
     with open(manifest_path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(entries, f, ensure_ascii=False, indent=1)

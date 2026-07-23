@@ -11,7 +11,7 @@
  },
  "engine": {
   "package": "fisuralab",
-  "version": "0.20.000",
+  "version": "0.21.000",
   "model": "learned track (deeplabv3p_r18, dinov2s14_linear, hrsegnet_b16, segformer_b2, unet_r18), replayed from the local GPU runs"
  },
  "params": {
@@ -122,7 +122,7 @@
   "path": "learned_on_examples/artifact.json",
   "format": "json",
   "artifact_schema": "fisura.artifact/v1",
-  "bytes": 958069
+  "bytes": 930735
  },
  "lane": "precompute",
  "gate": {
@@ -132,14 +132,14 @@
    "segmentation-models-pytorch",
    "torch"
   ],
-  "trace_bytes": 958069,
+  "trace_bytes": 930735,
   "run_ms_budget": 1500.0,
   "trace_bytes_budget": 524288,
   "reasons": [
    "not pure-python",
    "wheels not Pyodide-safe: ['segmentation-models-pytorch', 'torch']",
    "runtime exceeds the 1500ms budget",
-   "trace_bytes 958069 > 524288"
+   "trace_bytes 930735 > 524288"
   ]
  },
  "flags": [

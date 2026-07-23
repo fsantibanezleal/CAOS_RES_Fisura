@@ -213,7 +213,7 @@ def train(epochs: int = 8, accum: int = 8, seed: int = 42, limit_train: int | No
     torch = _lazy_torch()
     from torch.utils.data import DataLoader  # noqa: PLC0415
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cuda" if (torch.cuda.is_available() and torch.cuda.device_count() > 0) else "cpu"
     torch.manual_seed(seed)
     np.random.seed(seed)
 

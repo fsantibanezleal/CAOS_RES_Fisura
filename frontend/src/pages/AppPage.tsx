@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Callout, Tabs } from '@fasl-work/caos-app-shell';
 import {
-  heatUrl, loadCaseArtifact, loadDinoPca, loadEnrichment, loadGradCam, loadWorkbench, overlayUrl, workbenchUrl,
-  type DinoPca, type Enrichment, type GradCam, type WorkbenchIndex, type WorkbenchSample,
+  heatUrl, loadCaseArtifact, loadDinoPca, loadEnrichment, loadGradCam, loadSac, loadWorkbench, overlayUrl, workbenchUrl,
+  type DinoPca, type Enrichment, type GradCam, type Sac, type WorkbenchIndex, type WorkbenchSample,
 } from '../api/artifacts';
 import type { ArtifactSample, CaseArtifact, LevelRecord } from '../lib/contract.types';
 import { useT } from '../lib/i18n';
@@ -84,6 +84,7 @@ export default function AppPage() {
   const [enrich, setEnrich] = useState<Enrichment | null>(null);
   const [dinoPca, setDinoPca] = useState<DinoPca | null>(null);
   const [gradCam, setGradCam] = useState<GradCam | null>(null);
+  const [sac, setSac] = useState<Sac | null>(null);
   // SOTA tab view mode: the prediction mask, the frozen-feature PCA, or the Grad-CAM evidence map
   const [sotaView, setSotaView] = useState<'pred' | 'features' | 'cam'>('pred');
   const [sampleId, setSampleId] = useState<string | null>(null);
@@ -106,6 +107,7 @@ export default function AppPage() {
     loadWorkbench().then(setWb).catch(() => setWb(null));
     loadDinoPca().then(setDinoPca).catch(() => setDinoPca(null));
     loadGradCam().then(setGradCam).catch(() => setGradCam(null));
+    loadSac().then(setSac).catch(() => setSac(null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -238,7 +240,7 @@ export default function AppPage() {
                 { id: 'slic', label: t('SLIC', 'SLIC'), content: <SlicTab wb={wbSample} n={snapN} c={snapC} es={es} /> },
                 { id: 'quant', label: t('Quantification', 'Cuantificación'), content: <QuantTab enrich={enrich} imageUrl={imageUrl} es={es} /> },
                 { id: 'classical', label: t('Classical', 'Clásico'), content: <FamilyTab methods={CLASSICAL_METHODS} sample={cSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} /> },
-                { id: 'sota', label: t('SOTA', 'SOTA'), content: <FamilyTab methods={LEARNED_METHODS} sample={lSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} dinoPca={dinoPca} gradCam={gradCam} sotaView={sotaView} setSotaView={setSotaView} /> },
+                { id: 'sota', label: t('SOTA', 'SOTA'), content: <FamilyTab methods={LEARNED_METHODS} sample={lSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} dinoPca={dinoPca} gradCam={gradCam} sac={sac} sotaView={sotaView} setSotaView={setSotaView} /> },
                 { id: 'beyond', label: t('Beyond SOTA', 'Más allá SOTA'), content: <FamilyTab methods={ANOMALY_METHODS} sample={aSample} base={cSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} detail={detail} setDetail={setDetail} es={es} anomalyHeat={aSample?.heat_rel ? heatUrl(aSample.heat_rel) : null} /> },
                 { id: 'metrics', label: t('Metrics', 'Métricas'), content: <MetricsTab enrich={enrich} es={es} /> },
                 { id: 'summary', label: t('Summary', 'Resumen'), content: <SummaryTab cSample={cSample} lSample={lSample} aSample={aSample} imageUrl={imageUrl} showGt={showGt} opacity={opacity} es={es} /> },
@@ -413,10 +415,10 @@ function SlicTab({ wb, n, c, es }: { wb: WorkbenchSample | null; n: number; c: n
 
 // ---- a method family applied to the image (Classical / SOTA / Beyond) --------------------------
 
-function FamilyTab({ methods, sample, base, imageUrl, showGt, opacity, detail, setDetail, es, anomalyHeat, dinoPca, gradCam, sotaView, setSotaView }: {
+function FamilyTab({ methods, sample, base, imageUrl, showGt, opacity, detail, setDetail, es, anomalyHeat, dinoPca, gradCam, sac, sotaView, setSotaView }: {
   methods: MethodDef[]; sample: ArtifactSample | null; base: ArtifactSample; imageUrl: string | null;
   showGt: boolean; opacity: number; detail: string; setDetail: (s: string) => void; es: boolean; anomalyHeat?: string | null;
-  dinoPca?: DinoPca | null; gradCam?: GradCam | null;
+  dinoPca?: DinoPca | null; gradCam?: GradCam | null; sac?: Sac | null;
   sotaView?: 'pred' | 'features' | 'cam'; setSotaView?: (v: 'pred' | 'features' | 'cam') => void;
 }) {
   const t = (en: string, esx: string) => (es ? esx : en);
@@ -505,6 +507,56 @@ function FamilyTab({ methods, sample, base, imageUrl, showGt, opacity, detail, s
               {t('The memory bank saw only UNCRACKED concrete. High = unlike healthy concrete, not necessarily a crack. Transfer AUROC is 0.72, far below the 0.996 the same method reaches on industrial MVTec AD.', 'El banco de memoria vio solo hormigón SIN grietas. Alto = distinto del hormigón sano, no necesariamente una grieta. El AUROC de transferencia es 0.72, muy por debajo del 0.996 del mismo método en el industrial MVTec AD.')}
             </Callout>
           ) : null}
+        </div>
+      </div>
+      {fam === 'learned' && sac ? <SacPanel sac={sac} base={base} es={es} /> : null}
+    </div>
+  );
+}
+
+// ---- SAC: the foundation-adapter rung (SAM ViT-B, norm-only tuning) -----------------------------
+// It lives on the SOTA tab as its own panel rather than as another method tile, because it is a
+// different model family (a frozen SAM, not an SMP segmenter) and its whole point is the cost axis:
+// how far 0.45 percent of the network gets you. The overlay for the selected image comes from the
+// separate sac artifact, keyed by sample id.
+
+function SacPanel({ sac, base, es }: { sac: Sac; base: ArtifactSample; es: boolean }) {
+  const t = (en: string, esx: string) => (es ? esx : en);
+  const row = sac.samples.find((s) => s.id === base.sample_id) ?? null;
+  const trainable = sac.trainable_norm_params + sac.trainable_head_params;
+  const total = trainable + sac.frozen_encoder_params;
+  const pct = (100 * trainable) / total;
+  return (
+    <div className="fs-panel" style={{ marginTop: '1rem' }}>
+      <div className="fs-panel-t">{t('Foundation adapter: Segment Any Crack (SAM ViT-B)', 'Adaptador fundacional: Segment Any Crack (SAM ViT-B)')}</div>
+      <div className="fs-wb-two">
+        <div className="fs-wb-img">
+          {row ? (
+            <>
+              <img className="fs-wb-photo" src={`${import.meta.env.BASE_URL}data/${row.overlay}`} alt="SAC prediction" />
+              <p className="fs-panel-sub">
+                {row.f1_2px != null
+                  ? t(`SAC on this image: F1 ${row.f1_2px.toFixed(3)} at 2 px, ${(row.pred_positive_frac * 100).toFixed(1)} percent of pixels predicted.`,
+                       `SAC en esta imagen: F1 ${row.f1_2px.toFixed(3)} a 2 px, ${(row.pred_positive_frac * 100).toFixed(1)} por ciento de píxeles predichos.`)
+                  : t(`SAC on this image: ${(row.pred_positive_frac * 100).toFixed(1)} percent of pixels predicted (no pixel ground truth here).`,
+                       `SAC en esta imagen: ${(row.pred_positive_frac * 100).toFixed(1)} por ciento de píxeles predichos (sin ground truth de píxeles aquí).`)}
+              </p>
+            </>
+          ) : (
+            <p className="fs-panel-sub">{t('No SAC overlay for this image.', 'Sin overlay SAC para esta imagen.')}</p>
+          )}
+        </div>
+        <div className="fs-wb-read">
+          <div className="fs-kpis fs-kpis-2">
+            <div className="fs-kpi"><div className="fs-kpi-v">{sac.val_f1_2px != null ? sac.val_f1_2px.toFixed(3) : '-'}</div><div className="fs-kpi-l">{t('val F1 @ 2px', 'F1 val @ 2px')}</div></div>
+            <div className="fs-kpi"><div className="fs-kpi-v">{pct.toFixed(2)}%</div><div className="fs-kpi-l">{t('of the network trained', 'de la red entrenada')}</div></div>
+            <div className="fs-kpi"><div className="fs-kpi-v">{(trainable / 1000).toFixed(0)}K</div><div className="fs-kpi-l">{t('trainable params', 'parámetros entrenables')}</div></div>
+            <div className="fs-kpi"><div className="fs-kpi-v">{sac.published_reference_point.f1.toFixed(3)}</div><div className="fs-kpi-l">{t('published on OmniCrack30k', 'publicado en OmniCrack30k')}</div></div>
+          </div>
+          <p className="fs-detail-desc">{sac.framing}</p>
+          <Callout variant="honest" title={t('Read honestly', 'Léelo con honestidad')}>
+            {sac.limitation}
+          </Callout>
         </div>
       </div>
     </div>

@@ -12,7 +12,7 @@
  },
  "shared_scale": {
   "lo": 1.2274248600006104,
-  "hi": 3.929433584213257
+  "hi": 3.7992680072784424
  },
  "scores": {
   "bcl-nonsteel-c1": 3.2647,
@@ -33,10 +33,10 @@
   "synth-09-straight_bar": 2.9869,
   "synth-10-uncracked": 3.1547,
   "synth-11-uncracked": 3.1172,
-  "fives-100_d": 3.7796,
-  "fives-101_g": 3.7422,
-  "fives-10_a": 3.9294,
-  "fives-151_n": 3.6669
+  "fives-100_d": 3.7993,
+  "fives-101_g": 3.7458,
+  "fives-10_a": 3.7589,
+  "fives-151_n": 3.6712
  },
- "minutes": 0.6
+ "minutes": 0.5
 }
