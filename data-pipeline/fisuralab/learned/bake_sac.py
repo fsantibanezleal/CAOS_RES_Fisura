@@ -103,7 +103,7 @@ def main() -> None:
         print(f"  no SAC checkpoint at {ckpt}; run `python -m fisuralab.learned.train_sac` first")
         return
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cuda" if (torch.cuda.is_available() and torch.cuda.device_count() > 0) else "cpu"
     model, n_norm, n_head = build_sac()
     state = torch.load(ckpt, map_location=device)
     # checkpoint holds only the trainable deltas (norm + head); load non-strictly onto the full model
